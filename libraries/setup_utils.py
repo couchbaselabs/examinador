@@ -27,5 +27,5 @@ def connect_nodes(cwd: str, node_num: int, services: str, data_size: int = 256, 
     if complete.returncode != 0:
         logger.warn(f'Cluster connect failed, rc {complete.returncode}: {complete.stdout}')
         raise subprocess.CalledProcessError
-    logger.info(f'Nodes connected: {complete.stdout}')
     time.sleep(wait_for)
+    logger.info('Nodes connected', also_console=True)

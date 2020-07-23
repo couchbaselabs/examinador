@@ -29,3 +29,10 @@ set of nodes to do the tests. Before running the tests make sure you have build 
 not it will fail.
 
 Setup takes around a minute, after that the test should run expediently.
+
+To run the UI test selenium webdrivers are required this can be installed using the following command
+```
+webdrivermanager firefox chrome --linkpath /usr/local/bin
+```
+
+webdrivermanager is installed as part of the previous `pip install` run.

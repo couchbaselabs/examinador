@@ -5,7 +5,7 @@ Library           ../libraries/setup_utils.py
 
 *** Variables ***
 ${NS_SERVER_PATH}      %{HOME}/source/ns_server
-${WAIT_UNTIL_READY}    30s
+${WAIT_UNTIL_READY}    30
 ${RUNNING_MODE}        CV
 
 *** Keywords ***
@@ -24,14 +24,14 @@ Start ${node_num} cluster run nodes
     Start Process    ./cluster_run     --nodes    ${node_num}    --dont-rename    cwd=${NS_SERVER_PATH}    alias=cluster    stdout=DEVNULL    stderr=DEVNULL
     Log      cluster run process started
     Sleep    ${WAIT_UNTIL_READY}
-    Log      Waited for ${WAIT_UNTIL_READY}
+    Log      Waited for ${WAIT_UNTIL_READY} seconds
 
 
 Start cluster_run nodes and connect them
     [Arguments]    ${node_num}=1    ${connect_nodes}=1    ${services}=n0:kv+backup    ${data_size}=256
     [Documentation]    Shortcut to start nodes and connect them in one keyword.
     Start ${node_num} cluster run nodes
-    Connect nodes    ${NS_SERVER_PATH}    ${connect_nodes}    ${services}    ${data_size}
+    Connect nodes    ${NS_SERVER_PATH}    ${connect_nodes}    ${services}    ${data_size}    wait_for=${WAIT_UNTIL_READY}
 
 Environment dependent clean up
     [Documentation]    This function will stop the running cluster and will delete the data if the running mode is CV.
