@@ -1,6 +1,7 @@
 *** Settings ***
 Documentation     Simple Backup UI tests.
 Library           SeleniumLibrary
+Suite setup       Set selenium timeout    5s
 
 *** Variables ***
 ${BASE_HOST}      http://localhost:9000/ui/index.html
@@ -11,13 +12,15 @@ ${PASSWORD}       asdasd
 
 *** Test Cases ***
 Valid Login
-    [Documentation]    Check that we can loging into the administrator console
+    [Documentation]
+    ...    Check that we can loging into the administrator console and click the backup tab it expects to see the no
+    ...    instance exists message.
     Open browser to main page
-    Input username    ${USERNAME}
-    Input password    ${PASSWORD}
+    Input text        name:username    ${USERNAME}
+    Input password    name:password    ${PASSWORD}
     Submit credentials
-    Click link    linkText=Backup
-    Location should be    /ui/index.html#/backup/instances
+    Go to backup tab
+    Confirm that no instance page shows
     [Teardown]    Close browser
 
 
@@ -26,13 +29,14 @@ Open browser to main page
     Open browser    ${BASE_HOST}    ${BROWSER}
     Sleep           2s
 
-Input username
-    [Arguments]    ${username}
-    Input Text     name=username    ${username}
-
-Input password
-    [Arguments]    ${password}
-    Input text     name=password    ${password}
-
 Submit credentials
-    Click button    tag=button
+    Click button    tag:button
+
+Go to backup tab
+    Wait until element is visible    link:Backup
+    Click link                       link:Backup
+    Location should contain          /ui/index.html#/backup/instances
+
+Confirm that no instance page shows
+    Wait until element is visible    class:zero-content
+    Page should contain              No instances are registered
