@@ -11,7 +11,7 @@ ${PASSWORD}       asdasd
 
 
 *** Test Cases ***
-Valid Login
+Loging and go to backup tab
     [Documentation]
     ...    Check that we can loging into the administrator console and click the backup tab it expects to see the no
     ...    instance exists message.
