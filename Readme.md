@@ -2,7 +2,7 @@ Examinador
 ======
 
 Examinador is a framework a tool to run integration tests for the backup service.
-To use the tool you will need Python 3.5.
+To use the tool you will need Python 3.6.
 
 Create and activate a virtual environment
 

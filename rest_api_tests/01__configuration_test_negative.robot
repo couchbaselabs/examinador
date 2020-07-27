@@ -33,7 +33,23 @@ Try to update to invalid values
     -1          5         # One of the values is out of the integer range
     5.1         100.5     # Floats should not be allowed
     3           90000     # Second value is outside the range
+    {"a":1}     20        # One of them is a JSON object
 
+Try to patch without sending values
+    [Tags]    patch
+    [Documentation]     Try to do a patch operation on the configuration with an empty body
+    ${before}=    Get config
+    ${resp}=      POST request    backup_service    /config    {}
+    Expect bad request response and no config change    ${resp}    ${before}
+
+Try to patch with invalid values
+    [Tags]    post
+    [Template]    Patch config with invalid values
+    "alpha"    "omega"    # Try strings
+    -1          5         # One of the values is out of the integer range
+    5.1         100.5     # Floats should not be allowed
+    3           90000     # Second value is outside the range
+    {"a":1}     20        # One of them is a JSON object
 
 *** Keywords ***
 Create REST session
@@ -48,6 +64,12 @@ Get config
     Status should be           200               ${resp}
     [Return]    ${resp.json()}
 
+Expect bad request response and no config change
+    [Arguments]    ${resp}    ${before}
+    Status should be    400    ${resp}
+    ${after}=           Get config
+    Dictionaries should be equal     ${after}    ${before}    The configuration should have not changed
+
 Update config with invalid values
     [Arguments]    ${history_rotation_period}    ${history_rotation_size}
     [Documentation]
@@ -56,6 +78,14 @@ Update config with invalid values
     ${before}=    Get config
     ${resp}=      POST request    backup_service    /config
     ...     {"history_rotation_period":${history_rotation_period},"history_rotation_size":${history_rotation_size}}
-    Status should be    400    ${resp}
-    ${after}=           Get config
-    Dictionaries should be equal     ${after}    ${before}    The configuration should have not changed
+    Expect bad request response and no config change    ${resp}    ${before}
+
+Patch config with invalid values
+    [Arguments]    ${history_rotation_period}    ${history_rotation_size}
+    [Documentation]
+    ...         Sends a PATCH request with the given values which should be invalid. It expects the service to return
+    ...         with status 400 and the configuration value to stay the same before and after the PATCH request.
+    ${before}=    Get config
+    ${resp}=      PATCH request    backup_service    /config
+    ...     {"history_rotation_period":${history_rotation_period},"history_rotation_size":${history_rotation_size}}
+    Expect bad request response and no config change    ${resp}    ${before}

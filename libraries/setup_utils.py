@@ -7,6 +7,9 @@ from robot.api.deco import keyword
 from robot.api import logger
 
 
+ROBOT_AUTO_KEYWORDS = False
+
+
 @keyword(types=[str, int, str, int, int])
 def connect_nodes(cwd: str, node_num: int, services: str, data_size: int = 256, wait_for: int = 30):
     """Runs cluster connect with the given options. It will sleep for wait_for seconds after to give time for the
