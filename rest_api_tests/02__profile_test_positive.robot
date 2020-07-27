@@ -35,6 +35,29 @@ Try add profile with long name and description
     ${description}=    Generate random string    120
     Add profile and confirm addition    ${name}     "${description}"    []    []
 
+Try add profile that only affects data service
+    [Tags]    post
+    Add profile and confirm addition    only-data     ""    ["data"]    []
+
+Try add profile that with one task
+    [Tags]    post
+    Add profile and confirm addition    one-tasks     ""    []    [{"name":"task-1","task_type":"BACKUP","full_backup":true,"schedule":{"job_type":"BACKUP","frequency":3,"period":"MINUTES"}}]
+
+Try add task with different periods
+    [Tags]    post
+    [Template]    Add task with period "${period}"
+    MINUTES
+    HOURS
+    DAYS
+    WEEKS
+    MONDAY
+    TUESDAY
+    WEDNESDAY
+    THURSDAY
+    FRIDAY
+    SATURDAY
+    SUNDAY
+
 *** Keywords ***
 Set basic auth
     [Arguments]        ${username}=Administrator    ${password}=asdasd
@@ -51,6 +74,9 @@ Add profile and confirm addition
     ${resp}=           Get request         backup_service    /profile/${name}
     Status should be   200                 ${resp}
     Dictionary like equals    ${resp.json()}    {"name":"${name}","description":${description},"services":${services},"tasks":${tasks}}    ['description']
+
+Add task with period "${period}"
+    Add profile and confirm addition    profile-${period}    ""    []    [{"name":"task-1","task_type":"BACKUP","full_backup":true,"schedule":{"job_type":"BACKUP","frequency":3,"period":"${period}"}}]
 
 Create REST session
     [Arguments]        ${user}    ${password}
