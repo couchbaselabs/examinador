@@ -74,7 +74,7 @@ Update config with invalid values
     [Arguments]    ${history_rotation_period}    ${history_rotation_size}
     [Documentation]
     ...         Sends a POST request with the given values which should be invalid. It expects the service to return
-    ...         with status 404 and the configuration value to stay the same before and after the POST request.
+    ...         with status 404 qand the configuration value to stay the same before and after the POST request.
     ${before}=    Get config
     ${resp}=      POST request    backup_service    /config
     ...     {"history_rotation_period":${history_rotation_period},"history_rotation_size":${history_rotation_size}}

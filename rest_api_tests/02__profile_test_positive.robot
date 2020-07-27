@@ -50,7 +50,7 @@ Add profile and confirm addition
     Integer            response status     200
     ${resp}=           Get request         backup_service    /profile/${name}
     Status should be   200                 ${resp}
-    Dictionaries should be equal    ${resp.json()}    {"name":"${name}","description":${description},"services":${services},"tasks":${tasks}}
+    Dictionary like equals    ${resp.json()}    {"name":"${name}","description":${description},"services":${services},"tasks":${tasks}}    ['description']
 
 Create REST session
     [Arguments]        ${user}    ${password}
