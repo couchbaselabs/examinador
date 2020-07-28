@@ -1,11 +1,12 @@
 *** Settings ***
-Documentation    Test that all allowed profile realted actions via the REST API work as intended.
+Documentation    Test that are all allowed profile realted actions via the REST API work as intended.
 Force Tags       positive    profile
 Library          Collections
 Library          REST    ${BACKUP_HOST}
 Library          RequestsLibrary
 Library         ../libraries/rest_utils.py
 Library         ../libraries/utils.py
+Resource        ../resources/rest.resource
 Suite setup     Create REST session and auth
 
 *** Variables  ***
@@ -58,13 +59,14 @@ Try add task with different periods
     SATURDAY
     SUNDAY
 
-*** Keywords ***
-Set basic auth
-    [Arguments]        ${username}=Administrator    ${password}=asdasd
-    [Documentation]    Sets a suite variable BASIC_AUTH with the encoded basic auth to use in request headers.
-    ${auth}=              Get basic auth        ${username}    ${password}
-    Set suite variable    ${BASIC_AUTH}         {"authorization":"${auth}"}
+Try and delete profile
+    [Tags]     delete
+    DELETE     /profile/only-data    headers=${BASIC_AUTH}
+    Integer    response status       200
+    GET        /profile/only-data
+    Integer    response status       500
 
+*** Keywords ***
 Add profile and confirm addition
     [Arguments]        ${name}    ${description}=None    ${services}=None    ${tasks}=None
     [Documentation]    Adds a new profile.
@@ -77,14 +79,3 @@ Add profile and confirm addition
 
 Add task with period "${period}"
     Add profile and confirm addition    profile-${period}    ""    []    [{"name":"task-1","task_type":"BACKUP","full_backup":true,"schedule":{"job_type":"BACKUP","frequency":3,"period":"${period}"}}]
-
-Create REST session
-    [Arguments]        ${user}    ${password}
-    [Documentation]    Creates a client that can be used to communicate to the client instead of creating one per test.
-    ${auth}=           Create List             ${user}                 ${password}
-    Create session     backup_service          ${BACKUP_HOST}          auth=${auth}
-
-Create REST session and auth
-    [Arguments]        ${username}=Administrator    ${password}=asdasd
-    Set basic auth         ${username}    ${password}
-    Create REST session    ${username}    ${password}

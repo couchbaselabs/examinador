@@ -9,6 +9,7 @@ ${WAIT_UNTIL_READY}    30
 ${RUNNING_MODE}        CV
 ${SKIP_SETUP}          False
 ${SKIP_TEARDOWN}       False
+${DELETE_LOGS}         TRUE
 
 *** Keywords ***
 Remove cluster run data and logs
@@ -51,7 +52,7 @@ Clean up running nodes
     Log                  Terminating cluster
     Terminate process    cluster    kill=true
     Log                  Cluster terminated
-    Remove cluster run data and logs
+    Run keyword if       ${DELETE_LOGS}                 Remove cluster run data and logs
 
 Stop nodes and clean up data only if test pass
     [Documentation]
