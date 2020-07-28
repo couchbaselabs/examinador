@@ -63,8 +63,8 @@ Try and delete profile
     [Tags]     delete
     DELETE     /profile/only-data    headers=${BASIC_AUTH}
     Integer    response status       200
-    GET        /profile/only-data
-    Integer    response status       500
+    GET        /profile/only-data    headers=${BASIC_AUTH}
+    Integer    response status       404
 
 *** Keywords ***
 Add profile and confirm addition
