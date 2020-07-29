@@ -8,11 +8,14 @@ Library         Collections
 Library         REST        ${BACKUP_HOST}
 Library         ../libraries/utils.py
 Resource        ../resources/rest.resource
-Suite setup        Create client and instance dir
+Suite setup        Create client and instance dir    add_active_instance
 Suite Teardown     Remove Directory    ${TEMP_DIR}${/}add_active_instance    recursive=True
 
 *** Variables  ***
 ${BACKUP_HOST}    http://localhost:7101/api/v1
+${CB_NODE}        http://localhost:9001
+${USER}           Administrator
+${PASSWORD}       asdasd
 
 *** Test Cases ***
 Get empty instances
@@ -90,6 +93,18 @@ Archive active instance
     # Delete does not delete the data so ensure it still exists
     Directory should exist        ${archived.json()["archive"]}${/}${archived.json()["repo"]}
 
+Add bucket level instance
+    [Tags]     post
+    [Setup]    Create CB bucket if it does not exist    default
+    [Teardown]    Remove directory    ${TEMP_DIR}${/}bucket_instance    recursive=True
+    [Documentation]    This test will create an instance that should only backup the default bucket. This test will
+    ...   create a bucket 'default', if it is not already present in the system.
+    Create Directory    ${TEMP_DIR}${/}bucket_instance
+    POST    /cluster/self/instance/active/bucket-instance    {"profile":"empty", "archive":"${TEMP_DIR}${/}bucket_instance", "bucket_name":"default"}    headers=${BASIC_AUTH}
+    Integer    response status    200
+    GET    /cluster/self/instance/active/bucket-instance    headers=${BASIC_AUTH}
+    String    $.bucket.name    default
+
 *** Keywords ***
 Get empty ${state} instances
     [Documentation]    Retrieves the instances in the state ${state} and checks that it gets and empty array
@@ -97,9 +112,11 @@ Get empty ${state} instances
     Integer    response status                    200
     Array      response body                      maxItems=0
 
-Create client and instance dir
-    [Documentation]
-    ...    It creates the rest client as well as initializes the basic auth headers. It also creates the temporary
-    ...    directory to use as an archive for this tests.
-    Create REST session and auth
-    Create Directory    ${TEMP_DIR}${/}add_active_instance
+Create CB bucket if it does not exist
+    [Arguments]    ${bucket}    ${ramQuota}=100
+    ${auth}=    Create List    ${USER}    ${PASSWORD}
+    Create session    admin_api    ${CB_NODE}    auth=${auth}
+    ${resp}=    Get request    admin_api    /pools/default/buckets/${bucket}
+    Return from keyword if    ${resp.status_code} == 200
+    ${resp}=    Post request    admin_api    /pools/default/buckets    {"name":"${bucket}","ramQuota":${ramQuota},"replicaNumber":0,"bucketType":"couchbase"}
+    Status should be    200    ${resp}

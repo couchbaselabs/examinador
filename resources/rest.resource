@@ -19,3 +19,11 @@ Create REST session and auth
     [Arguments]        ${username}=Administrator    ${password}=asdasd
     Set basic auth         ${username}    ${password}
     Create REST session    ${username}    ${password}
+
+Create client and instance dir
+    [Arguments]    ${dir_name}
+    [Documentation]
+    ...    It creates the rest client as well as initializes the basic auth headers. It also creates the temporary
+    ...    directory to use as an archive for this tests.
+    Create REST session and auth
+    Create Directory    ${TEMP_DIR}${/}${dir_name}
