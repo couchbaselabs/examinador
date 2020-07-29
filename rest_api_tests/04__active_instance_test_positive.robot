@@ -8,7 +8,8 @@ Library         Collections
 Library         REST        ${BACKUP_HOST}
 Library         ../libraries/utils.py
 Resource        ../resources/rest.resource
-Suite setup     Create REST session and auth
+Suite setup        Create client and instance dir
+Suite Teardown     Remove Directory    ${TEMP_DIR}${/}add_active_instance    recursive=True
 
 *** Variables  ***
 ${BACKUP_HOST}    http://localhost:7101/api/v1
@@ -27,8 +28,6 @@ Add active instance and confirm
     [Documentation]
     ...    This test will create a simple profile added and then create an instance with that profile then it will check
     ...    that the instance has been created and tasks are scheduled as expected.
-    [Setup]        Create Directory    ${TEMP_DIR}${/}add_active_instance
-    [Teardown]     Remove Directory    ${TEMP_DIR}${/}add_active_instance    recursive=True
     POST       /profile/add_active_instance    {"tasks":[{"name":"t1","task_type":"BACKUP","schedule":{"job_type":"BACKUP","frequency":10,"period":"HOURS"}}]}    headers=${BASIC_AUTH}
     Integer    response status                 200
     POST       /cluster/self/instance/active/add_active_instance    {"archive":"${TEMP_DIR}${/}add_active_instance", "profile":"add_active_instance"}    headers=${BASIC_AUTH}
@@ -70,9 +69,28 @@ Pause and resume instance before next supposed task run
     Should be equal     ${resumed.json()["state"]}              active
     Should be equal     ${resumed.json()["scheduled"]["t1"]["next_run"]}    ${original.json()["scheduled"]["t1"]["next_run"]}
 
+Archive active instance
+    [Tags]    post
+    [Documentation]
+    ...    Archive an active instance and then deleted. It will use the the same instance that was created in previous
+    ...    tests
+    POST    /cluster/self/instance/active/add_active_instance/archive    {"id":"archived-id"}    headers=${BASIC_AUTH}
+    Integer    response status    200
+    ${archived}=    Get request    backup_service    /cluster/self/instance/archived/archived-id
+    Status should be    200    ${archived}
+    ${original}=    Get request    backup_service    /cluster/self/instance/active/add_active_instance
+    Status should be    404    ${original}
+
 *** Keywords ***
 Get empty ${state} instances
     [Documentation]    Retrieves the instances in the state ${state} and checks that it gets and empty array
     GET        /cluster/self/instance/${state}    headers=${BASIC_AUTH}
     Integer    response status                    200
     Array      response body                      maxItems=0
+
+Create client and instance dir
+    [Documentation]
+    ...    It creates the rest client as well as initializes the basic auth headers. It also creates the temporary
+    ...    directory to use as an archive for this tests.
+    Create REST session and auth
+    Create Directory    ${TEMP_DIR}${/}add_active_instance
