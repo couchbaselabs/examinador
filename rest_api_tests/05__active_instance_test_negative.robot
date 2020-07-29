@@ -14,16 +14,21 @@ Suite Teardown     Remove Directory    ${TEMP_DIR}${/}negative_instance_dir    r
 *** Variables  ***
 ${BACKUP_HOST}    http://localhost:7101/api/v1
 ${CB_NODE}        http://localhost:9001
+${TEST_DIR}       ${TEMP_DIR}${/}negative_instance_dir
 
 *** Test Cases ***
-Add instance without a profile
-    POST    /cluster/self/instance/active/negative_add_instance    {"archive":"${TEMP_DIR}${/}negative_instance_dir"}    headers=${BASIC_AUTH}
-    Integer    response status    400
-
+Add invalid instances
+    [Tags]    post
+    [Documentation]    Do a set of profile add requests that should be rejected by the server.
+    [Template]         Add invalid instance
+    *invalid*name             empty    ${TEST_DIR}
+    no-profile                \        ${TEST_DIR}
+    no-archive                empty
+    bucket-does-not-exist     empty    ${TEST_DIR}    fake-bucket
 
 *** Keywords ***
 Add invalid instance
-    [Arguments]    ${name}    ${profile}    ${archive}    ${bucket}    ${expected}=400
+    [Arguments]    ${name}    ${profile}=\   ${archive}=\    ${bucket}=\    ${expected}=400
     [Documentation]    Tries and create an instance with the given arguments
     POST    /cluster/self/instance/active/${name}    {"archive":"${archive}","profile":"${profile}","bucket_name":"${bucket}"}    headers=${BASIC_AUTH}
     Integer    response status   ${expected}
