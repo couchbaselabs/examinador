@@ -26,6 +26,16 @@ Add invalid instances
     no-archive                empty
     bucket-does-not-exist     empty    ${TEST_DIR}    fake-bucket
 
+Try and delete active instance
+    [Tags]    delete
+    [Documentation]    Deleting an active instance is not allowed.
+    POST      /cluster/self/instance/active/negative_instance    {"archive":"${TEST_DIR}", "profile":"empty"}    headers=${BASIC_AUTH}
+    Integer   response status    200
+    DELETE    /cluster/self/instance/active/negative_instance    headers=${BASIC_AUTH}
+    Integer   response status    400
+    GET       /cluster/self/instance/active/negative_instance    headers=${BASIC_AUTH}
+    Integer   response status    200
+
 *** Keywords ***
 Add invalid instance
     [Arguments]    ${name}    ${profile}=\   ${archive}=\    ${bucket}=\    ${expected}=400
