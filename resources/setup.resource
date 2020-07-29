@@ -5,11 +5,11 @@ Library           ../libraries/setup_utils.py
 
 *** Variables ***
 ${NS_SERVER_PATH}      %{HOME}/source/ns_server
-${WAIT_UNTIL_READY}    30
+${WAIT_UNTIL_READY}    15
 ${RUNNING_MODE}        CV
 ${SKIP_SETUP}          False
 ${SKIP_TEARDOWN}       False
-${DELETE_LOGS}         TRUE
+${DELETE_LOGS}         True
 
 *** Keywords ***
 Remove cluster run data and logs

@@ -1,14 +1,18 @@
 """This contain miscelaneous utility funtions used by the tests"""
-import random
-import string
 import json
+import random
+import re
+import string
+from datetime import datetime
 from typing import Dict, Union, List
 
+from dateutil.parser import parse
 from robot.api.deco import keyword
 from robot.api import logger
 
 
 ROBOT_AUTO_KEYWORDS = False
+DURATION_FORMAT = r'((?P<days>\d+)d ?)?((?P<hours>\d+)h ?)?((?P<minutes>\d+)m ?)?((?P<seconds>\d+)s ?)?$'
 
 
 @keyword(types=[int, str, str])
@@ -42,6 +46,32 @@ def generate_random_task_template(number: int = 1, valid: bool = True) -> str:
     return json.dumps(
         [generate_valid_task_template() if valid else generate_invalid_task_template() for i in range(0, number)]
     )
+
+
+@keyword(types=[str, str, int])
+def should_be_approx_x_from_now(time_str: str, offset: str = '1h', error_margin: int = 3600):
+    """Checks whether a time represented by 'time_str' is approximately 'offset' from now. The acceptable error margin
+    is error_margin in seconds.
+    """
+    timestamp = parse(time_str)
+    now = datetime.now(timestamp.tzinfo)
+    match = re.fullmatch(DURATION_FORMAT, offset)
+    if not match:
+        raise ValueError(f'Invalid offset {offset}')
+
+    logger.info(match)
+
+    days = int(match.group('days')) if match.group('days') else 0
+    hours = int(match.group('hours')) if match.group('hours') else 0
+    minutes = int(match.group('minutes')) if match.group('minutes') else 0
+    seconds = int(match.group('seconds')) if match.group('seconds') else 0
+    expected_diff = days * 86400 + hours * 3600 + minutes * 60 + seconds
+    diff = (timestamp - now).total_seconds()
+    logger.info(f'Got time {timestamp} now {now}')
+    logger.info(f'Offset {offset} diff {diff} expected_diff {expected_diff} margin {error_margin}s')
+    if abs(diff - expected_diff) > error_margin:
+        raise AssertionError(f'The task was scheduled at {timestamp} when it should have been scheduled at'
+                             f'{now} + {offset} with a margin of {error_margin}s')
 
 
 def generate_valid_task_template() -> Dict:

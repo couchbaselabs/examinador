@@ -1,5 +1,6 @@
 *** Settings ***
 Library    RequestsLibrary
+Library    ../libraries/rest_utils.py
 
 *** Keywords ***
 Set basic auth
