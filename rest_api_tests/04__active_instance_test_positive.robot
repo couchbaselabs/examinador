@@ -27,7 +27,8 @@ Add active instance and confirm
     [Tags]    get post
     [Documentation]
     ...    This test will create a simple profile added and then create an instance with that profile then it will check
-    ...    that the instance has been created and tasks are scheduled as expected.
+    ...    that the instance has been created and tasks are scheduled as expected and that the cbbackupmgr repo was
+    ...    created.
     POST       /profile/add_active_instance    {"tasks":[{"name":"t1","task_type":"BACKUP","schedule":{"job_type":"BACKUP","frequency":10,"period":"HOURS"}}]}    headers=${BASIC_AUTH}
     Integer    response status                 200
     POST       /cluster/self/instance/active/add_active_instance    {"archive":"${TEMP_DIR}${/}add_active_instance", "profile":"add_active_instance"}    headers=${BASIC_AUTH}
@@ -38,6 +39,7 @@ Add active instance and confirm
     Log     ${resp.json()}    level=DEBUG
     Should be equal                            ${resp.json()["profile_name"]}                   add_active_instance
     Should be approx x from now                ${resp.json()["scheduled"]["t1"]["next_run"]}    10h
+    Directory should exist                     ${resp.json()["archive"]}${/}${resp.json()["repo"]}
 
 Pause and resume instance before next supposed task run
     [Tags]    post
@@ -72,14 +74,21 @@ Pause and resume instance before next supposed task run
 Archive active instance
     [Tags]    post
     [Documentation]
-    ...    Archive an active instance and then deleted. It will use the the same instance that was created in previous
-    ...    tests
+    ...    Archive an active instance and then delete it. It will use the the same instance that was created in previous
+    ...    tests. It will also check that when the archived instance is deleting *without* forcing the deletion of the
+    ...    cbbackupmgr repository, the repository is still there.
     POST    /cluster/self/instance/active/add_active_instance/archive    {"id":"archived-id"}    headers=${BASIC_AUTH}
     Integer    response status    200
     ${archived}=    Get request    backup_service    /cluster/self/instance/archived/archived-id
     Status should be    200    ${archived}
     ${original}=    Get request    backup_service    /cluster/self/instance/active/add_active_instance
     Status should be    404    ${original}
+    DELETE     /cluster/self/instance/archived/archived-id    headers=${BASIC_AUTH}
+    Integer    response status     200
+    ${not_found}=    Get request    backup_service    /cluster/self/instance/archived/archived-id
+    Status should be    404        ${not_found}
+    # Delete does not delete the data so ensure it still exists
+    Directory should exist        ${archived.json()["archive"]}${/}${archived.json()["repo"]}
 
 *** Keywords ***
 Get empty ${state} instances
