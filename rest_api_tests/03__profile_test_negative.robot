@@ -2,6 +2,7 @@
 Documentation    Test that all invalid profile realted actions via the REST API.
 Force Tags       negative    profile
 Library          Collections
+Library          OperatingSystem
 Library          REST    ${BACKUP_HOST}
 Library          RequestsLibrary
 Library         ../libraries/rest_utils.py
@@ -65,6 +66,21 @@ Try to add profile with to many tasks
     [Tags]       post
     ${tasks}=    Generate random task template    number=15
     Send invalid profile    to-many-tasks    ""    []    ${tasks}
+
+Try and delete a profile that is being used
+    [Tags]    delete
+    [Documentation]    Trying to delete a profile that is in use should return an error. This test will create an
+    ...                instance using the duplication profile and attempt to delete the profile. This should fail. After
+    ...                it will remove the instance.
+    [Setup]    Run Keywords        Create directory    ${TEMP_DIR}${/}delete_in_use    AND
+    ...        POST      /cluster/self/instance/active/delete_in_use            {"archive":"${TEMP_DIR}${/}delete_in_use}", "profile": "duplication"}    headers=${BASIC_AUTH}
+    [Teardown]    Run keywords     Remove directory    ${TEMP_DIR}${/}delete_in_use    recursive=True    AND
+    ...           POST      /cluster/self/instance/active/delete_in_use/archive    {"id":"delete_in_use"}    headers=${BASIC_AUTH}    AND
+    ...           DELETE    /cluster/self/instance/archived/delete_in_use          headers=${BASIC_AUTH}
+    DELETE    /profile/duplication    headers=${BASIC_AUTH}
+    Integer   response status         400
+    GET       /profile/duplication    headers=${BASIC_AUTH}
+    Integer   response status         200
 
 *** Keywords ***
 Add profile with invalid name
