@@ -8,6 +8,7 @@ Library         Collections
 Library         REST        ${BACKUP_HOST}
 Library         ../libraries/utils.py
 Resource        ../resources/rest.resource
+Resource        ../resources/couchbase.resource
 Suite setup        Create client and instance dir    add_active_instance
 Suite Teardown     Remove Directory    ${TEMP_DIR}${/}add_active_instance    recursive=True
 
@@ -111,12 +112,3 @@ Get empty ${state} instances
     GET        /cluster/self/instance/${state}    headers=${BASIC_AUTH}
     Integer    response status                    200
     Array      response body                      maxItems=0
-
-Create CB bucket if it does not exist
-    [Arguments]    ${bucket}    ${ramQuota}=100
-    ${auth}=    Create List    ${USER}    ${PASSWORD}
-    Create session    admin_api    ${CB_NODE}    auth=${auth}
-    ${resp}=    Get request    admin_api    /pools/default/buckets/${bucket}
-    Return from keyword if    ${resp.status_code} == 200
-    ${resp}=    Post request    admin_api    /pools/default/buckets    {"name":"${bucket}","ramQuota":${ramQuota},"replicaNumber":0,"bucketType":"couchbase"}
-    Status should be    200    ${resp}

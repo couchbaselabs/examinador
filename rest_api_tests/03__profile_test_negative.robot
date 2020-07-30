@@ -39,7 +39,6 @@ Try to add profile that already exists
     Status should be                   200                       ${resp}
     Dictionary like equals             ${resp.json()}            {"name":"duplication","services":null,"tasks":null}
 
-
 Try to delete profile that does not exist
     [Tags]    delete
     DELETE    /profile/it-does-not-exist    headers=${BASIC_AUTH}
