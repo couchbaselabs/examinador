@@ -36,9 +36,15 @@ Try and delete active instance
     GET       /cluster/self/instance/active/negative_instance    headers=${BASIC_AUTH}
     Integer   response status    200
 
+Try and add active instace with same name
+    [Tags]    post
+    [Documentation]    Try and add an instance with the same name as a previous one. This test relies on the test "try
+    ...                and delete active instance" to succeed adding the instance "negative instance"
+    Add invalid instance    negative_instance    empty    ${TEST_DIR}
+
 *** Keywords ***
 Add invalid instance
     [Arguments]    ${name}    ${profile}=\   ${archive}=\    ${bucket}=\    ${expected}=400
     [Documentation]    Tries and create an instance with the given arguments
     POST    /cluster/self/instance/active/${name}    {"archive":"${archive}","profile":"${profile}","bucket_name":"${bucket}"}    headers=${BASIC_AUTH}
-    Integer    response status   ${expected}
+    Integer    response status    ${expected}
