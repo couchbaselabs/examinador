@@ -27,9 +27,11 @@ ${ADHOC_INSTANCE}    trigger-task-instance
 Try trigger a backup
     [Tags]    post
     [Documentation]    Trigger an adhoc full backup.
+    # Trigger a full backup
     ${trigger}=         Post request    backup_service    /cluster/self/instance/active/trigger-task-instance/backup    {"full_backup":true}
     Status should be    200                  ${trigger}
     Log                 ${trigger.json()}    DEBUG
+    # Confirm task is running
     ${resp}=            Get request     backup_service    /cluster/self/instance/active/trigger-task-instance
     Status should be                 200               ${resp}
     Log                              ${resp.json()}    DEBUG
@@ -37,12 +39,18 @@ Try trigger a backup
     Dictionary should contain key    ${resp.json()["running_one_off"]}    ${trigger.json()["task_name"]}
     ${task}=                         Get from dictionary                  ${resp.json()["running_one_off"]}    ${trigger.json()["task_name"]}
     Should be equal                  ${task["type"]}                      BACKUP
+    # Check that the task finishes and it is add to history
     Wait until one off task is finished    ${BACKUP_NODE}    ${task["task_name"]}    trigger-task-instance
     Get    /cluster/self/instance//active/trigger-task-instance/taskHistory    headers=${BASIC_AUTH}
     Integer    response status    200
     Array      response body      minItems=1    maxItems=1
     String     $.[0].task_name         ${task["task_name"]}
     String     $.[0].status       done
+    # Confirm that the backup was actually done by using info
+    ${resp}=    Get request    backup_service    /cluster/self/instance/active/trigger-task-instance
+    Status should be    200    ${resp}
+    Length shoud be     ${resp.json()["backups"]}    1
+    Should be equal     ${resp.json()["backups"][0]["type"]}    FULL
 
 *** Keywords ***
 Create instance for triggering adhoc tasks
