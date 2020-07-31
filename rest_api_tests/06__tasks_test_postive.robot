@@ -24,33 +24,40 @@ ${TEST_DIR}       ${TEMP_DIR}${/}trigger_tasks
 ${ADHOC_INSTANCE}    trigger-task-instance
 
 *** Test Cases ***
-Try trigger a backup
+Try trigger a full backup
     [Tags]    post
     [Documentation]    Trigger an adhoc full backup.
     # Trigger a full backup
-    ${trigger}=         Post request    backup_service    /cluster/self/instance/active/trigger-task-instance/backup    {"full_backup":true}
-    Status should be    200                  ${trigger}
-    Log                 ${trigger.json()}    DEBUG
+    ${backup_name}=    Trigger backup    full=true
     # Confirm task is running
-    ${resp}=            Get request     backup_service    /cluster/self/instance/active/trigger-task-instance
-    Status should be                 200               ${resp}
-    Log                              ${resp.json()}    DEBUG
-    Length should be                 ${resp.json()["running_one_off"]}    1
-    Dictionary should contain key    ${resp.json()["running_one_off"]}    ${trigger.json()["task_name"]}
-    ${task}=                         Get from dictionary                  ${resp.json()["running_one_off"]}    ${trigger.json()["task_name"]}
-    Should be equal                  ${task["type"]}                      BACKUP
+    ${task}=    Confirm task is running    ${backup_name}    trigger-task-instance
     # Check that the task finishes and it is add to history
-    Wait until one off task is finished    ${BACKUP_NODE}    ${task["task_name"]}    trigger-task-instance
-    Get    /cluster/self/instance//active/trigger-task-instance/taskHistory    headers=${BASIC_AUTH}
-    Integer    response status    200
-    Array      response body      minItems=1    maxItems=1
-    String     $.[0].task_name         ${task["task_name"]}
-    String     $.[0].status       done
+    Wait until one off task is finished    ${BACKUP_NODE}    ${backup_name}    trigger-task-instance
+    ${history}=         Get task history    trigger-task-instance
+    Length should be    ${history}          1
+    Confirm task is last and successfull   ${history}    ${backup_name}
     # Confirm that the backup was actually done by using info
-    ${resp}=    Get request    backup_service    /cluster/self/instance/active/trigger-task-instance
-    Status should be    200    ${resp}
-    Length shoud be     ${resp.json()["backups"]}    1
+    ${resp}=    Get request    backup_service    /cluster/self/instance/active/trigger-task-instance/info
+    Status should be    200                                     ${resp}
+    Log                 ${resp.json()}                          DEBUG
+    Length should be    ${resp.json()["backups"]}               1
     Should be equal     ${resp.json()["backups"][0]["type"]}    FULL
+
+Trigger an incremental backup
+    [Tags]    post
+    [Documentation]    Trigger an incremantal backup.
+    ${backup_name}=     Trigger backup             full=false
+    ${task}=            Confirm task is running    ${backup_name}    trigger-task-instance
+    Wait until one off task is finished            ${BACKUP_NODE}    ${backup_name}            trigger-task-instance
+    ${history}=         Get task history           trigger-task-instance
+    Confirm task is last and successfull           ${history}        ${backup_name}
+    # Confirm that the backup was actually done by using info
+    ${resp}=    Get request    backup_service    /cluster/self/instance/active/trigger-task-instance/info
+    Status should be    200                                     ${resp}
+    Log                 ${resp.json()}                          DEBUG
+    Length should be    ${resp.json()["backups"]}               2
+    Should be equal     ${resp.json()["backups"][1]["type"]}    INCR
+
 
 *** Keywords ***
 Create instance for triggering adhoc tasks
@@ -60,5 +67,34 @@ Create instance for triggering adhoc tasks
     Create directory    ${TEST_DIR}${/}${archive}
     POST                /profile/${profile}    {}    headers=${BASIC_AUTH}
     Integer             response status        200
-    POST                /cluster/self/instance/active/${name}    {"archive":"${archive}", "profile":"${profile}"}    headers=${BASIC_AUTH}
+    POST                /cluster/self/instance/active/${name}    {"archive":"${TEST_DIR}${/}${archive}", "profile":"${profile}"}    headers=${BASIC_AUTH}
     Integer             response status        200
+
+Trigger backup
+    [Arguments]         ${full}=false
+    ${trigger}=         Post request    backup_service    /cluster/self/instance/active/trigger-task-instance/backup    {"full_backup":${full}}
+    Status should be    200                  ${trigger}
+    Log                 ${trigger.json()}    DEBUG
+    Return from keyword    ${trigger.json()["task_name"]}
+
+Confirm task is running
+    [Arguments]    ${task_name}    ${instance}    ${state}=active    ${task_type}=BACKUP
+    ${resp}=            Get request     backup_service    /cluster/self/instance/${state}/${instance}
+    Status should be                 200               ${resp}
+    Log                              ${resp.json()}    DEBUG
+    Dictionary should contain key    ${resp.json()["running_one_off"]}    ${task_name}
+    ${task}=                         Get from dictionary                  ${resp.json()["running_one_off"]}    ${task_name}
+    Should be equal                  ${task["type"]}                      ${task_type}
+    Return from keyword              ${task}
+
+Get task history
+    [Arguments]   ${instance}    ${state}=active
+    [Documentation]    Gets the task history for the requested instance.
+    ${resp}=            Get request      backup_service   /cluster/self/instance/${state}/${instance}/taskHistory
+    Status should be    200              ${resp}
+    Return from keyword                  ${resp.json()}
+
+Confirm task is last and successfull
+    [Arguments]        ${history}                    ${backup_name}
+    Should be equal    ${history[0]["task_name"]}    ${backup_name}
+    Should be equal    ${history[0]["status"]}       done

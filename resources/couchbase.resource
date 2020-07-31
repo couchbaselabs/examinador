@@ -21,6 +21,6 @@ Load documents into bucket using cbm
     [Arguments]    ${items}=1000    ${bucket}=default    ${host}=http://localhost:9000    ${user}=Administrator
     ...            ${password}=asdasd    ${size}=1024
     [Documentation]    Uses cbbackupmgr generator to load data into the bucket
-    ${result}=    Run process    ${BIN_PATH}/cbbackupmgr    generate    -c    ${host}    -u    ${user}    -p ${password}
+    ${result}=    Run process    ${BIN_PATH}/cbbackupmgr    generate    -c    ${host}    -u    ${user}    -p     ${password}
     ...           -n    ${items}    -b     ${bucket}    -L    -j    -s    ${size}
     Should Be Equal As Integers    ${result.rc}    0
