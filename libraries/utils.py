@@ -51,7 +51,7 @@ def wait_until_one_off_task_is_finished(host: str, task_name: str, instance_name
             # if no running one offs assume task is finished
             return
 
-        time.sleep(1)
+        time.sleep(1 * (retries + 1))
         continue
 
     raise AssertionError('Task is not finished')

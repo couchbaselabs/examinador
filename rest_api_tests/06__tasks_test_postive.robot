@@ -25,7 +25,7 @@ ${ADHOC_INSTANCE}    trigger-task-instance
 
 *** Test Cases ***
 Try trigger a full backup
-    [Tags]    post
+    [Tags]    post    backup    full
     [Documentation]    Trigger an adhoc full backup.
     # Trigger a full backup
     ${backup_name}=    Trigger backup    full=true
@@ -44,7 +44,7 @@ Try trigger a full backup
     Should be equal     ${resp.json()["backups"][0]["type"]}    FULL
 
 Trigger an incremental backup
-    [Tags]    post
+    [Tags]    post    backup    incr
     [Documentation]    Trigger an incremantal backup.
     ${backup_name}=     Trigger backup             full=false
     ${task}=            Confirm task is running    ${backup_name}    trigger-task-instance
@@ -57,6 +57,18 @@ Trigger an incremental backup
     Log                 ${resp.json()}                          DEBUG
     Length should be    ${resp.json()["backups"]}               2
     Should be equal     ${resp.json()["backups"][1]["type"]}    INCR
+
+Merge everything together
+    [Tags]    post    merge
+    [Documentation]    Merge all backups
+    ${merge}=    Trigger a merge
+    ${task}=     Confirm task is running    ${merge}          trigger-task-instance    task_type=MERGE
+    Wait until one off task is finished     ${BACKUP_NODE}    ${merge}                 trigger-task-instance
+    ${resp}=    Get request    backup_service    /cluster/self/instance/active/trigger-task-instance/info
+    Status should be    200                                     ${resp}
+    Log                 ${resp.json()}                          DEBUG
+    Length should be    ${resp.json()["backups"]}               1
+    Should be equal     ${resp.json()["backups"][0]["type"]}    MERGE - FULL
 
 
 *** Keywords ***
@@ -76,6 +88,12 @@ Trigger backup
     Status should be    200                  ${trigger}
     Log                 ${trigger.json()}    DEBUG
     Return from keyword    ${trigger.json()["task_name"]}
+
+Trigger a merge
+    ${merge}=           Post request       backup_service    /cluster/self/instance/active/trigger-task-instance/merge    {}
+    Status should be    200                ${merge}
+    Log                 ${merge.json()}    DEBUG
+    Return from keyword    ${merge.json()["task_name"]}
 
 Confirm task is running
     [Arguments]    ${task_name}    ${instance}    ${state}=active    ${task_type}=BACKUP
