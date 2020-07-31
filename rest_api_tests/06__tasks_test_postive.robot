@@ -37,11 +37,9 @@ Try trigger a full backup
     Length should be    ${history}          1
     Confirm task is last and successfull   ${history}    ${backup_name}
     # Confirm that the backup was actually done by using info
-    ${resp}=    Get request    backup_service    /cluster/self/instance/active/trigger-task-instance/info
-    Status should be    200                                     ${resp}
-    Log                 ${resp.json()}                          DEBUG
-    Length should be    ${resp.json()["backups"]}               1
-    Should be equal     ${resp.json()["backups"][0]["type"]}    FULL
+    ${info}=    Get instance info    trigger-task-instance
+    Length should be    ${info["backups"]}               1
+    Should be equal     ${info["backups"][0]["type"]}    FULL
 
 Trigger an incremental backup
     [Tags]    post    backup    incr
@@ -52,11 +50,9 @@ Trigger an incremental backup
     ${history}=         Get task history           trigger-task-instance
     Confirm task is last and successfull           ${history}        ${backup_name}
     # Confirm that the backup was actually done by using info
-    ${resp}=    Get request    backup_service    /cluster/self/instance/active/trigger-task-instance/info
-    Status should be    200                                     ${resp}
-    Log                 ${resp.json()}                          DEBUG
-    Length should be    ${resp.json()["backups"]}               2
-    Should be equal     ${resp.json()["backups"][1]["type"]}    INCR
+    ${info}=    Get instance info    trigger-task-instance
+    Length should be    ${info["backups"]}               2
+    Should be equal     ${info["backups"][1]["type"]}    INCR
 
 Merge everything together
     [Tags]    post    merge
@@ -64,12 +60,16 @@ Merge everything together
     ${merge}=    Trigger a merge
     ${task}=     Confirm task is running    ${merge}          trigger-task-instance    task_type=MERGE
     Wait until one off task is finished     ${BACKUP_NODE}    ${merge}                 trigger-task-instance
-    ${resp}=    Get request    backup_service    /cluster/self/instance/active/trigger-task-instance/info
-    Status should be    200                                     ${resp}
-    Log                 ${resp.json()}                          DEBUG
-    Length should be    ${resp.json()["backups"]}               1
-    Should be equal     ${resp.json()["backups"][0]["type"]}    MERGE - FULL
+    ${info}=    Get instance info    trigger-task-instance
+    Length should be    ${info["backups"]}               1
+    Should be equal     ${info["backups"][0]["type"]}    MERGE - FULL
 
+Delete a backup
+    [Tags]    post    remove
+    ${info}=    Get instance info    trigger-task-instance
+    Delete      /cluster/self/instance/active/trigger-task-instance/backups/${info["backups"][0]["date"]}    headers=${BASIC_AUTH}
+    Integer     response status    200
+    Directory should not exist    ${TEST_DIR}${/}trigger_archive${/}${info["backups"][0]["date"]}
 
 *** Keywords ***
 Create instance for triggering adhoc tasks
@@ -116,3 +116,10 @@ Confirm task is last and successfull
     [Arguments]        ${history}                    ${backup_name}
     Should be equal    ${history[0]["task_name"]}    ${backup_name}
     Should be equal    ${history[0]["status"]}       done
+
+Get instance info
+    [Arguments]    ${instance}    ${state}=active
+    ${resp}=               Get request    backup_service    /cluster/self/instance/${state}/${instance}/info
+    Status should be       200                                     ${resp}
+    Log                    ${resp.json()}                          DEBUG
+    Return from keyword    ${resp.json()}
