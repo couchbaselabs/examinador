@@ -20,7 +20,7 @@ Create REST session and auth
     Set basic auth         ${username}    ${password}
     Create REST session    ${username}    ${password}
 
-Create client and instance dir
+Create client and repository dir
     [Arguments]    ${dir_name}
     [Documentation]
     ...    It creates the rest client as well as initializes the basic auth headers. It also creates the temporary

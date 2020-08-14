@@ -1,6 +1,6 @@
 *** Settings ***
-Documentation    Test that all invalid profile realted actions via the REST API.
-Force Tags       negative    profile
+Documentation    Test that all invalid plan realted actions via the REST API.
+Force Tags       negative    plan
 Library          Collections
 Library          OperatingSystem
 Library          REST    ${BACKUP_HOST}
@@ -15,38 +15,38 @@ ${BACKUP_HOST}    http://localhost:7101/api/v1
 
 
 *** Test Cases ***
-Try and add a profile with an invalid name
+Try and add a plan with an invalid name
     [Tags]    post
     [Documentation]
-    ...    Try to add profile wit a variaty of invalid names. Valid names are those that follow the pattern
+    ...    Try to add plan wit a variaty of invalid names. Valid names are those that follow the pattern
     ...    [a-zA-Z0-9][a-zA-Z0-9_-]{1,49}.
-    [Template]    Add profile with invalid name
-    _reserved     # Profiles starting with _ are reserved for internal use
+    [Template]    Add plan with invalid name
+    _reserved     # Plans starting with _ are reserved for internal use
     *special*     # Special characters
-    with space    # Profiles can't contain a space
-    daily.random  # Profiles can't contain dots
+    with space    # Plans can't contain a space
+    daily.random  # Plans can't contain dots
 
-Try to add profile that already exists
+Try to add plan that already exists
     [Tags]     post
     [Documentation]
-    ...    Check that creating a profile with the same name is not allowed and that the original profile does not get
+    ...    Check that creating a plan with the same name is not allowed and that the original plan does not get
     ...    modified.
-    POST       /profile/duplication    {}    headers=${BASIC_AUTH}
+    POST       /plan/duplication    {}    headers=${BASIC_AUTH}
     Integer    response status         200
-    POST       /profile/duplication    {"services": ["data"]}    headers=${BASIC_AUTH}
+    POST       /plan/duplication    {"services": ["data"]}    headers=${BASIC_AUTH}
     Integer    response status         400
-    ${resp}=   GET request             backup_service            /profile/duplication
+    ${resp}=   GET request             backup_service            /plan/duplication
     Status should be                   200                       ${resp}
     Dictionary like equals             ${resp.json()}            {"name":"duplication","services":null,"tasks":null}
 
-Try to delete profile that does not exist
+Try to delete plan that does not exist
     [Tags]    delete
-    DELETE    /profile/it-does-not-exist    headers=${BASIC_AUTH}
+    DELETE    /plan/it-does-not-exist    headers=${BASIC_AUTH}
     Integer   response status               404
 
-Try to add invalid profiles
+Try to add invalid plans
     [Tags]    post
-    [Template]    Send invalid profile
+    [Template]    Send invalid plan
     name1    0     []                      []       # Description is an integer and not a string
     name2    ""    ["full text search"]    []       # Service list is invalid
     name3    ""    ["data"]                [0,1,2]  # Task are integers instead of JSON objects
@@ -61,37 +61,38 @@ Try to add invalid profiles
     name8    ""    []                      [{"name":"task-1","task_type":"BACKUP","schedule":{"job_type":"BACKUP","frequency":10,"period":"hour"}}]
     name8    ""    []                      [{"name":"task-1","task_type":"BACKUP","schedule":{"job_type":"BACKUP","frequency":10,"period":"hour"}}]
 
-Try to add profile with to many tasks
+Try to add plan with to many tasks
     [Tags]       post
     ${tasks}=    Generate random task template    number=15
-    Send invalid profile    to-many-tasks    ""    []    ${tasks}
+    Send invalid plan    to-many-tasks    ""    []    ${tasks}
 
-Try and delete a profile that is being used
+Try and delete a plan that is being used
     [Tags]    delete
-    [Documentation]    Trying to delete a profile that is in use should return an error. This test will create an
-    ...                instance using the duplication profile and attempt to delete the profile. This should fail. After
-    ...                it will remove the instance.
+    [Documentation]    Trying to delete a plan that is in use should return an error. This test will create an
+    ...                repository using the duplication plan and attempt to delete the plan. This should fail. After
+    ...                it will remove the repository.
     [Setup]    Run Keywords        Create directory    ${TEMP_DIR}${/}delete_in_use    AND
-    ...        POST      /cluster/self/instance/active/delete_in_use            {"archive":"${TEMP_DIR}${/}delete_in_use}", "profile": "duplication"}    headers=${BASIC_AUTH}
+    ...        POST      /cluster/self/repository/active/delete_in_use            {"archive":"${TEMP_DIR}${/}delete_in_use}", "plan": "duplication"}    headers=${BASIC_AUTH}    AND
+    ...        Integer   response status    200
     [Teardown]    Run keywords     Remove directory    ${TEMP_DIR}${/}delete_in_use    recursive=True    AND
-    ...           POST      /cluster/self/instance/active/delete_in_use/archive    {"id":"delete_in_use"}    headers=${BASIC_AUTH}    AND
-    ...           DELETE    /cluster/self/instance/archived/delete_in_use          headers=${BASIC_AUTH}
-    DELETE    /profile/duplication    headers=${BASIC_AUTH}
+    ...           POST      /cluster/self/repository/active/delete_in_use/archive    {"id":"delete_in_use"}    headers=${BASIC_AUTH}    AND
+    ...           DELETE    /cluster/self/repository/archived/delete_in_use          headers=${BASIC_AUTH}
+    DELETE    /plan/duplication    headers=${BASIC_AUTH}
     Integer   response status         400
-    GET       /profile/duplication    headers=${BASIC_AUTH}
+    GET       /plan/duplication    headers=${BASIC_AUTH}
     Integer   response status         200
 
 *** Keywords ***
-Add profile with invalid name
+Add plan with invalid name
     [Arguments]    ${name}
-    POST       /profile/${name}    {}    headers=${BASIC_AUTH}
+    POST       /plan/${name}    {}    headers=${BASIC_AUTH}
     Integer    response status     400
 
-Send invalid profile
+Send invalid plan
     [Arguments]        ${name}    ${description}=None    ${services}=None    ${tasks}=None
-    [Documentation]    Adds a new profile.
-    POST               /profile/${name}    {"description":${description},"services":${services},"tasks":${tasks}}
+    [Documentation]    Adds a new plan.
+    POST               /plan/${name}    {"description":${description},"services":${services},"tasks":${tasks}}
     ...                headers=${BASIC_AUTH}
     Integer            response status     400
-    ${resp}=           Get request         backup_service    /profile/${name}
+    ${resp}=           Get request         backup_service    /plan/${name}
     Status should be   404                 ${resp}

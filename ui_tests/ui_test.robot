@@ -14,13 +14,13 @@ ${PASSWORD}       asdasd
 Loging and go to backup tab
     [Documentation]
     ...    Check that we can loging into the administrator console and click the backup tab it expects to see the no
-    ...    instance exists message.
+    ...    repository exists message.
     Open browser to main page
     Input text        name:username    ${USERNAME}
     Input password    name:password    ${PASSWORD}
     Submit credentials
     Go to backup tab
-    Confirm that no instance page shows
+    Confirm that no repository page shows
     [Teardown]    Close browser
 
 
@@ -35,8 +35,8 @@ Submit credentials
 Go to backup tab
     Wait until element is visible    link:Backup
     Click link                       link:Backup
-    Location should contain          /ui/index.html#/backup/instances
+    Location should contain          /ui/index.html#/backup/respositories
 
-Confirm that no instance page shows
+Confirm that no repository page shows
     Wait until element is visible    class:zero-content
-    Page should contain              No instances are registered
+    Page should contain              No respositories are registered

@@ -35,19 +35,19 @@ def generate_random_string(length: int = 10, chars: str = string.ascii_letters+s
 
 
 @keyword(types=[str, str, str, str, int])
-def wait_until_one_off_task_is_finished(host: str, task_name: str, instance_name: str, state: str = 'active',
+def wait_until_one_off_task_is_finished(host: str, task_name: str, repository_name: str, state: str = 'active',
                                         timeout: int = 60, retries: int = 10, user: str = 'Administrator',
                                         password: str = 'asdasd'):
     """Will wait until the task is no longer running"""
     for retry in range(retries):
         logger.debug(f'Checking if task {task_name} is still running. Attempt {retry}')
-        res = requests.get(f'{host}/api/v1/cluster/self/instance/active/{instance_name}', auth=(user, password),
+        res = requests.get(f'{host}/api/v1/cluster/self/repository/active/{repository_name}', auth=(user, password),
                            timeout=timeout)
         if res.status_code != 200:
             raise requests.HTTPError(f'Unexpected error code: {res.status_code} {res.json()}')
 
-        instance = res.json()
-        if 'running_one_off' not in instance or task_name not in instance['running_one_off']:
+        repository = res.json()
+        if 'running_one_off' not in repository or task_name not in repository['running_one_off']:
             # if no running one offs assume task is finished
             return
 
