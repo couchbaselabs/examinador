@@ -32,7 +32,7 @@ Try trigger a full backup
     # Confirm task is running
     ${task}=    Confirm task is running    ${backup_name}    trigger-task-repository
     # Check that the task finishes and it is add to history
-    Wait until one off task is finished    ${BACKUP_NODE}    ${backup_name}    trigger-task-repository
+    Wait until task is finished             ${BACKUP_NODE}    ${backup_name}    trigger-task-repository
     ${history}=         Get task history    trigger-task-repository
     Length should be    ${history}          1
     Confirm task is last and successfull   ${history}    ${backup_name}
@@ -46,7 +46,7 @@ Trigger an incremental backup
     [Documentation]    Trigger an incremantal backup.
     ${backup_name}=     Trigger backup             full=false
     ${task}=            Confirm task is running    ${backup_name}    trigger-task-repository
-    Wait until one off task is finished            ${BACKUP_NODE}    ${backup_name}            trigger-task-repository
+    Wait until task is finished                    ${BACKUP_NODE}    ${backup_name}            trigger-task-repository
     ${history}=         Get task history           trigger-task-repository
     Confirm task is last and successfull           ${history}        ${backup_name}
     # Confirm that the backup was actually done by using info
@@ -59,7 +59,7 @@ Merge everything together
     [Documentation]    Merge all backups
     ${merge}=    Trigger a merge
     ${task}=     Confirm task is running    ${merge}          trigger-task-repository    task_type=MERGE
-    Wait until one off task is finished     ${BACKUP_NODE}    ${merge}                 trigger-task-repository
+    Wait until task is finished             ${BACKUP_NODE}    ${merge}                   trigger-task-repository
     ${info}=    Get repository info    trigger-task-repository
     Length should be    ${info["backups"]}               1
     Should be equal     ${info["backups"][0]["type"]}    MERGE - FULL

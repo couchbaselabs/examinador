@@ -5,7 +5,7 @@ import re
 import string
 import time
 from datetime import datetime
-from typing import Dict, Union, List
+from typing import Dict, Union, List, Tuple
 
 import requests
 from dateutil.parser import parse
@@ -15,6 +15,57 @@ from robot.api import logger
 
 ROBOT_AUTO_KEYWORDS = False
 DURATION_FORMAT = r'((?P<days>\d+)d ?)?((?P<hours>\d+)h ?)?((?P<minutes>\d+)m ?)?((?P<seconds>\d+)s ?)?$'
+
+
+def get_user_and_password(**kwargs) -> Tuple[str, str]:
+    """Helper function to get user and password"""
+    return kwargs.get('user', 'Administrator'), kwargs.get('password', 'asdasd')
+
+
+def convert_duration_format_to_seconds(duration: str) -> int:
+    """converts a string of format Dd Hh Mm Ss to a absolute number of seconds"""
+    match = re.fullmatch(DURATION_FORMAT, duration)
+    if not match:
+        raise ValueError(f'Invalid durration {duration}')
+
+    days = int(match.group('days')) if match.group('days') else 0
+    hours = int(match.group('hours')) if match.group('hours') else 0
+    minutes = int(match.group('minutes')) if match.group('minutes') else 0
+    seconds = int(match.group('seconds')) if match.group('seconds') else 0
+    return days * 86400 + hours * 3600 + minutes * 60 + seconds
+
+
+@keyword
+def is_approx_from_now(time_str: str, duration: str = '5m', margin: int = 30):
+    """checks that the givent time is  n units +- margin seconds from the current time """
+    timestamp = parse(time_str)
+    now = datetime.now(timestamp.tzinfo)
+
+    diff = (timestamp - now).total_seconds()
+    expected_diff = convert_duration_format_to_seconds(duration)
+    if abs(diff - expected_diff) > margin:
+        raise AssertionError(f'Time {timestamp} is not {duration} from {now}')
+
+
+@keyword
+def archive_and_delete_repo(host: str, repo: str, **kwargs):
+    """Archives the active repo and then deletes it"""
+    user, password = get_user_and_password(**kwargs)
+    timeout = int(kwargs.get('timeout', 60))
+
+    # archive repo
+    new_id = ''.join(random.choice(string.ascii_letters) for i in range(20))
+    res = requests.post(f'{host}/api/v1/cluster/self/repository/active/{repo}/archive', auth=(user, password),
+                        timeout=timeout, json={'id': new_id})
+    if res.status_code != 200:
+        raise requests.HTTPError(f'Could not archive repository {repo} got status {res.status_code}: {res.text}')
+
+    logger.debug(f'Archived repo {repo} with new id {new_id}')
+    # delete repo
+    res = requests.delete(f'{host}/api/v1/cluster/self/repository/archived/{new_id}', auth=(user, password),
+                          params={'remove_repository': True})
+    if res.status_code != 200:
+        raise requests.HTTPError(f'Could not delete repository got status {res.status_code}: {res.text}')
 
 
 @keyword(types=[int, str, str])
@@ -34,20 +85,37 @@ def generate_random_string(length: int = 10, chars: str = string.ascii_letters+s
     return generated
 
 
-@keyword(types=[str, str, str, str, int])
-def wait_until_one_off_task_is_finished(host: str, task_name: str, repository_name: str, state: str = 'active',
-                                        timeout: int = 60, retries: int = 10, user: str = 'Administrator',
-                                        password: str = 'asdasd'):
-    """Will wait until the task is no longer running"""
+@keyword
+def wait_until_task_is_finished(host: str, task_name: str, repo: str, state: str = 'active',
+                                task_type: str = 'running_one_off', **kwargs):
+    """Wait until a task is finished
+    Args:
+        - host (str): the host for the backup service.
+        - task_name (str): the task we are looking for.
+        - task_type [running_one_off, running_tasks]: The type of task we are waiting for.
+        - state ([active, imported, archived]): The repository state.
+        - kwargs:
+            - timeout (int): request timeout.
+            - retries (int): how many times to poll the endpoint at a maximum.
+            - user (str): The user to use for the requests.
+            - passwrod (str): The password to use for the requests.
+    """
+    timeout = int(kwargs.get('timeout', 60))
+    retries = int(kwargs.get('retries', 10))
+    user, password = get_user_and_password(**kwargs)
+
+    if task_type not in ['running_one_off', 'running_tasks']:
+        raise ValueError('taks type must be one off [running_one_off, running_tasks]')
+
     for retry in range(retries):
-        logger.debug(f'Checking if task {task_name} is still running. Attempt {retry}')
-        res = requests.get(f'{host}/api/v1/cluster/self/repository/active/{repository_name}', auth=(user, password),
+        logger.debug(f'Checking if task {task_type} {task_name} is still running. Attempt {retry}')
+        res = requests.get(f'{host}/api/v1/cluster/self/repository/active/{repo}', auth=(user, password),
                            timeout=timeout)
         if res.status_code != 200:
             raise requests.HTTPError(f'Unexpected error code: {res.status_code} {res.json()}')
 
         repository = res.json()
-        if 'running_one_off' not in repository or task_name not in repository['running_one_off']:
+        if task_type not in repository or task_name not in repository[task_type]:
             # if no running one offs assume task is finished
             return
 
@@ -80,18 +148,10 @@ def should_be_approx_x_from_now(time_str: str, offset: str = '1h', error_margin:
     """
     timestamp = parse(time_str)
     now = datetime.now(timestamp.tzinfo)
-    match = re.fullmatch(DURATION_FORMAT, offset)
-    if not match:
-        raise ValueError(f'Invalid offset {offset}')
 
-    logger.info(match)
-
-    days = int(match.group('days')) if match.group('days') else 0
-    hours = int(match.group('hours')) if match.group('hours') else 0
-    minutes = int(match.group('minutes')) if match.group('minutes') else 0
-    seconds = int(match.group('seconds')) if match.group('seconds') else 0
-    expected_diff = days * 86400 + hours * 3600 + minutes * 60 + seconds
+    expected_diff = convert_duration_format_to_seconds(offset)
     diff = (timestamp - now).total_seconds()
+
     logger.info(f'Got time {timestamp} now {now}')
     logger.info(f'Offset {offset} diff {diff} expected_diff {expected_diff} margin {error_margin}s')
     if abs(diff - expected_diff) > error_margin:
