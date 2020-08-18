@@ -36,8 +36,13 @@ Schedule backups every 5 minutes
     Log                 ${resp.json()}    DEBUG
     Dictionary should contain key      ${resp.json()["scheduled"]}    5-min-backup
     Is approx from now    ${resp.json()["scheduled"]["5-min-backup"]["next_run"]}    5m
-    Sleep     5m
-    Wait until task is finished    ${BACKUP_NODE}    5-min-backup     every-5    state
+    Sleep     6m
+    Wait until task is finished    ${BACKUP_NODE}    5-min-backup     every-5    active    running_tasks
+    ${history}=    Get task history    every-5
+    Confirm task is last and successfull    ${history}   5-min-backup
+    ${info}=            Get repository info              every-5
+    Length should be    ${info["backups"]}               1
+    Should be equal     ${info["backups"][0]["type"]}    FULL
 
 
 *** Keywords ***

@@ -109,13 +109,17 @@ def wait_until_task_is_finished(host: str, task_name: str, repo: str, state: str
 
     for retry in range(retries):
         logger.debug(f'Checking if task {task_type} {task_name} is still running. Attempt {retry}')
-        res = requests.get(f'{host}/api/v1/cluster/self/repository/active/{repo}', auth=(user, password),
+        res = requests.get(f'{host}/api/v1/cluster/self/repository/{state}/{repo}', auth=(user, password),
                            timeout=timeout)
         if res.status_code != 200:
             raise requests.HTTPError(f'Unexpected error code: {res.status_code} {res.json()}')
 
         repository = res.json()
+        logger.debug(f'/api/v1/cluster/self/repository/{state}/{repo} response: {repository}')
+
         if task_type not in repository or task_name not in repository[task_type]:
+            if retry == 0:
+                logger.debug('Task finished before first run')
             # if no running one offs assume task is finished
             return
 

@@ -104,22 +104,3 @@ Confirm task is running
     ${task}=                         Get from dictionary                  ${resp.json()["running_one_off"]}    ${task_name}
     Should be equal                  ${task["type"]}                      ${task_type}
     Return from keyword              ${task}
-
-Get task history
-    [Arguments]   ${repository}    ${state}=active
-    [Documentation]    Gets the task history for the requested repository.
-    ${resp}=            Get request      backup_service   /cluster/self/repository/${state}/${repository}/taskHistory
-    Status should be    200              ${resp}
-    Return from keyword                  ${resp.json()}
-
-Confirm task is last and successfull
-    [Arguments]        ${history}                    ${backup_name}
-    Should be equal    ${history[0]["task_name"]}    ${backup_name}
-    Should be equal    ${history[0]["status"]}       done
-
-Get repository info
-    [Arguments]    ${repository}    ${state}=active
-    ${resp}=               Get request    backup_service    /cluster/self/repository/${state}/${repository}/info
-    Status should be       200                                     ${resp}
-    Log                    ${resp.json()}                          DEBUG
-    Return from keyword    ${resp.json()}
