@@ -30,9 +30,10 @@ Create client and repository dir
     Create Directory    ${TEMP_DIR}${/}${dir_name}
 
 Get task history
-    [Arguments]   ${repository}    ${state}=active
+    [Arguments]   ${repository}    ${state}=active    ${limit}=0    ${offset}=0
     [Documentation]    Gets the task history for the requested repository.
-    ${resp}=            Get request      backup_service   /cluster/self/repository/${state}/${repository}/taskHistory
+    ${params}=          Create Dictionary                limit=${limit}    offset=${offset}
+    ${resp}=            Get request      backup_service   /cluster/self/repository/${state}/${repository}/taskHistory    params=${params}
     Status should be    200              ${resp}
     Log                 ${resp.json()}   DEBUG
     Return from keyword                  ${resp.json()}

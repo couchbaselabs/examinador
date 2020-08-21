@@ -29,9 +29,7 @@ ${TEST_DIR}       ${TEMP_DIR}${/}compound
 *** Test Cases ***
 Test info pagination
     [Tags]    positive
-    [Documentation]
-    ...           The test will make 10 backups and then try to do both info and get task history with the pagination
-    ...           options and confirm that they work.
+    [Documentation]    Do info with different paginations and confirm the results are as expected.
     [Setup]       Set info
     [Template]    Get info paginated and compare
     ${INFO["backups"]}         0      0    # No pagination
@@ -40,6 +38,18 @@ Test info pagination
     ${INFO["backups"][:5]}     5      0    # Limit to 5
     ${INFO["backups"]}         100    0    # Large limit
     ${INFO["backups"][0:0]}    0      100  # Offset to large
+
+Test history pagination
+    [Tags]    positive
+    [Documentation]    Get the history with different pagination options and confirm it works.
+    [Setup]    Set history
+    [Template]    Get task history and compare
+    ${HISTORY}         0      0    # No pagination
+    ${HISTORY[:1]}     1      0    # Limit to 1
+    ${HISTORY[1:2]}    1      1    # Limit to 1 and offset by 1
+    ${HISTORY[:5]}     5      0    # Limit to 5
+    ${HISTORY}         100    0    # Large limit
+    ${HISTORY[0:0]}    0      100  # Offset to large
 
 *** Keywords ***
 Run ten backups
@@ -52,8 +62,19 @@ Get info paginated and compare
     [Documentation]    Gets the info of the test repository and checks that the returned backups are of length
     [Arguments]    ${expected}    ${limit}=0    ${offset}=0
     ${info}=              Get repository info      repository=${ADHOC_REPO}    limit=${limit}    offset=${offset}
-    Backup dates match    ${expected}              ${info["backups"]}
+    List should be same by key    ${expected}      ${info["backups"]}           date
 
 Set info
     ${INFO}=     Get repository info      repository=${ADHOC_REPO}
     Set suite variable    ${INFO}
+
+Set history
+    ${HISTORY}=    Get task history    ${ADHOC_REPO}
+    Set suite variable    ${HISTORY}
+
+Get task history and compare
+    [Documentation]    Gets the task history with the given pagination parameters and compare it to the expected
+    ...                results.
+    [Arguments]    ${expected}    ${limit}=0    ${offset}=0
+    ${history}=    Get task history    ${ADHOC_REPO}    limit=${limit}    offset=${offset}
+    List should be same by key         ${expected}      ${history}        task_name

@@ -36,16 +36,16 @@ def convert_duration_format_to_seconds(duration: str) -> int:
 
 
 @keyword
-def backup_dates_match(expected: List[object], got: List[object]):
-    """Given the backups list returned by info it will check that both a and be have the same backups in the same
-       order.
+def list_should_be_same_by_key(expected: List[object], got: List[object], key: str):
+    """Given to list of objects it will check that the elements in the same index share the same value for the given
+    key.
     """
     if len(expected) != len(got):
         raise AssertionError(f'Expected {len(expected)} backups got {len(got)} backups')
 
-    for (index, (a_backup, b_backup)) in enumerate(zip(expected, got)):
-        if a_backup['date'] != b_backup['date']:
-            raise AssertionError(f'Backup in index {index} does not match {a_backup["date"]} != {b_backup["date"]}')
+    for (index, (expected_item, got_item)) in enumerate(zip(expected, got)):
+        if expected_item[key] != got_item[key]:
+            raise AssertionError(f'Element in index {index} does not match {expected_item[key]} != {got_item[key]}')
 
 
 @keyword
