@@ -20,7 +20,7 @@ ${CB_NODE}        http://localhost:9001
 ${USER}           Administrator
 ${PASSWORD}       asdasd
 ${TEST_DIR}       ${TEMP_DIR}${/}scheduled
-${ADHOC_INSTANCE}    scheduled-repository
+${ADHOC_REPO}    scheduled-repository
 
 
 *** Test Cases ***

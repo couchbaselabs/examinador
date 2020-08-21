@@ -39,6 +39,17 @@ Test info pagination
     ${INFO["backups"]}         100    0    # Large limit
     ${INFO["backups"][0:0]}    0      100  # Offset to large
 
+Test info with invalid pagination
+    [tags]   negative
+    [Documentation]    Test the pagination system with invalid values
+    [Template]    Get repository info invalid
+    -1     0
+    0      -1
+    1.1    0
+    0      1.1
+    a      0
+    0      b
+
 Test history pagination
     [Tags]    positive
     [Documentation]    Get the history with different pagination options and confirm it works.
@@ -57,6 +68,12 @@ Run ten backups
         ${backup_name}=    Trigger backup    ${ADHOC_REPO}
         Wait until task is finished    ${BACKUP_NODE}    ${backup_name}    ${ADHOC_REPO}
     END
+
+Get repository info invalid
+    [Arguments]         ${limit}=0    ${offset}=0
+    ${params}=          Create Dictionary                limit=${limit}    offset=${offset}
+    ${resp}=            Get request    backup_service    /cluster/self/repository/active/${ADHOC_REPO}/info    params=${params}
+    Status should be    400            ${resp}
 
 Get info paginated and compare
     [Documentation]    Gets the info of the test repository and checks that the returned backups are of length
