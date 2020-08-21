@@ -72,7 +72,7 @@ Try and delete a plan that is being used
     ...                repository using the duplication plan and attempt to delete the plan. This should fail. After
     ...                it will remove the repository.
     [Setup]    Run Keywords        Create directory    ${TEMP_DIR}${/}delete_in_use    AND
-    ...        POST      /cluster/self/repository/active/delete_in_use            {"archive":"${TEMP_DIR}${/}delete_in_use}", "plan": "duplication"}    headers=${BASIC_AUTH}    AND
+    ...        POST      /cluster/self/repository/active/delete_in_use            {"archive":"${TEMP_DIR}${/}delete_in_use${/}archive}", "plan": "duplication"}    headers=${BASIC_AUTH}    AND
     ...        Integer   response status    200
     [Teardown]    Run keywords     Remove directory    ${TEMP_DIR}${/}delete_in_use    recursive=True    AND
     ...           POST      /cluster/self/repository/active/delete_in_use/archive    {"id":"delete_in_use"}    headers=${BASIC_AUTH}    AND

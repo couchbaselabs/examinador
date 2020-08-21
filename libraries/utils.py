@@ -36,6 +36,19 @@ def convert_duration_format_to_seconds(duration: str) -> int:
 
 
 @keyword
+def backup_dates_match(expected: List[object], got: List[object]):
+    """Given the backups list returned by info it will check that both a and be have the same backups in the same
+       order.
+    """
+    if len(expected) != len(got):
+        raise AssertionError(f'Expected {len(expected)} backups got {len(got)} backups')
+
+    for (index, (a_backup, b_backup)) in enumerate(zip(expected, got)):
+        if a_backup['date'] != b_backup['date']:
+            raise AssertionError(f'Backup in index {index} does not match {a_backup["date"]} != {b_backup["date"]}')
+
+
+@keyword
 def is_approx_from_now(time_str: str, duration: str = '5m', margin: int = 30):
     """checks that the givent time is  n units +- margin seconds from the current time """
     timestamp = parse(time_str)

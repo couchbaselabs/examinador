@@ -1,5 +1,6 @@
 *** Settings ***
 Library    RequestsLibrary
+Library    OperatingSystem
 Library    ../libraries/rest_utils.py
 
 *** Keywords ***
@@ -42,8 +43,26 @@ Confirm task is last and successfull
     Should be equal    ${history[0]["status"]}       done
 
 Get repository info
-    [Arguments]    ${repository}    ${state}=active
-    ${resp}=               Get request    backup_service    /cluster/self/repository/${state}/${repository}/info
+    [Arguments]    ${repository}    ${state}=active    ${limit}=0    ${offset}=0
+    ${params}=             Create Dictionary                limit=${limit}    offset=${offset}
+    ${resp}=               Get request    backup_service    /cluster/self/repository/${state}/${repository}/info    params=${params}
     Status should be       200                                     ${resp}
     Log                    ${resp.json()}                          DEBUG
     Return from keyword    ${resp.json()}
+
+Create repository for triggering adhoc tasks
+    [Documentation]    This will create an empty plan and used it as a base for an repository with name "${name}" and
+    ...    archive "${archive}".
+    [Arguments]    ${plan}=trigger-task-plan    ${name}=trigger-task-repository    ${archive}=trigger_archive
+    Create directory    ${TEST_DIR}${/}${archive}
+    POST                /plan/${plan}    {}    headers=${BASIC_AUTH}
+    Integer             response status        200
+    POST                /cluster/self/repository/active/${name}    {"archive":"${TEST_DIR}${/}${archive}", "plan":"${plan}"}    headers=${BASIC_AUTH}
+    Integer             response status        200
+
+Trigger backup
+    [Arguments]         ${repo}    ${state}=active    ${full}=false
+    ${trigger}=         Post request    backup_service    /cluster/self/repository/${state}/${repo}/backup    {"full_backup":${full}}
+    Status should be    200                  ${trigger}
+    Log                 ${trigger.json()}    DEBUG
+    Return from keyword    ${trigger.json()["task_name"]}

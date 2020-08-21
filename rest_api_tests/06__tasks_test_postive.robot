@@ -9,7 +9,7 @@ Library            ../libraries/utils.py
 Resource           ../resources/rest.resource
 Resource           ../resources/couchbase.resource
 Suite setup        Run keywords    Create client and repository dir   trigger_tasks          AND
-...                Create repository for triggering adhoc tasks    name=${ADHOC_INSTANCE}    AND
+...                Create repository for triggering adhoc tasks    name=${ADHOC_REPO}    AND
 ...                Create CB bucket if it does not exist                                   AND
 ...                Load documents into bucket using cbm
 Suite Teardown     Remove Directory    ${TEMP_DIR}${/}trigger_tasks    recursive=True
@@ -21,14 +21,14 @@ ${CB_NODE}        http://localhost:9001
 ${USER}           Administrator
 ${PASSWORD}       asdasd
 ${TEST_DIR}       ${TEMP_DIR}${/}trigger_tasks
-${ADHOC_INSTANCE}    trigger-task-repository
+${ADHOC_REPO}    trigger-task-repository
 
 *** Test Cases ***
 Try trigger a full backup
     [Tags]    post    backup    full
     [Documentation]    Trigger an adhoc full backup.
     # Trigger a full backup
-    ${backup_name}=    Trigger backup    full=true
+    ${backup_name}=    Trigger backup    trigger-task-repository    full=true
     # Confirm task is running
     ${task}=    Confirm task is running    ${backup_name}    trigger-task-repository
     # Check that the task finishes and it is add to history
@@ -44,7 +44,7 @@ Try trigger a full backup
 Trigger an incremental backup
     [Tags]    post    backup    incr
     [Documentation]    Trigger an incremantal backup.
-    ${backup_name}=     Trigger backup             full=false
+    ${backup_name}=    Trigger backup    trigger-task-repository    full=false
     ${task}=            Confirm task is running    ${backup_name}    trigger-task-repository
     Wait until task is finished                    ${BACKUP_NODE}    ${backup_name}            trigger-task-repository
     ${history}=         Get task history           trigger-task-repository
@@ -72,23 +72,6 @@ Delete a backup
     Directory should not exist    ${TEST_DIR}${/}trigger_archive${/}${info["backups"][0]["date"]}
 
 *** Keywords ***
-Create repository for triggering adhoc tasks
-    [Documentation]    This will create an empty plan and used it as a base for an repository with name "${name}" and
-    ...    archive "${archive}".
-    [Arguments]    ${plan}=trigger-task-plan    ${name}=trigger-task-repository    ${archive}=trigger_archive
-    Create directory    ${TEST_DIR}${/}${archive}
-    POST                /plan/${plan}    {}    headers=${BASIC_AUTH}
-    Integer             response status        200
-    POST                /cluster/self/repository/active/${name}    {"archive":"${TEST_DIR}${/}${archive}", "plan":"${plan}"}    headers=${BASIC_AUTH}
-    Integer             response status        200
-
-Trigger backup
-    [Arguments]         ${full}=false
-    ${trigger}=         Post request    backup_service    /cluster/self/repository/active/trigger-task-repository/backup    {"full_backup":${full}}
-    Status should be    200                  ${trigger}
-    Log                 ${trigger.json()}    DEBUG
-    Return from keyword    ${trigger.json()["task_name"]}
-
 Trigger a merge
     ${merge}=           Post request       backup_service    /cluster/self/repository/active/trigger-task-repository/merge    {}
     Status should be    200                ${merge}
