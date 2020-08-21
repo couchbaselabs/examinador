@@ -53,8 +53,8 @@ Test info with invalid pagination
 Test history pagination
     [Tags]    positive
     [Documentation]    Get the history with different pagination options and confirm it works.
-    [Setup]    Set history
-    [Template]    Get task history and compare
+    [Setup]            Set history
+    [Template]         Get task history and compare
     ${HISTORY}         0      0    # No pagination
     ${HISTORY[:1]}     1      0    # Limit to 1
     ${HISTORY[1:2]}    1      1    # Limit to 1 and offset by 1
@@ -62,12 +62,29 @@ Test history pagination
     ${HISTORY}         100    0    # Large limit
     ${HISTORY[0:0]}    0      100  # Offset to large
 
+Test history with invalid pagination
+    [tags]   negative
+    [Documentation]    Test the pagination system with invalid values
+    [Template]         Get history invalid
+    -1     0
+    0      -1
+    1.1    0
+    0      1.1
+    a      0
+    0      b
+
 *** Keywords ***
 Run ten backups
     FOR    ${index}    IN RANGE    10
         ${backup_name}=    Trigger backup    ${ADHOC_REPO}
         Wait until task is finished    ${BACKUP_NODE}    ${backup_name}    ${ADHOC_REPO}
     END
+
+Get history invalid
+    [Arguments]         ${limit}=0    ${offset}=0
+    ${params}=          Create Dictionary                limit=${limit}    offset=${offset}
+    ${resp}=            Get request      backup_service   /cluster/self/repository/active/${ADHOC_REPO}/taskHistory    params=${params}
+    Status should be    400            ${resp}
 
 Get repository info invalid
     [Arguments]         ${limit}=0    ${offset}=0
