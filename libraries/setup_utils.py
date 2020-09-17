@@ -42,15 +42,15 @@ def confirm_backup_service_running(host: str, log_path: str, user: str = 'Admini
                                    context: int = 15):
     """confirm the backup service is running in the given host if it is not it will error out and log the last lines
     off the backup_service log"""
+    worked = False
     try:
-        logger.info(f'Confiming the baups service is running in host: {host}')
+        logger.info(f'Confiming the backup service is running in host: {host}')
         res = requests.get(f'{host}/api/v1/config', auth=(user, password))
-        if res.status_code != 200:
-            logger.warn(f'Received non 200 repsonse {res}')
-            log_end_of_backup_service_logs(log_path, context)
-            raise AssertionError(f'Backup service is not running in host {host}')
-    except ConnectionError as connection_error:
+        worked = res.status_code == 200
+    except Exception as connection_error:
         logger.warn(f'Connection error occured: {connection_error}')
+
+    if not worked:
         log_end_of_backup_service_logs(log_path, context)
         raise AssertionError(f'Backup service is not running in host {host}')
 
