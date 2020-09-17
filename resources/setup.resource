@@ -9,7 +9,7 @@ ${WAIT_UNTIL_READY}    15
 ${RUNNING_MODE}        CV
 ${SKIP_SETUP}          False
 ${SKIP_TEARDOWN}       False
-${DELETE_LOGS}         True
+${DELETE_LOGS}         False
 
 *** Keywords ***
 Remove cluster run data and logs

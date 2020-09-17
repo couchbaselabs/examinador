@@ -34,6 +34,7 @@ def connect_nodes(cwd: str, node_num: int, services: str, data_size: int = 256, 
         raise subprocess.CalledProcessError(complete.returncode, complete.args)
     time.sleep(wait_for)
     logger.info('Nodes connected', also_console=True)
+    logger.info(complete.stdout)
 
 
 @keyword(types=[str, str, str, str, int])
@@ -41,8 +42,13 @@ def confirm_backup_service_running(host: str, log_path: str, user: str = 'Admini
                                    context: int = 15):
     """confirm the backup service is running in the given host if it is not it will error out and log the last lines
     off the backup_service log"""
-    res = requests.get(f'{host}/api/v1/config', auth=(user, password))
-    if res.status_code != 200:
+    try:
+        res = requests.get(f'{host}/api/v1/config', auth=(user, password))
+        if res.status_code != 200:
+            log_end_of_backup_service_logs(log_path, context)
+            raise AssertionError(f'Backup service is not running in host {host}')
+    except ConnectionError as connection_error:
+        logger.warn(f'Connection error occured: {connection_error}')
         log_end_of_backup_service_logs(log_path, context)
         raise AssertionError(f'Backup service is not running in host {host}')
 
