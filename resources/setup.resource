@@ -5,7 +5,7 @@ Library           ../libraries/setup_utils.py
 
 *** Variables ***
 ${NS_SERVER_PATH}      %{HOME}/source/ns_server
-${WAIT_UNTIL_READY}    15
+${WAIT_UNTIL_READY}    25
 ${RUNNING_MODE}        CV
 ${SKIP_SETUP}          False
 ${SKIP_TEARDOWN}       False

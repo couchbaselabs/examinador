@@ -34,7 +34,7 @@ def connect_nodes(cwd: str, node_num: int, services: str, data_size: int = 256, 
         raise subprocess.CalledProcessError(complete.returncode, complete.args)
     time.sleep(wait_for)
     logger.info('Nodes connected', also_console=True)
-    logger.info(complete.stdout)
+    logger.debug(complete.stdout)
 
 
 @keyword(types=[str, str, str, str, int])
