@@ -20,7 +20,7 @@ pip install -f requirements.txt
 Run the REST API test suite
 
 ```
-robot-env/bin/robot --vaiable NS_SERVER_PATH:<location to the ns_server_repo> rest_api_tests
+robot-env/bin/robot --variable NS_SERVER_PATH:<location to the ns_server_repo> rest_api_tests
 ```
 
 Note that you must provided the path to the ns_server repo as currently it only supports running
