@@ -26,12 +26,22 @@ def connect_nodes(cwd: str, node_num: int, services: str, data_size: int = 256, 
 
     It will realise a CalledProcessError if cluster_connect fails.
     """
-    logger.info(f'Connecting nodes {services}', also_console=True)
-    complete = subprocess.run([join(cwd, 'cluster_connect'), '-n', str(node_num), '-T', services, '-s', str(data_size),
-                               '-r', '0'], capture_output=True, timeout=30)
-    if complete.returncode != 0:
-        logger.warn(f'Cluster connect failed, rc {complete.returncode}: {complete.stdout}')
+    # retry up to 3 times
+    connected = False
+    for i in range(3):
+        logger.info(f'Connecting nodes {services}', also_console=True)
+        complete = subprocess.run([join(cwd, 'cluster_connect'), '-n', str(node_num), '-T', services, '-s',
+                                   str(data_size), '-r', '0'], capture_output=True, timeout=30)
+        if complete.returncode != 0:
+            logger.warn(f'Cluster connect failed, rc {complete.returncode}: {complete.stdout}')
+            time.sleep(5 * (i + 1))
+        else:
+            connected = True
+            break
+
+    if not connected:
         raise subprocess.CalledProcessError(complete.returncode, complete.args)
+
     time.sleep(wait_for)
     logger.info('Nodes connected', also_console=True)
     logger.debug(complete.stdout)
