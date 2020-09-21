@@ -20,6 +20,8 @@ The following are listed with the following syntax "**VARIABLE_NAME: (type) [def
 
 **NS_SERVER_PATH: (str) [$HOME/source/ns_server]** The location to the ns_server repo.
 
+**COUCHBASE_LOG_PATH: (str) [NS_SERVER_PATH/logs/n_1]** Location for the logs.
+
 **BIN_PATH: (str) [$HOME/source/install/bin]** The location to the build Couchbase directory.
 
 ### Setup and teardown

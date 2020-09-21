@@ -5,6 +5,8 @@ Library           ../libraries/setup_utils.py
 
 *** Variables ***
 ${NS_SERVER_PATH}      %{HOME}${/}source${/}ns_server
+${COUCHBASE_LOG_PATH}  ${NS_SERVER_PATH}${/}logs${/}n_1
+${BACKUP_NODE}         http://localhost:7101
 ${WAIT_UNTIL_READY}    25
 ${RUNNING_MODE}        CV
 ${SKIP_SETUP}          False
