@@ -20,7 +20,6 @@ Loging and go to backup tab
     Input password    name:password    ${PASSWORD}
     Submit credentials
     Go to backup tab
-    Confirm that no repository page shows
     [Teardown]    Close browser
 
 
@@ -35,8 +34,5 @@ Submit credentials
 Go to backup tab
     Wait until element is visible    link:Backup
     Click link                       link:Backup
-    Location should contain          /ui/index.html#/backup/respositories
-
-Confirm that no repository page shows
-    Wait until element is visible    class:zero-content
-    Page should contain              No respositories are registered
+    Sleep                            1s
+    Location should contain          /ui/index.html#/backup/repositories
