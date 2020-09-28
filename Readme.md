@@ -14,7 +14,7 @@ source robot-env/bin/activate
 Install all the dependencies
 
 ```
-pip install -f requirements.txt
+pip install -r requirements.txt
 ```
 
 Run the REST API test suite
