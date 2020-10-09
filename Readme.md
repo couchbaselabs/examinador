@@ -1,8 +1,8 @@
 Examinador
 ======
 
-Examinador is a framework a tool to run integration tests for the backup service.
-To use the tool you will need Python 3.6.
+Examinador is a a tool to run integration tests for the backup service.
+To use it you will need Python 3.6.
 
 Create and activate a virtual environment
 
@@ -23,9 +23,9 @@ Run the REST API test suite
 robot-env/bin/robot --variable NS_SERVER_PATH:<location to the ns_server_repo> rest_api_tests
 ```
 
-Note that you must provided the path to the ns_server repo as currently it only supports running
+Note that you must provide the path to the ns_server repo as currently it only supports running
 test of a dev cluster using `cluster_run`. The idea is to expand so that it can take an arbitrary
-set of nodes to do the tests. Before running the tests make sure you have build the server as if
+set of nodes to do the tests. Before running the tests make sure you have built the server as if
 not it will fail.
 
 Setup takes around a minute, after that the test should run expediently.
