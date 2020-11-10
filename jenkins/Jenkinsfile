@@ -63,7 +63,7 @@ pipeline {
                     }
 
                     // Fetch the commit we are testing
-                    dir("${SOURCE}") {
+                    dir("${EXAMINADOR}") {
                         sh "git fetch ssh://buildbot@review.couchbase.org:29418/examinador ${GERRIT_REFSPEC}"
                         sh "git checkout FETCH_HEAD"
                 }
@@ -75,8 +75,8 @@ pipeline {
         stage("Lint") {
             steps {
                 timeout(time: 10, unit: "MINUTES") {
-                    dir("${SOURCE}") {
-                        sh "python3 -m pylint --${WORKSPACE}/.pylintrc libraries"
+                    dir("${EXAMINADOR}") {
+                        sh "python3 -m pylint --rcfile=${EXAMINADOR}/.pylintrc libraries"
                     }
                 }
             }
@@ -85,7 +85,7 @@ pipeline {
         stage("Type check") {
             steps {
                 timeout(time: 10, unit: "MINUTES") {
-                    dir("${SOURCE}") {
+                    dir("${EXAMINADOR}") {
                         sh """#!/bin/bash
                             if [ \$(mypy --ignore-missing-imports libraries | grep -c error) -gt 1 ]; then
                                 echo "Failed mypy type checking in libraries"
