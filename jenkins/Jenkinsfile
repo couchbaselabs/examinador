@@ -66,11 +66,23 @@ pipeline {
                     dir("${EXAMINADOR}") {
                         sh "git fetch ssh://buildbot@review.couchbase.org:29418/examinador ${GERRIT_REFSPEC}"
                         sh "git checkout FETCH_HEAD"
-                }
+                    }
                 }
             }
         }
 
+        stage("Setup Examinador") {
+            steps {
+                dir("${EXAMINADOR}") {
+                    // Use python virtual environment to make life easier
+                    sh '''#!/bin/bash
+                          python3 -m venv robot-env
+                          source robot-env/bin/activate
+                          pip install -r requirements.txt
+                    '''
+                }
+            }
+        }
 
         stage("Lint") {
             steps {
@@ -95,19 +107,6 @@ pipeline {
                             fi
                            """
                     }
-                }
-            }
-        }
-
-        stage("Setup Examinador") {
-            steps {
-                dir("${EXAMINADOR}") {
-                    // Use python virtual environment to make life easier
-                    sh '''#!/bin/bash
-                          python3 -m venv robot-env
-                          source robot-env/bin/activate
-                          pip install -r requirements.txt
-                    '''
                 }
             }
         }
