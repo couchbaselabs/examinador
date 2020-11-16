@@ -88,7 +88,9 @@ pipeline {
             steps {
                 timeout(time: 10, unit: "MINUTES") {
                     dir("${EXAMINADOR}") {
-                        sh "python3 -m pylint --rcfile=${EXAMINADOR}/.pylintrc libraries"
+                        sh '''python3 -m venv robot-env
+                              python3 -m pylint --rcfile=${EXAMINADOR}/.pylintrc libraries
+                        '''
                     }
                 }
             }
