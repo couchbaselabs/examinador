@@ -103,6 +103,7 @@ pipeline {
                 timeout(time: 10, unit: "MINUTES") {
                     dir("${EXAMINADOR}") {
                         sh """#!/bin/bash
+                            source robot-env/bin/activate
                             if [ \$(mypy --ignore-missing-imports libraries | grep -c error) -gt 1 ]; then
                                 echo "Failed mypy type checking in libraries"
                                 echo "Re running: mypy --ignore-missing-imports libraries"
@@ -142,7 +143,7 @@ pipeline {
                     // Run test suites
                     sh '''#!/bin/bash
                           source robot-env/bin/activate
-                          robot-env/bin/robot --variable NS_SERVER_PATH:${SOURCE}/ns_server --variable BIN_PATH:${SOURCE}/install/bin --outputdir ${WORKSPACE}/reports --exclude in_progress --consolewidth 120 -L DEBUG *_tests rest_api_longer
+                          robot-env/bin/robot --variable NS_SERVER_PATH:${SOURCE}/ns_server --variable BIN_PATH:${SOURCE}/install/bin --outputdir ${WORKSPACE}/reports --exclude in_progress --exclude UI --consolewidth 120 -L DEBUG *_tests rest_api_longer
                     '''
                 }
             }
