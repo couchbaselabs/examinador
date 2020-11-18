@@ -36,7 +36,7 @@ def convert_duration_format_to_seconds(duration: str) -> int:
 
 
 @keyword
-def list_should_be_same_by_key(expected: List[object], got: List[object], key: str):
+def list_should_be_same_by_key(expected: List[Dict], got: List[Dict], key: str):
     """Given to list of objects it will check that the elements in the same index share the same value for the given
     key.
     """
@@ -143,7 +143,7 @@ def wait_until_task_is_finished(host: str, task_name: str, repo: str, state: str
 
 
 @keyword
-def dictionary_like_equals(first: Union[Dict, str], second: Union[Dict, str], remove_empty: List[str] = []) -> bool:
+def dictionary_like_equals(first: Union[Dict, str], second: Union[Dict, str], remove_empty: List[str] = []):
     """Compare either strings to dictionaries and see if they match"""
     logger.info(f'Comparing {sorted_json_string(first)} == {sorted_json_string(second)} filter: {remove_empty}')
     if sorted_json_string(first, remove_empty) != sorted_json_string(second, remove_empty):
@@ -213,10 +213,8 @@ def generate_invalid_task_template() -> Dict:
 
 def sorted_json_string(dict_like: Union[Dict, str], remove_empty: List[str] = []) -> str:
     """Convert a dictionary or a string into a key sorted JSON string"""
-    val = dict_like
-    if isinstance(val, str):
-        val = json.loads(val)
+    dict_value: Dict = dict_like if isinstance(dict_like, dict) else json.loads(dict_like)
     for remove in remove_empty:
-        if remove in val and (val[remove] == '' or val[remove] is None):
-            del val[remove]
-    return json.dumps(val, sort_keys=True)
+        if remove in dict_value and (dict_value[remove] == '' or dict_value[remove] is None):
+            del dict_value[remove]
+    return json.dumps(dict_value, sort_keys=True)
