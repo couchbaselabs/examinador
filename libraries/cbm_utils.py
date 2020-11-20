@@ -4,10 +4,17 @@
 
 import json
 import time
+import os
 import subprocess
 from subprocess import Popen
 from os.path import join
 from typing import Dict, List, Optional
+from datetime import datetime, timedelta
+
+from couchbase.cluster import Cluster
+from couchbase.cluster import ClusterOptions
+from couchbase.cluster import QueryOptions
+from couchbase_core.cluster import PasswordAuthenticator
 
 from robot.api.deco import keyword
 from robot.api import logger
@@ -23,6 +30,17 @@ class cbm_utils:
     def __init__(self, bin_path: str, archive: str):
         self.BIN_PATH = bin_path
         self.archive = archive
+
+    @keyword(types=[str, dict, str, str, str, str])
+    def sdk_replace(self, key: str, value: dict, host: str = "http://localhost:9000", bucket: str = "default",
+            user: str = "Administrator", password: str = "asdasd"):
+        """This function uses the Couchbase SDK to replace a value with a new given value for the document of the
+        given key."""
+        cluster = Cluster(host, ClusterOptions(PasswordAuthenticator(user, password)))
+        cb = cluster.bucket(bucket)
+        result = cb.replace(key, value)
+        if result.returncode != 0:
+            raise subprocess.CalledProcessError(result.returncode, result.args, result.stdout)
 
     @keyword(types=[str, str, str, str, str, int])
     def run_restore(self, repo: Optional[str] = None, archive: Optional[str] = None,
@@ -218,3 +236,10 @@ class cbm_utils:
         for doc in data:
             if doc["value"]["group"] != expected_value:
                 raise AssertionError("Data from incorrect scope included in backup")
+
+    @keyword(types=[str, str])
+    def change_backup_date(self, date: str, path: str):
+        """Renames the backup file to one day earlier."""
+        new_date = datetime.strftime(datetime.strptime(date[:10], "%Y-%m-%d") - timedelta(days=1), "%Y-%m-%d")\
+                    + date[10:]
+        os.rename(f'{path}/{date}', f'{path}/{new_date}')
