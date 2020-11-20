@@ -140,9 +140,9 @@ Load documents into bucket using cbc
 
 Load documents into bucket using cbc bucket level
     [Arguments]    ${host}=http://localhost:9000    ${user}=Administrator
-    ...            ${password}=asdasd    ${bucket}=default    ${key}=key    ${group}=example
+    ...            ${password}=asdasd    ${bucket}=default    ${key}=key    ${group}=example    ${items}=10
     [Documentation]    Uses cbc-create to load data into the scope.
-    FOR    ${i}    IN RANGE    10
+    FOR    ${i}    IN RANGE    ${items}
         ${result}=    Run process    ${BIN_PATH}${/}cbc    create    -U    ${host}/${bucket}    -u    ${user}
         ...                         -P     ${password}    --json    ${key}${i}    -V    {"group":"${group}","num":${i}}
         Should Be Equal As Integers    ${result.rc}    0
