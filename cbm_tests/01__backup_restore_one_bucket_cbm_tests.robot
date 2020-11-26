@@ -24,11 +24,15 @@ Test Simple backup
     Load documents into bucket using cbworkloadgen
     Configure backup    repo=simple
     Run backup          repo=simple
-    ${result}=    Get info as json    repo=simple
-    ${number_of_backups}=         Get Length    ${result}[backups]
-    Should Be Equal                ${result}[backups][${number_of_backups-1}][buckets][0][name]          default
-    Should Be Equal as integers    ${result}[backups][${number_of_backups-1}][buckets][0][mutations]     2048
-    Should Be Equal as integers    ${result}[backups][${number_of_backups-1}][buckets][0][tombstones]    0
+    ${result}=               Get info as json    repo=simple
+    ${number_of_backups}=    Get Length    ${result}[backups]
+    ${bucket_index}=         Get bucket index    ${result}
+    Should Be Equal                ${result}[backups][${number_of_backups-1}][buckets][${bucket_index}][name]
+    ...                            default
+    Should Be Equal as integers    ${result}[backups][${number_of_backups-1}][buckets][${bucket_index}][mutations]
+    ...                            2048
+    Should Be Equal as integers    ${result}[backups][${number_of_backups-1}][buckets][${bucket_index}][tombstones]
+    ...                            0
     ${bucket_uuid}=    Get bucket uuid
     ${dir}=    catenate    SEPARATOR=
     ...    ${TEMP_DIR}${/}data${/}backups${/}simple${/}${result}[backups][${number_of_backups-1}][date]
@@ -63,11 +67,15 @@ Test Incremental backup
     Run backup      repo=simple
     Load documents into bucket using cbworkloadgen    key-pref=pyme
     Run backup      repo=simple
-    ${result}=    Get info as json    repo=simple
+    ${result}=               Get info as json    repo=simple
     ${number_of_backups}=    Get Length    ${result}[backups]
-    Should Be Equal                ${result}[backups][${number_of_backups-1}][buckets][0][name]          default
-    Should Be Equal as integers    ${result}[backups][${number_of_backups-1}][buckets][0][mutations]     2048
-    Should Be Equal as integers    ${result}[backups][${number_of_backups-1}][buckets][0][tombstones]    0
+    ${bucket_index}=         Get bucket index    ${result}
+    Should Be Equal                ${result}[backups][${number_of_backups-1}][buckets][${bucket_index}][name]
+    ...                            default
+    Should Be Equal as integers    ${result}[backups][${number_of_backups-1}][buckets][${bucket_index}][mutations]
+    ...                            2048
+    Should Be Equal as integers    ${result}[backups][${number_of_backups-1}][buckets][${bucket_index}][tombstones]
+    ...                            0
     ${bucket_uuid}=    Get bucket uuid
     ${dir}=    catenate    SEPARATOR=
     ...    ${TEMP_DIR}${/}data${/}backups${/}simple${/}${result}[backups][${number_of_backups-1}][date]
@@ -105,12 +113,17 @@ Test Force Full Backup
     ...                used by checking the number of items backed up is the number originally backed up
     Load documents into bucket using cbworkloadgen    key-pref=pymg
     Run backup      repo=simple    full-backup=None
-    ${result}=    Get info as json    repo=simple
+    ${result}=               Get info as json    repo=simple
     ${number_of_backups}=    Get Length    ${result}[backups]
-    Should Be Equal                ${result}[backups][${number_of_backups-1}][buckets][0][name]          default
-    Should Be Equal as integers    ${result}[backups][${number_of_backups-1}][buckets][0][mutations]     6144
-    Should Be Equal as integers    ${result}[backups][${number_of_backups-1}][buckets][0][tombstones]    0
-    Should Be Equal as integers    ${result}[backups][${number_of_backups-1}][buckets][0][items]         6144
+    ${bucket_index}=         Get bucket index    ${result}
+    Should Be Equal                ${result}[backups][${number_of_backups-1}][buckets][${bucket_index}][name]
+    ...                            default
+    Should Be Equal as integers    ${result}[backups][${number_of_backups-1}][buckets][${bucket_index}][mutations]
+    ...                            6144
+    Should Be Equal as integers    ${result}[backups][${number_of_backups-1}][buckets][${bucket_index}][tombstones]
+    ...                            0
+    Should Be Equal as integers    ${result}[backups][${number_of_backups-1}][buckets][${bucket_index}][items]
+    ...                            6144
     ${bucket_uuid}=    Get bucket uuid
     ${dir}=    catenate    SEPARATOR=
     ...    ${TEMP_DIR}${/}data${/}backups${/}simple${/}${result}[backups][${number_of_backups-1}][date]

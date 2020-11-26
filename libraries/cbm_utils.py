@@ -249,3 +249,11 @@ class cbm_utils:
         new_date = datetime.strftime(datetime.strptime(date[:10], "%Y-%m-%d") - timedelta(days=1), "%Y-%m-%d")\
                     + date[10:]
         os.rename(f'{path}/{date}', f'{path}/{new_date}')
+
+    @keyword(types=[Dict, str])
+    def get_bucket_index(self, data: Dict, bucket: str = "default") -> int:
+        """Returns the index of the desired bucket in the Get Info As Json output."""
+        for i, buck in enumerate(data["backups"][-1]["buckets"]):
+            if buck["name"] == bucket:
+                return i
+        raise AssertionError(f"Bucket {bucket} not backed up")
