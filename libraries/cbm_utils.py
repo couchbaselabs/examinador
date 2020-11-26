@@ -39,8 +39,8 @@ class cbm_utils:
         cluster = Cluster(host, ClusterOptions(PasswordAuthenticator(user, password)))
         cb = cluster.bucket(bucket)
         result = cb.replace(key, value)
-        if result.returncode != 0:
-            raise subprocess.CalledProcessError(result.returncode, result.args, result.stdout)
+        if result.rc != 0:
+            raise subprocess.CalledProcessError(result.rc, result.args, result.stdout)
 
     @keyword(types=[str, str, str, str, str, int])
     def run_restore(self, repo: Optional[str] = None, archive: Optional[str] = None,
@@ -52,7 +52,9 @@ class cbm_utils:
         complete = subprocess.run([join(self.BIN_PATH, 'cbbackupmgr'), 'restore', '-a', archive, '-r', repo, '-c',
                         host, '-u', user, '-p', password] + other_args, capture_output=True, shell=False,
                         timeout=timeout_value)
+        logger.debug(complete.returncode)
         logger.debug(complete.args)
+        logger.debug(complete.stdout)
         if complete.returncode != 0:
             raise subprocess.CalledProcessError(complete.returncode, complete.args, complete.stdout)
 
@@ -64,7 +66,9 @@ class cbm_utils:
         other_args = self.format_flags(kwargs)
         complete = subprocess.run([join(self.BIN_PATH, 'cbbackupmgr'), 'config', '-a', archive, '-r', repo]
                         + other_args, capture_output=True, shell=False, timeout=timeout_value)
+        logger.debug(complete.returncode)
         logger.debug(complete.args)
+        logger.debug(complete.stdout)
         if complete.returncode != 0:
             raise subprocess.CalledProcessError(complete.returncode, complete.args, complete.stdout)
 
@@ -77,7 +81,9 @@ class cbm_utils:
         complete = subprocess.run([join(self.BIN_PATH, 'cbbackupmgr'), 'backup', '-a', archive, '-r', repo, '-c',
                         host, '-u', user, '-p', password] + other_args, capture_output=True, shell=False,
                         timeout=timeout_value)
+        logger.debug(complete.returncode)
         logger.debug(complete.args)
+        logger.debug(complete.stdout)
         if complete.returncode != 0:
             raise subprocess.CalledProcessError(complete.returncode, complete.args, complete.stdout)
 
@@ -89,7 +95,7 @@ class cbm_utils:
         other_args = self.format_flags(kwargs)
         complete = subprocess.Popen([join(self.BIN_PATH, 'cbbackupmgr'), 'backup', '-a', archive, '-r', repo, '-c',
                                host, '-u', user, '-p', password] + other_args)
-        logger.debug(complete.args)
+        logger.debug(complete.returncode, complete.args)
         time.sleep(1)
         complete.kill()
 
