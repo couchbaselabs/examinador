@@ -2,10 +2,12 @@
 Library            RequestsLibrary
 Library            Process
 Library            OperatingSystem
+Library            ../libraries/test_utils.py
 Library            ../libraries/cbm_utils.py     ${BIN_PATH}    ${TEMP_DIR}${/}data${/}backups
 
 *** Variables ***
-${BIN_PATH}    %{HOME}${/}source${/}install${/}bin
+${BIN_PATH}        %{HOME}${/}source${/}install${/}bin
+${WORKSPACE}       Get Environment Variable    PWD
 
 *** Keywords ***
 Get info as json
@@ -22,6 +24,12 @@ Get info as user
     ...                                --depth    ${depth}
     Should Be Equal As Integers    ${result.rc}    0
     Return from keyword    ${result.stdout}
+
+Collect logs and remove archive
+    [Arguments]        ${arch}=${TEMP_DIR}${/}data${/}backups
+    ${result}=         Run Process     ${BIN_PATH}${/}cbbackupmgr    collect-logs    --archive     ${arch}     -o    ${WORKSPACE}${/}reports
+    Should Be Equal As Integers    ${result.rc}    0
+    Remove Directory    ${arch}    recursive=True
 
 Get cbriftdump data
     [Arguments]        ${dir}

@@ -143,7 +143,7 @@ pipeline {
                     // Run test suites
                     sh '''#!/bin/bash
                           source robot-env/bin/activate
-                          robot-env/bin/robot --variable NS_SERVER_PATH:${SOURCE}/ns_server --variable BIN_PATH:${SOURCE}/install/bin --outputdir ${WORKSPACE}/reports --exclude in_progress --exclude UI --consolewidth 120 -L DEBUG *_tests rest_api_longer
+                          robot-env/bin/robot --variable NS_SERVER_PATH:${SOURCE}/ns_server --variable BIN_PATH:${SOURCE}/install/bin --variable WORKSPACE:${WORKSPACE} --outputdir ${WORKSPACE}/reports --exclude in_progress --exclude UI --consolewidth 120 -L DEBUG *_tests rest_api_longer
                     '''
                 }
             }
@@ -162,6 +162,7 @@ pipeline {
                       outputFileName      : 'output.xml',
                       reportFileName      : 'report.html',
                       logFileName         : 'log.html',
+                      otherFiles          : 'cbbackupmgr-collectinfo-backups-*.zip'
                       disableArchiveOutput: false,
                       passThreshold       : 100,
                       unstableThreshold   : 95,
