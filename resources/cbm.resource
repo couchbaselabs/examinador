@@ -2,7 +2,6 @@
 Library            RequestsLibrary
 Library            Process
 Library            OperatingSystem
-Library            ../libraries/test_utils.py
 Library            ../libraries/cbm_utils.py     ${BIN_PATH}    ${TEMP_DIR}${/}data${/}backups
 
 *** Variables ***
