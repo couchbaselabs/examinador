@@ -4,6 +4,7 @@ Library    Process
 
 *** Variables ***
 ${BIN_PATH}    %{HOME}${/}source${/}install${/}bin
+${THREADS}     1
 
 *** Keywords ***
 Create CB bucket if it does not exist cli
@@ -150,37 +151,37 @@ Load documents into bucket using cbc bucket level
 
 Load documents into bucket using cbworkloadgen
     [Arguments]    ${items}=2048    ${bucket}=default    ${host}=localhost:9000    ${user}=Administrator
-    ...            ${password}=asdasd    ${size}=1024    ${threads}=6    ${key-pref}=pymc
+    ...            ${password}=asdasd    ${size}=1024    ${key-pref}=pymc
     [Documentation]    Uses cbworkloadgen to load data into the bucket
     ${result}=    Run process    ${BIN_PATH}${/}cbworkloadgen    -n    ${host}    -u    ${user}    -p     ${password}
-    ...                          -i    ${items}    -b     ${bucket}    -j    -s    ${size}    -t    ${threads}
+    ...                          -i    ${items}    -b     ${bucket}    -j    -s    ${size}    -t    ${THREADS}
     ...                          --prefix    ${key-pref}    stdout=${TEMPDIR}/stdout.txt     stderr=DEVNULL
     Should Be Equal As Integers    ${result.rc}    0
 
 Load documents with xattr into bucket using cbworkloadgen
     [Arguments]    ${items}=2048    ${bucket}=default    ${host}=localhost:9000   ${user}=Administrator
-    ...            ${password}=asdasd    ${size}=1024    ${threads}=6    ${key-pref}=pymc
+    ...            ${password}=asdasd    ${size}=1024    ${key-pref}=pymc
     [Documentation]    Uses cbworkloadgen to load data into the bucket
     ${result}=    Run process    ${BIN_PATH}${/}cbworkloadgen    -n    ${host}    -u    ${user}    -p     ${password}
-    ...                          -i    ${items}    -b     ${bucket}    -j    -s    ${size}    -t    ${threads}
+    ...                          -i    ${items}    -b     ${bucket}    -j    -s    ${size}    -t    ${THREADS}
     ...                          --prefix    ${key-pref}    --xattr
     Should Be Equal As Integers    ${result.rc}    0
 
 Load Binary documents into bucket using cbworkloadgen
     [Arguments]    ${items}=2048    ${bucket}=default    ${host}=localhost:9000   ${user}=Administrator
-    ...            ${password}=asdasd    ${size}=1024    ${threads}=6    ${key-pref}=pymc
+    ...            ${password}=asdasd    ${size}=1024    ${key-pref}=pymc
     [Documentation]    Uses cbworkloadgen to load data into the bucket
     ${result}=    Run process    ${BIN_PATH}${/}cbworkloadgen    -n    ${host}    -u    ${user}    -p     ${password}
-    ...                          -i    ${items}    -b     ${bucket}    -s    ${size}    -t    ${threads}
+    ...                          -i    ${items}    -b     ${bucket}    -s    ${size}    -t    ${THREADS}
     ...                          --prefix    ${key-pref}
     Should Be Equal As Integers    ${result.rc}    0
 
 Load Binary documents with xattr into bucket using cbworkloadgen
     [Arguments]    ${items}=2048    ${bucket}=default    ${host}=localhost:9000   ${user}=Administrator
-    ...            ${password}=asdasd    ${size}=1024    ${threads}=6    ${key-pref}=pymc
+    ...            ${password}=asdasd    ${size}=1024    ${key-pref}=pymc
     [Documentation]    Uses cbworkloadgen to load data into the bucket
     ${result}=    Run process    ${BIN_PATH}${/}cbworkloadgen    -n    ${host}    -u    ${user}    -p     ${password}
-    ...                          -i    ${items}    -b     ${bucket}    -s    ${size}    -t    ${threads}
+    ...                          -i    ${items}    -b     ${bucket}    -s    ${size}    -t    ${THREADS}
     ...                          --prefix    ${key-pref}    --xattr
     Should Be Equal As Integers    ${result.rc}    0
 
