@@ -162,7 +162,7 @@ pipeline {
                       outputFileName      : 'output.xml',
                       reportFileName      : 'report.html',
                       logFileName         : 'log.html',
-                      otherFiles          : 'cbbackupmgr-collectinfo-backups-*.zip',
+                      otherFiles          : '*.zip',
                       disableArchiveOutput: false,
                       passThreshold       : 100,
                       unstableThreshold   : 95,
