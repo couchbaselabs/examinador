@@ -5,6 +5,7 @@ Library    Process
 *** Variables ***
 ${BIN_PATH}    %{HOME}${/}source${/}install${/}bin
 ${THREADS}     1
+${CBWORKLOADGEN_WAIT_TIME}    20
 
 *** Keywords ***
 Create CB bucket if it does not exist cli
@@ -157,6 +158,7 @@ Load documents into bucket using cbworkloadgen
     ...                          -i    ${items}    -b     ${bucket}    -j    -s    ${size}    -t    ${THREADS}
     ...                          --prefix    ${key-pref}    stdout=${TEMPDIR}/stdout.txt     stderr=DEVNULL
     Should Be Equal As Integers    ${result.rc}    0
+    Sleep    ${CBWORKLOADGEN_WAIT_TIME}
 
 Load documents with xattr into bucket using cbworkloadgen
     [Arguments]    ${items}=2048    ${bucket}=default    ${host}=localhost:9000   ${user}=Administrator
@@ -166,6 +168,7 @@ Load documents with xattr into bucket using cbworkloadgen
     ...                          -i    ${items}    -b     ${bucket}    -j    -s    ${size}    -t    ${THREADS}
     ...                          --prefix    ${key-pref}    --xattr
     Should Be Equal As Integers    ${result.rc}    0
+    Sleep    ${CBWORKLOADGEN_WAIT_TIME}
 
 Load Binary documents into bucket using cbworkloadgen
     [Arguments]    ${items}=2048    ${bucket}=default    ${host}=localhost:9000   ${user}=Administrator
@@ -175,6 +178,7 @@ Load Binary documents into bucket using cbworkloadgen
     ...                          -i    ${items}    -b     ${bucket}    -s    ${size}    -t    ${THREADS}
     ...                          --prefix    ${key-pref}
     Should Be Equal As Integers    ${result.rc}    0
+    Sleep    ${CBWORKLOADGEN_WAIT_TIME}
 
 Load Binary documents with xattr into bucket using cbworkloadgen
     [Arguments]    ${items}=2048    ${bucket}=default    ${host}=localhost:9000   ${user}=Administrator
@@ -184,6 +188,7 @@ Load Binary documents with xattr into bucket using cbworkloadgen
     ...                          -i    ${items}    -b     ${bucket}    -s    ${size}    -t    ${THREADS}
     ...                          --prefix    ${key-pref}    --xattr
     Should Be Equal As Integers    ${result.rc}    0
+    Sleep    ${CBWORKLOADGEN_WAIT_TIME}
 
 Get bucket uuid
     [Arguments]    ${bucket}=default    ${host}=http://localhost:9000    ${user}=Administrator    ${password}=asdasd

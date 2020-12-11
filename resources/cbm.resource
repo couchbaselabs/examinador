@@ -13,6 +13,7 @@ Get info as json
     [Arguments]        ${repo}    ${arch}=${TEMP_DIR}${/}data${/}backups    ${type}=0x03
     ${result}=         Run Process     ${BIN_PATH}${/}cbbackupmgr    info    --archive     ${arch}     -r    ${repo}
     ...                                --json
+    Log To Console    ${result.stdout}     DEBUG
     Should Be Equal As Integers    ${result.rc}    0
     ${result_dict}=    Evaluate    json.loads('''${result.stdout}''')    json
     Return from keyword    ${result_dict}
@@ -25,9 +26,25 @@ Get info as user
     Return from keyword    ${result.stdout}
 
 Collect logs and remove archive
-    [Arguments]        ${arch}=${TEMP_DIR}${/}data${/}backups
-    ${result}=         Run Process     ${BIN_PATH}${/}cbbackupmgr    collect-logs    --archive     ${arch}     -o    ${WORKSPACE}${/}reports
+    [Arguments]        ${arch}=${TEMP_DIR}${/}data${/}backups    ${host}=http://localhost:9000    ${user}=Administrator
+    ...                ${password}=asdasd
+    ${result}=         Run Process     ${BIN_PATH}${/}cbbackupmgr    collect-logs    --archive     ${arch}
+    ...                -o    ${WORKSPACE}${/}reports
+    Log To Console    ${result.stdout}     DEBUG
     Should Be Equal As Integers    ${result.rc}    0
+    ${result}=         Run Process     ${BIN_PATH}${/}couchbase-cli    collect-logs-start      -c    ${host}
+    ...                -u    ${user}    -p    ${password}    --output-directory    ${WORKSPACE}${/}reports
+    ...                --all-nodes
+    Log To Console    ${result.stdout}     DEBUG
+    Should Be Equal As Integers    ${result.rc}    0
+    FOR    ${i}   IN RANGE    300
+        Sleep    2s
+        ${result}=         Run Process     ${BIN_PATH}${/}couchbase-cli    collect-logs-status      -c    ${host}
+        ...                -u    ${user}    -p    ${password}
+        ${exit}=    Evaluate    "completed" in """${result.stdout}"""
+        Exit for loop IF    ${exit}
+    END
+    Log To Console    ${result.stdout}     DEBUG
     Remove Directory    ${arch}    recursive=True
 
 Get cbriftdump data
