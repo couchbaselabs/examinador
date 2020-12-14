@@ -153,42 +153,50 @@ Load documents into bucket using cbc bucket level
 Load documents into bucket using cbworkloadgen
     [Arguments]    ${items}=2048    ${bucket}=default    ${host}=localhost:9000    ${user}=Administrator
     ...            ${password}=asdasd    ${size}=1024    ${key-pref}=pymc
-    [Documentation]    Uses cbworkloadgen to load data into the bucket
+    [Documentation]    Uses cbworkloadgen to load json docs with no xattr into the bucket
+    ${previous_items}=    Get item count    bucket=${bucket}
     ${result}=    Run process    ${BIN_PATH}${/}cbworkloadgen    -n    ${host}    -u    ${user}    -p     ${password}
     ...                          -i    ${items}    -b     ${bucket}    -j    -s    ${size}    -t    ${THREADS}
     ...                          --prefix    ${key-pref}    stdout=${TEMPDIR}/stdout.txt     stderr=DEVNULL
+    Log To Console    ${result.stdout}     DEBUG
     Should Be Equal As Integers    ${result.rc}    0
-    Sleep    ${CBWORKLOADGEN_WAIT_TIME}
+    Wait for items to be persisted to disk    ${previous_items}    ${items}    bucket=${bucket}
 
 Load documents with xattr into bucket using cbworkloadgen
     [Arguments]    ${items}=2048    ${bucket}=default    ${host}=localhost:9000   ${user}=Administrator
     ...            ${password}=asdasd    ${size}=1024    ${key-pref}=pymc
-    [Documentation]    Uses cbworkloadgen to load data into the bucket
+    [Documentation]    Uses cbworkloadgen to load json docs with xattr into the bucket
+    ${previous_items}=    Get item count    bucket=${bucket}
     ${result}=    Run process    ${BIN_PATH}${/}cbworkloadgen    -n    ${host}    -u    ${user}    -p     ${password}
     ...                          -i    ${items}    -b     ${bucket}    -j    -s    ${size}    -t    ${THREADS}
     ...                          --prefix    ${key-pref}    --xattr
+    Log To Console    ${result.stdout}     DEBUG
     Should Be Equal As Integers    ${result.rc}    0
-    Sleep    ${CBWORKLOADGEN_WAIT_TIME}
+    Wait for items to be persisted to disk    ${previous_items}    ${items}    bucket=${bucket}
 
 Load Binary documents into bucket using cbworkloadgen
     [Arguments]    ${items}=2048    ${bucket}=default    ${host}=localhost:9000   ${user}=Administrator
     ...            ${password}=asdasd    ${size}=1024    ${key-pref}=pymc
-    [Documentation]    Uses cbworkloadgen to load data into the bucket
+    [Documentation]    Uses cbworkloadgen to load binary docs with no xattr into the bucket
+    ${previous_items}=    Get item count    bucket=${bucket}
     ${result}=    Run process    ${BIN_PATH}${/}cbworkloadgen    -n    ${host}    -u    ${user}    -p     ${password}
     ...                          -i    ${items}    -b     ${bucket}    -s    ${size}    -t    ${THREADS}
     ...                          --prefix    ${key-pref}
+    Log To Console    ${result.stdout}     DEBUG
     Should Be Equal As Integers    ${result.rc}    0
-    Sleep    ${CBWORKLOADGEN_WAIT_TIME}
+    Wait for items to be persisted to disk    ${previous_items}    ${items}    bucket=${bucket}
 
 Load Binary documents with xattr into bucket using cbworkloadgen
-    [Arguments]    ${items}=2048    ${bucket}=default    ${host}=localhost:9000   ${user}=Administrator
+    [Arguments]    ${items}=2048    ${bucket}=default    ${host}=localhost:9000  ${user}=Administrator
     ...            ${password}=asdasd    ${size}=1024    ${key-pref}=pymc
-    [Documentation]    Uses cbworkloadgen to load data into the bucket
+    [Documentation]    Uses cbworkloadgen to load binary docs with xattr into the bucket
+    ${previous_items}=    Get item count    bucket=${bucket}
     ${result}=    Run process    ${BIN_PATH}${/}cbworkloadgen    -n    ${host}    -u    ${user}    -p     ${password}
     ...                          -i    ${items}    -b     ${bucket}    -s    ${size}    -t    ${THREADS}
     ...                          --prefix    ${key-pref}    --xattr
+    Log To Console    ${result.stdout}     DEBUG
     Should Be Equal As Integers    ${result.rc}    0
-    Sleep    ${CBWORKLOADGEN_WAIT_TIME}
+    Wait for items to be persisted to disk    ${previous_items}    ${items}    bucket=${bucket}
 
 Get bucket uuid
     [Arguments]    ${bucket}=default    ${host}=http://localhost:9000    ${user}=Administrator    ${password}=asdasd
@@ -198,3 +206,38 @@ Get bucket uuid
     ${resp}=    Get request    admin_api    /pools/default/buckets/${bucket}
     Status should be    200    ${resp}
     Return from keyword    ${resp.json()["uuid"]}
+
+Get item count
+    [Arguments]    ${bucket}    ${host}=localhost   ${user}=Administrator    ${password}=asdasd
+    [Documentation]    Get the number of items in a bucket.
+    ${ports}=    Get service ports    bucket=${bucket}
+    ${result}=         Run Process     ${BIN_PATH}${/}cbstats    -u    ${user}    -p    ${password}
+    ...                -b    ${bucket}    ${host}:${ports['kv']}    -j    all
+    Should Be Equal As Integers    ${result.rc}    0
+    ${result_dict}=    Evaluate    json.loads('''${result.stdout}''')    json
+    Return from keyword    ${result_dict['ep_total_persisted']}
+
+Get service ports
+    [Arguments]    ${bucket}=default    ${host}=http://localhost:9000    ${user}=Administrator    ${password}=asdasd
+    [Documentation]    Gets the ports for a node.
+    ${auth}=    Create List    ${user}    ${password}
+    Create session    admin_api    ${host}    auth=${auth}
+    ${resp}=    Get request    admin_api    /pools/default/nodeServices
+    Status should be    200    ${resp}
+    ${num_nodes}=    Get Length    ${resp.json()['nodesExt']}
+    FOR    ${node}    IN RANGE    ${num_nodes}
+        Return from keyword if    '${resp.json()['nodesExt'][${node}]['thisNode']}'=='True'
+        ...                       ${resp.json()['nodesExt'][${node}]['services']}
+    END
+    Fail    Node not found
+
+Wait for items to be persisted to disk
+    [Arguments]    ${previous_items}    ${items}    ${bucket}=default
+    [Documentation]    Checks the expected number of items have been persisted to disk.
+    FOR    ${i}   IN RANGE    120
+        ${result}=    Get item count    bucket=${bucket}
+        ${expected_result}=    Evaluate    ${previous_items}+${items}
+        ${exit}=      Evaluate    ${result}==${expected_result}
+        Exit for loop IF    ${exit}
+        Sleep    0.5
+    END
