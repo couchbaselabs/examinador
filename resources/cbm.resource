@@ -25,13 +25,17 @@ Get info as user
     Should Be Equal As Integers    ${result.rc}    0
     Return from keyword    ${result.stdout}
 
-Collect logs and remove archive
+Collect backup logs and remove archive
     [Arguments]        ${arch}=${TEMP_DIR}${/}data${/}backups    ${host}=http://localhost:9000    ${user}=Administrator
     ...                ${password}=asdasd
     ${result}=         Run Process     ${BIN_PATH}${/}cbbackupmgr    collect-logs    --archive     ${arch}
     ...                -o    ${WORKSPACE}${/}reports
     Log To Console    ${result.stdout}     DEBUG
     Should Be Equal As Integers    ${result.rc}    0
+    Remove Directory    ${arch}    recursive=True
+
+Collect server logs and remove archive
+    [Arguments]        ${host}=http://localhost:9000    ${user}=Administrator    ${password}=asdasd
     ${result}=         Run Process     ${BIN_PATH}${/}couchbase-cli    collect-logs-start      -c    ${host}
     ...                -u    ${user}    -p    ${password}    --output-directory    ${WORKSPACE}${/}reports
     ...                --all-nodes
@@ -45,7 +49,6 @@ Collect logs and remove archive
         Exit for loop IF    ${exit}
     END
     Log To Console    ${result.stdout}     DEBUG
-    Remove Directory    ${arch}    recursive=True
 
 Get cbriftdump data
     [Arguments]        ${dir}

@@ -183,6 +183,14 @@ class cbm_utils:
             if doc["key"].startswith(excluded_key):
                 raise AssertionError("Document with wrong key prefix included")
 
+    @keyword(types=[List[Dict],str,int])
+    def check_key_is_included_in_backup(self, data: List[Dict], included_key: str, expected_count: int) :
+        """The function will check the documents key prefix to ensure these documents have been included in the
+        backup."""
+        count = len(list(filter(lambda doc: doc["key"].startswith(included_key), data)))
+        if count != expected_count:
+            raise AssertionError(f"Unexpected number of documents with included key: {count} != {expected_count}")
+
     @keyword(types=[List[Dict],str])
     def check_key_not_included_in_restore(self, data: List[Dict], excluded_key: str) :
         """The function will check the documents key prefix and raise an error if any documents have the
@@ -199,7 +207,7 @@ class cbm_utils:
         documents, that the index matches the key and the body is made up of a certain number of 0s.
 
         Arguments:
-            len: The expected number of documents.
+            expected_length: The expected number of documents.
             size: The length of the body.
         """
         if len(data) != expected_length:
@@ -210,6 +218,24 @@ class cbm_utils:
                 raise AssertionError("Document contents changed: index doesn't match key")
             if doc["body"] != "0"*size:
                 raise AssertionError("Document contents changed: body has been alterd")
+
+    @keyword(types=[List[Dict], int, str])
+    def check_restored_cbc_docs_contents(self, data: List[Dict], expected_length: int, group: str) :
+        """The function checks the documents cotents and validates them.
+
+        Checks that the cbtransfer output of cbc-create generated documents contains; the expected number of
+        documents and the group field is the expected value.
+
+        Arguments:
+            expected_length: The expected number of documents.
+            group: The expected value of the group field.
+        """
+        if len(data) != expected_length:
+            raise AssertionError(f'Document contents changed: unexpected number of documents: {len(data)} \
+                                    != {expected_length}')
+        for doc in data:
+            if not doc["group"] == group:
+                raise AssertionError(f'Document contents changed: {doc["group"]} != {group}')
 
     @keyword(types=[str])
     def rift_to_list(self, data: str) -> List[Dict]:

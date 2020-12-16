@@ -7,7 +7,7 @@ Resource           ../resources/couchbase.resource
 Resource           ../resources/cbm.resource
 
 
-Suite Teardown     Remove Directory    ${TEMP_DIR}${/}data${/}backups    recursive=True
+Suite Teardown     Collect backup logs and remove archive
 
 
 ***Test Cases***

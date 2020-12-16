@@ -9,7 +9,7 @@ Resource           ../resources/cbm.resource
 
 Suite setup        Run keywords    Delete bucket cli
 ...                AND    Delete bucket cli    bucket=new_bucket
-Suite Teardown     Remove Directory    ${TEMP_DIR}${/}data${/}backups    recursive=True
+Suite Teardown     Collect backup logs and remove archive
 
 ***Test Cases***
 Test include bucket backup
@@ -103,7 +103,7 @@ Test exclude scopes backup
     Check correct scope    ${result}    y
 
 Test include collections backup
-    [Tags]    P1    Backup    in_progress
+    [Tags]    P1    Backup
     [Documentation]    This tests that when the --include-data flag is used on a bucket with multiple collections,
     ...                only the data from the specified collection is backed up.
     Delete bucket cli
@@ -160,7 +160,6 @@ Test partial backup restored to other bucket
     Load documents into bucket using cbworkloadgen     bucket=buck2
     Configure backup     repo=simple
     Run backup           repo=simple
-    # buckets should be flushed not deleted but can only fit two nodes at a time not three
     Delete bucket cli    bucket=buck1
     Flush bucket REST    bucket=buck2
     Create CB bucket if it does not exist cli    bucket=new_bucket

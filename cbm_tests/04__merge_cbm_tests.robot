@@ -8,7 +8,7 @@ Resource           ../resources/cbm.resource
 
 Suite setup        Run keywords    Delete bucket cli     bucket=buck1
 ...                AND    Delete bucket cli     bucket=buck2
-Suite Teardown     Remove Directory    ${TEMP_DIR}${/}data${/}backups    recursive=True
+Suite Teardown     Collect backup logs and remove archive
 
 
 ***Test Cases***
