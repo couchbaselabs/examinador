@@ -78,10 +78,17 @@ pipeline {
                     sh '''#!/bin/bash
                           python3 -m venv robot-env
                           source robot-env/bin/activate
-                          pip install -r requirements.txt
+                          pip3 install -r requirements.txt
                           pip3 install pylint mypy==0.730
                     '''
-                }
+
+                    //Install chromedriver
+                    sh '''#!/bin/bash
+                          source robot-env/bin/activate
+                          pip3 install webdrivermanager
+                          webdrivermanager chrome --linkpath ${EXAMINADOR}/robot-env/bin
+                    '''
+                  }
             }
         }
 
@@ -143,7 +150,7 @@ pipeline {
                     // Run test suites
                     sh '''#!/bin/bash
                           source robot-env/bin/activate
-                          robot-env/bin/robot --variable NS_SERVER_PATH:${SOURCE}/ns_server --variable BIN_PATH:${SOURCE}/install/bin --variable WORKSPACE:${WORKSPACE} --outputdir ${WORKSPACE}/reports --exclude in_progress --exclude wait_for_bug_fix --exclude UI --consolewidth 120 -L DEBUG *_tests rest_api_longer
+                          robot-env/bin/robot --variable NS_SERVER_PATH:${SOURCE}/ns_server --variable BIN_PATH:${SOURCE}/install/bin --variable WORKSPACE:${WORKSPACE} --outputdir ${WORKSPACE}/reports --exclude in_progress --exclude wait_for_bug_fix --consolewidth 120 -L DEBUG *_tests rest_api_longer
                     '''
                 }
             }
