@@ -9,6 +9,8 @@ Resource           ../resources/cbm.resource
 
 Suite Teardown     Collect backup logs and remove archive
 
+***Variables***
+${ARCHIVE}         ${TEMP_DIR}${/}data${/}backups
 
 ***Test Cases***
 Test simple info per repo
@@ -46,12 +48,12 @@ Test advanced info per repo
     Should Be Equal as integers    ${result}[backups][2][buckets][1][mutations]          0
     ${bucket_uuid}=    Get bucket uuid    bucket=buck1
     ${dir}=    catenate    SEPARATOR=
-    ...    ${TEMP_DIR}${/}data${/}backups${/}simple${/}${result}[backups][0][date]
+    ...    ${ARCHIVE}${/}simple${/}${result}[backups][0][date]
     ...    ${/}buck1-${bucket_uuid}${/}data
     ${data}=    Get cbriftdump data     dir=${dir}
     Check cbworkloadgen rift contents    ${data}    expected_len_json=2048    size=1024
     ${dir}=    catenate    SEPARATOR=
-    ...    ${TEMP_DIR}${/}data${/}backups${/}simple${/}${result}[backups][1][date]
+    ...    ${ARCHIVE}${/}simple${/}${result}[backups][1][date]
     ...    ${/}buck1-${bucket_uuid}${/}data
     ${data}=    Get cbriftdump data     dir=${dir}
     Check cbworkloadgen rift contents    ${data}    expected_len_json=2048    size=1024

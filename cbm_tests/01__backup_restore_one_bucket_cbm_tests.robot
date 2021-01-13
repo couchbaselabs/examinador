@@ -4,7 +4,8 @@ Force tags         Tier1
 Library            Process
 Library            OperatingSystem
 Library            Collections
-Library            ../libraries/cbm_utils.py    ${BIN_PATH}    ${TEMP_DIR}${/}data${/}backups
+Library            ../libraries/cbm_utils.py    ${BIN_PATH}    ${ARCHIVE}
+Library            ../libraries/sdk_utils.py
 Resource           ../resources/couchbase.resource
 Resource           ../resources/cbm.resource
 
@@ -13,13 +14,14 @@ Suite Teardown     Run keywords    Collect backup logs and remove archive
 
 ***Variables***
 ${BIN_PATH}        %{HOME}${/}test-source${/}install${/}bin
+${ARCHIVE}         ${TEMP_DIR}${/}data${/}backups
 
 ***Test Cases***
 Test Simple backup
     [Tags]    P0    Backup
-    [Documentation]    This tests that a backup can be performed and then checks
-    ...                the the number of documents are correct and the documents
-    ...                have the correct body and metadata.
+    [Documentation]    This tests that a backup can be performed and then checks the the number of documents are correct
+    ...                and the documents have the correct body and metadata.
+    Set index memory quota
     Create CB bucket if it does not exist cli
     Load documents into bucket using cbworkloadgen
     Configure backup    repo=simple
@@ -35,7 +37,7 @@ Test Simple backup
     ...                            0
     ${bucket_uuid}=    Get bucket uuid
     ${dir}=    catenate    SEPARATOR=
-    ...    ${TEMP_DIR}${/}data${/}backups${/}simple${/}${result}[backups][${number_of_backups-1}][date]
+    ...    ${ARCHIVE}${/}simple${/}${result}[backups][${number_of_backups-1}][date]
     ...    ${/}default-${bucket_uuid}${/}data
     ${data}=    Get cbriftdump data     dir=${dir}
     Check cbworkloadgen rift contents    ${data}    expected_len_json=2048    size=1024
@@ -45,7 +47,7 @@ Test Restore Backup
     [Documentation]    Tests a backup is restored by flushing bucket then restoring it and showing
     ...                it contains the correct number of documents in the correct format
     Flush bucket REST
-    Run restore                   repo=simple
+    Run restore and wait until persisted    repo=simple
     ${result}=    Get doc info
     Check restored cbworkloadgen docs contents    ${result}    2048    1024
 
@@ -53,7 +55,7 @@ Test bucket restored to other bucket
     [Tags]    P0    Restore
     [Documentation]    Tests backup of one backup can be mapped to another bucket when restored with --map-data flag.
     Create CB bucket if it does not exist cli    bucket=new_bucket
-    Run restore                   repo=simple    map-data=default=new_bucket
+    Run restore and wait until persisted    repo=simple    bucket=new_bucket    map-data=default=new_bucket
     ${result}=    Get doc info    bucket=new_bucket
     Check restored cbworkloadgen docs contents    ${result}    2048    1024
 
@@ -78,7 +80,7 @@ Test Incremental backup
     ...                            0
     ${bucket_uuid}=    Get bucket uuid
     ${dir}=    catenate    SEPARATOR=
-    ...    ${TEMP_DIR}${/}data${/}backups${/}simple${/}${result}[backups][${number_of_backups-1}][date]
+    ...    ${ARCHIVE}${/}simple${/}${result}[backups][${number_of_backups-1}][date]
     ...    ${/}default-${bucket_uuid}${/}data
     ${data}=    Get cbriftdump data     dir=${dir}
     Check cbworkloadgen rift contents    ${data}    expected_len_json=2048    size=1024
@@ -92,7 +94,7 @@ Test all incremental backups restored
     Load documents into bucket using cbworkloadgen    key-pref=pymf
     Run backup                        repo=simple
     Flush bucket REST
-    Run restore                       repo=simple
+    Run restore and wait until persisted    repo=simple    items=6144
     ${result}=    Get doc info
     Check restored cbworkloadgen docs contents    ${result}    6144    1024
 
@@ -101,7 +103,7 @@ Test range of incremental backups restored
     [Documentation]    Tests all incremental backups are restored by flushing bucket then restoring it and showing
     ...                it contains the correct number of documents in the correct format
     Flush bucket REST
-    Run restore                repo=simple    start=3    end=4
+    Run restore and wait until persisted    repo=simple    start=3    end=4    items=4096
     ${result}=    Get doc info
     Check restored cbworkloadgen docs contents         ${result}    4096    1024
     Check key not included in restore    ${result}    pymc
@@ -126,7 +128,7 @@ Test Force Full Backup
     ...                            6144
     ${bucket_uuid}=    Get bucket uuid
     ${dir}=    catenate    SEPARATOR=
-    ...    ${TEMP_DIR}${/}data${/}backups${/}simple${/}${result}[backups][${number_of_backups-1}][date]
+    ...    ${ARCHIVE}${/}simple${/}${result}[backups][${number_of_backups-1}][date]
     ...    ${/}default-${bucket_uuid}${/}data
     ${data}=    Get cbriftdump data     dir=${dir}
     Check cbworkloadgen rift contents    ${data}    expected_len_json=6144    size=1024
@@ -135,13 +137,13 @@ Test filter docs restored
     [Tags]    P1    Restore
     [Documentation]    This tests that when a backup is restored with the --filter-keys flag, only
     ...                documents with correct keys are restored.
-    Remove Directory    ${TEMP_DIR}${/}data${/}backups    recursive=True
+    Remove Directory    ${ARCHIVE}    recursive=True
     Flush bucket REST
     Load documents into bucket using cbc bucket level
     Configure backup    repo=simple
     Run backup      repo=simple
     Flush bucket REST
-    Run restore     repo=simple    filter-keys=key[0-4]
+    Run restore and wait until persisted     repo=simple    filter-keys=key[0-4]    items=5
     ${result}=    Get doc info
     Length should be    ${result}    5
 
@@ -150,7 +152,8 @@ Test filter values restored
     [Documentation]    This tests that when a backup is restored with the --filter-keys flag, only
     ...                documents with correct keys are restored.
     Flush bucket REST
-    Run restore     repo=simple    filter-values=\\{\\"group\\":\\"example\\",\\"num\\":[0-4]\\}
+    Run restore and wait until persisted     repo=simple
+    ...                 filter-values=\\{\\"group\\":\\"example\\",\\"num\\":[0-4]\\}    items=5
     ${result}=    Get doc info
     Length should be    ${result}    5
 
@@ -162,6 +165,6 @@ Test auto-create bucket
     Load documents into bucket using cbworkloadgen    bucket=new_bucket    key-pref=pymd
     Run backup             repo=simple
     Delete bucket cli      bucket=new_bucket
-    Run restore            repo=simple     auto-create-buckets=None
+    Run restore and wait until persisted            repo=simple     bucket=new_bucket    auto-create-buckets=None    items=4096
     ${result}=    Get doc info    bucket=new_bucket
     Check restored cbworkloadgen docs contents    ${result}    4096    1024

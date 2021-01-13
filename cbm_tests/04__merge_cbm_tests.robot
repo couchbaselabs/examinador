@@ -10,6 +10,8 @@ Suite setup        Run keywords    Delete bucket cli     bucket=buck1
 ...                AND    Delete bucket cli     bucket=buck2
 Suite Teardown     Collect backup logs and remove archive
 
+***Variables***
+${ARCHIVE}         ${TEMP_DIR}${/}data${/}backups
 
 ***Test Cases***
 Test non-overlapping backups merge
@@ -34,7 +36,7 @@ Test non-overlapping backups merge
     Should Be Equal as integers    ${result}[backups][${number_of_backups-1}][buckets][0][mutations]    6144
     ${bucket_uuid}=    Get bucket uuid
     ${dir}=    catenate    SEPARATOR=
-    ...    ${TEMP_DIR}${/}data${/}backups${/}simple${/}${result}[backups][${number_of_backups-1}][date]
+    ...    ${ARCHIVE}${/}simple${/}${result}[backups][${number_of_backups-1}][date]
     ...    ${/}default-${bucket_uuid}${/}data
     ${data}=    Get cbriftdump data     dir=${dir}
     Check cbworkloadgen rift contents    ${data}    expected_len_json=6144    size=1024
@@ -61,7 +63,7 @@ Test overlapping backups merge
     Should Be Equal as integers    ${result}[backups][${number_of_backups-1}][buckets][0][mutations]    8192
     ${bucket_uuid}=    Get bucket uuid
     ${dir}=    catenate    SEPARATOR=
-    ...    ${TEMP_DIR}${/}data${/}backups${/}simple${/}${result}[backups][${number_of_backups-1}][date]
+    ...    ${ARCHIVE}${/}simple${/}${result}[backups][${number_of_backups-1}][date]
     ...    ${/}default-${bucket_uuid}${/}data
     ${data}=    Get cbriftdump data     dir=${dir}
     Check cbworkloadgen rift contents    ${data}    expected_len_json=8192    size=1024

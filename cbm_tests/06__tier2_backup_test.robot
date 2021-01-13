@@ -4,7 +4,7 @@ Force tags         Tier2
 Library            Process
 Library            OperatingSystem
 Library            Collections
-Library            ../libraries/cbm_utils.py    ${BIN_PATH}    ${TEMP_DIR}${/}data${/}backups
+Library            ../libraries/cbm_utils.py    ${BIN_PATH}    ${ARCHIVE}
 Resource           ../resources/couchbase.resource
 Resource           ../resources/cbm.resource
 
@@ -13,7 +13,7 @@ Suite Teardown     Collect backup logs and remove archive
 
 ***Variables***
 ${BIN_PATH}        %{HOME}${/}test-source${/}install${/}bin
-
+${ARCHIVE}         ${TEMP_DIR}${/}data${/}backups
 
 ***Test Cases***
 Test multiple document type backup
@@ -30,7 +30,7 @@ Test multiple document type backup
     ${number_of_backups}=         Get Length       ${result}[backups]
     ${bucket_uuid}=    Get bucket uuid
     ${dir}=    catenate    SEPARATOR=
-    ...    ${TEMP_DIR}${/}data${/}backups${/}simple${/}${result}[backups][${number_of_backups-1}][date]
+    ...    ${ARCHIVE}${/}simple${/}${result}[backups][${number_of_backups-1}][date]
     ...    ${/}default-${bucket_uuid}${/}data
     ${data}=    Get cbriftdump data     dir=${dir}
     Check cbworkloadgen rift contents    ${data}    expected_len_binary=2048    expected_len_json=2048
@@ -41,7 +41,7 @@ Test purge backup
     [Documentation]    Test that is one backup is terminated mid process then another backup is run with the --purge
     ...                flag then the unfinished backup is deleted so only the new backup remains.
     Flush bucket REST
-    Remove Directory    ${TEMP_DIR}${/}data${/}backups    recursive=True
+    Remove Directory    ${ARCHIVE}    recursive=True
     Create CB bucket if it does not exist cli
     Load documents into bucket using cbworkloadgen
     Configure backup                  repo=simple
@@ -52,7 +52,7 @@ Test purge backup
     Length should be               ${result}[backups]      1
     ${bucket_uuid}=    Get bucket uuid
     ${dir}=    catenate    SEPARATOR=
-    ...    ${TEMP_DIR}${/}data${/}backups${/}simple${/}${result}[backups][0][date]
+    ...    ${ARCHIVE}${/}simple${/}${result}[backups][0][date]
     ...    ${/}default-${bucket_uuid}${/}data
     ${data}=    Get cbriftdump data     dir=${dir}
     Check cbworkloadgen rift contents    ${data}    expected_len_json=2048    size=1024
@@ -62,7 +62,7 @@ Test resume backup
     [Documentation]    Test that if one backup is terminated mid process then another backup is run with the --resume
     ...                flag then the backup restats from where the previous backup had got to.
     Flush bucket REST
-    Remove Directory    ${TEMP_DIR}${/}data${/}backups    recursive=True
+    Remove Directory    ${ARCHIVE}    recursive=True
     Create CB bucket if it does not exist cli
     Load documents into bucket using cbworkloadgen
     Configure backup                  repo=simple
@@ -74,7 +74,7 @@ Test resume backup
     Should be equal    ${result1}[backups][0][date]    ${result2}[backups][0][date]
     ${bucket_uuid}=    Get bucket uuid
     ${dir}=    catenate    SEPARATOR=
-    ...    ${TEMP_DIR}${/}data${/}backups${/}simple${/}${result2}[backups][0][date]
+    ...    ${ARCHIVE}${/}simple${/}${result2}[backups][0][date]
     ...    ${/}default-${bucket_uuid}${/}data
     ${data}=    Get cbriftdump data     dir=${dir}
     Check cbworkloadgen rift contents    ${data}    expected_len_json=2048    size=1024

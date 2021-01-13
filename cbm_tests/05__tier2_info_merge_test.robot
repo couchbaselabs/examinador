@@ -9,6 +9,9 @@ Resource           ../resources/cbm.resource
 
 Suite Teardown     Collect backup logs and remove archive
 
+***Variables***
+${ARCHIVE}         ${TEMP_DIR}${/}data${/}backups
+
 ***Test Cases***
 Test info per depth
     [Tags]    P0    Info
@@ -53,7 +56,7 @@ Test backups across multiple days merge
     ${result}=    Get info as json                   repo=across_day_merge
     ${number_of_backups}=    Get Length    ${result}[backups]
     Should be equal as integers    ${number_of_backups}    2
-    Change backup date    ${result}[backups][0][date]    ${TEMP_DIR}${/}data${/}backups${/}across_day_merge
+    Change backup date    ${result}[backups][0][date]    ${ARCHIVE}${/}across_day_merge
     Merge multiple backups            repo=across_day_merge    start=oldest    end=latest
     ${result}=    Get info as json    repo=across_day_merge
     ${number_of_backups}=    Get Length    ${result}[backups]
@@ -61,7 +64,7 @@ Test backups across multiple days merge
     Should be equal as integers    ${result}[backups][0][buckets][0][mutations]    4096
     ${bucket_uuid}=    Get bucket uuid
     ${dir}=    catenate    SEPARATOR=
-    ...    ${TEMP_DIR}${/}data${/}backups${/}across_day_merge${/}${result}[backups][0][date]
+    ...    ${ARCHIVE}${/}across_day_merge${/}${result}[backups][0][date]
     ...    ${/}default-${bucket_uuid}${/}data
     ${data}=    Get cbriftdump data    dir=${dir}
     Check cbworkloadgen rift contents    ${data}    expected_len_json=4096    size=1024

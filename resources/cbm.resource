@@ -3,6 +3,7 @@ Library            RequestsLibrary
 Library            Process
 Library            OperatingSystem
 Library            ../libraries/cbm_utils.py     ${BIN_PATH}    ${TEMP_DIR}${/}data${/}backups
+Resource           ../resources/couchbase.resource
 
 *** Variables ***
 ${BIN_PATH}        %{HOME}${/}source${/}install${/}bin
@@ -58,19 +59,18 @@ Get cbriftdump data
     ${result_list}=    Rift To List    ${result.stdout}
     Return from keyword    ${result_list}
 
-Get doc info
-    [Arguments]         ${bucket}=default   ${host}=http://localhost:9000    ${user}=Administrator
-    ...                 ${password}=asdasd
-    [Documentation]     This function will get the contents of the bucket.
-    ${trigger}=         Run Process     ${BIN_PATH}${/}cbtransfer     ${host}    stdout:
-    ...                 -u    ${USER}    -p    ${PASSWORD}    -b    ${bucket}    stdout=${TEMPDIR}${/}stdout.txt
-    ...                 stderr=DEVNULL
-    Should Be Equal As Integers    ${trigger.rc}    0
-    ${result_list}=    cbtransfer To List    ${trigger.stdout}
-    Return from keyword    ${result_list}
-
 Merge multiple backups
     [Arguments]         ${repo}    ${start}    ${end}    ${arch}=${TEMP_DIR}/data/backups
     ${trigger}=         Run Process     ${BIN_PATH}${/}cbbackupmgr     merge    --archive    ${arch}    -r    ${repo}
     ...                 --start    ${start}    --end    ${end}
     Should Be Equal As Integers    ${trigger.rc}    0
+
+Run restore and wait until persisted
+    [Arguments]         ${repo}    ${archive}=None    ${bucket}=default   ${host}=http://localhost:9000
+    ...                 ${user}=Administrator    ${password}=asdasd    ${timeout_value}=120    ${items}=2048
+    ...                 &{kwargs}
+    [Documentation]     This function will run restore and wait for docs to be persisted to disk.
+    ${previous_items}=    Get item count    bucket=${bucket}
+    Restore docs    repo=${repo}    host=${host}    user=${user}    password=${password}
+    ...             timeout_value=${timeout_value}    &{kwargs}
+    Wait for items to be persisted to disk    ${previous_items}    ${items}    bucket=${bucket}

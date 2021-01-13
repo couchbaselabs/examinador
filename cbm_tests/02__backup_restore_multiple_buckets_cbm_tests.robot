@@ -4,12 +4,16 @@ Force tags         Tier1
 Library            Process
 Library            OperatingSystem
 Library            Collections
+Library            ../libraries/sdk_utils.py
 Resource           ../resources/couchbase.resource
 Resource           ../resources/cbm.resource
 
 Suite setup        Run keywords    Delete bucket cli
 ...                AND    Delete bucket cli    bucket=new_bucket
 Suite Teardown     Collect backup logs and remove archive
+
+***Variables***
+${ARCHIVE}         ${TEMP_DIR}${/}data${/}backups
 
 ***Test Cases***
 Test include bucket backup
@@ -29,7 +33,7 @@ Test include bucket backup
     Should be equal        ${result}[backups][${number_of_backups-1}][buckets][0][name]    buck2
     ${bucket_uuid}=    Get bucket uuid    bucket=buck2
     ${dir}=    catenate    SEPARATOR=
-    ...    ${TEMP_DIR}${/}data${/}backups${/}include_buck2${/}${result}[backups][${number_of_backups-1}][date]
+    ...    ${ARCHIVE}${/}include_buck2${/}${result}[backups][${number_of_backups-1}][date]
     ...    ${/}buck2-${bucket_uuid}${/}data
     ${data}=    Get cbriftdump data     dir=${dir}
     Check cbworkloadgen rift contents    ${data}    expected_len_json=2048    size=1024
@@ -51,7 +55,7 @@ Test exclude bucket backup
     Length should be       ${result}[backups][${number_of_backups-1}][buckets]             1
     Should be equal        ${result}[backups][${number_of_backups-1}][buckets][0][name]    buck1
     ${dir}=    catenate    SEPARATOR=
-    ...    ${TEMP_DIR}${/}data${/}backups${/}exclude_buck2${/}${result}[backups][${number_of_backups-1}][date]
+    ...    ${ARCHIVE}${/}exclude_buck2${/}${result}[backups][${number_of_backups-1}][date]
     ...    ${/}buck1-${bucket_uuid}${/}data
     ${data}=    Get cbriftdump data     dir=${dir}
     Check cbworkloadgen rift contents    ${data}    expected_len_json=2048    size=1024
@@ -74,7 +78,7 @@ Test include scopes backup
     ${number_of_backups}=         Get Length    ${result}[backups]
     ${bucket_uuid}=    Get bucket uuid
     ${dir}=    catenate    SEPARATOR=
-    ...    ${TEMP_DIR}${/}data${/}backups${/}simple-scp-inc${/}${result}[backups][${number_of_backups-1}][date]
+    ...    ${ARCHIVE}${/}simple-scp-inc${/}${result}[backups][${number_of_backups-1}][date]
     ...    ${/}default-${bucket_uuid}${/}data
     ${result}=    Get cbriftdump data    dir=${dir}
     Check correct scope    ${result}    x
@@ -97,7 +101,7 @@ Test exclude scopes backup
     ${number_of_backups}=         Get Length    ${result}[backups]
     ${bucket_uuid}=    Get bucket uuid
     ${dir}=    catenate    SEPARATOR=
-    ...    ${TEMP_DIR}${/}data${/}backups${/}simple-scp-exc${/}${result}[backups][${number_of_backups-1}][date]
+    ...    ${ARCHIVE}${/}simple-scp-exc${/}${result}[backups][${number_of_backups-1}][date]
     ...    ${/}default-${bucket_uuid}${/}data
     ${result}=    Get cbriftdump data    dir=${dir}
     Check correct scope    ${result}    y
@@ -121,7 +125,7 @@ Test include collections backup
     ${number_of_backups}=         Get Length    ${result}[backups]
     ${bucket_uuid}=    Get bucket uuid
     ${dir}=    catenate    SEPARATOR=
-    ...    ${TEMP_DIR}${/}data${/}backups${/}simple-coll-inc${/}${result}[backups][${number_of_backups-1}][date]
+    ...    ${ARCHIVE}${/}simple-coll-inc${/}${result}[backups][${number_of_backups-1}][date]
     ...    ${/}default-${bucket_uuid}${/}data
     ${result}=    Get cbriftdump data    dir=${dir}
     Log To Console    ${result}     DEBUG
@@ -144,7 +148,7 @@ Test exclude collections backup
     ${number_of_backups}=         Get Length    ${result}[backups]
     ${bucket_uuid}=    Get bucket uuid
     ${dir}=    catenate    SEPARATOR=
-    ...    ${TEMP_DIR}${/}data${/}backups${/}simple-coll-exc${/}${result}[backups][${number_of_backups-1}][date]
+    ...    ${ARCHIVE}${/}simple-coll-exc${/}${result}[backups][${number_of_backups-1}][date]
     ...    ${/}default-${bucket_uuid}${/}data
     ${result}=    Get cbriftdump data    dir=${dir}
     Check correct scope    ${result}    b
@@ -163,6 +167,6 @@ Test partial backup restored to other bucket
     Delete bucket cli    bucket=buck1
     Flush bucket REST    bucket=buck2
     Create CB bucket if it does not exist cli    bucket=new_bucket
-    Run restore                   repo=simple     map-data=buck1=new_bucket
+    Run restore and wait until persisted    repo=simple     bucket=new_bucket    map-data=buck1=new_bucket
     ${result}=    Get doc info    bucket=new_bucket
     Check restored cbworkloadgen docs contents    ${result}    2048    1024

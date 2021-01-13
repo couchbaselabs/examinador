@@ -4,7 +4,8 @@ Force tags         Tier2
 Library            Process
 Library            OperatingSystem
 Library            Collections
-Library            ../libraries/cbm_utils.py    ${BIN_PATH}    ${TEMP_DIR}${/}data${/}backups
+Library            ../libraries/cbm_utils.py    ${BIN_PATH}    ${ARCHIVE}
+Library            ../libraries/sdk_utils.py
 Resource           ../resources/couchbase.resource
 Resource           ../resources/cbm.resource
 
@@ -13,6 +14,7 @@ Suite Teardown     Collect backup logs and remove archive
 
 ***Variables***
 ${BIN_PATH}        %{HOME}${/}test-source${/}install${/}bin
+${ARCHIVE}         ${TEMP_DIR}${/}data${/}backups
 
 ***Test Cases***
 Test force updates restore
@@ -26,7 +28,7 @@ Test force updates restore
     FOR    ${i}    IN RANGE    5
         SDK replace    key=key${i}     value={"group":"changed","num":${i}}
     END
-    Run restore    repo=force_updates    force-updates=None
+    Run restore and wait until persisted    repo=force_updates    items=10    force-updates=None
     ${result}=    Get doc info
     ${number_of_doc}=         Get Length    ${result}
     FOR    ${i}    IN RANGE     ${number_of_doc}
@@ -44,7 +46,7 @@ Test conflict resolution restore
     FOR    ${i}    IN RANGE    10
         SDK replace    key=key${i}     value={"group":"changed","num":${i}}
     END
-    Run restore    repo=conflict_resolution
+    Run restore and wait until persisted    repo=conflict_resolution     items=0
     ${result}=    Get doc info
     ${number_of_doc}=         Get Length    ${result}
     FOR    ${i}    IN RANGE     ${number_of_doc}
@@ -60,7 +62,8 @@ Test bucket restored to other auto-created bucket
     Load documents into bucket using cbworkloadgen
     Configure backup    repo=map_auto_create
     Run backup          repo=map_auto_create
-    Run restore         repo=map_auto_create    auto-create-buckets=None     map-data=default=new_bucket
+    Run restore and wait until persisted    repo=map_auto_create    bucket=new_bucket    auto-create-buckets=None
+    ...                 map-data=default=new_bucket
     ${result}=    Get doc info    bucket=new_bucket
     Check restored cbworkloadgen docs contents    ${result}    2048    1024
 
@@ -74,8 +77,8 @@ Test filterd bucket restored to other bucket
     Load documents into bucket using cbworkloadgen    items=2048
     Configure backup    repo=map_filter_keys
     Run backup          repo=map_filter_keys
-    Run restore         repo=map_filter_keys    filter-keys=pymc(\\d{1,3}|10[0-1]\\d|102[0-3])$
-    ...                 map-data=default=new_bucket
+    Run restore and wait until persisted    repo=map_filter_keys    bucket=new_bucket    items=1024
+    ...                 filter-keys=pymc(\\d{1,3}|10[0-1]\\d|102[0-3])$    map-data=default=new_bucket
     ${result}=    Get doc info    bucket=new_bucket
     Check restored cbworkloadgen docs contents    ${result}    1024    1024
 
@@ -90,7 +93,7 @@ Test filter to auto-created bucket
     Configure backup    repo=auto_create_filter_keys
     Run backup          repo=auto_create_filter_keys
     Delete bucket cli
-    Run restore         repo=auto_create_filter_keys    auto-create-buckets=None
+    Run restore and wait until persisted    repo=auto_create_filter_keys    items=1024    auto-create-buckets=None
     ...                 filter-keys=pymc(\\d{1,3}|10[0-1]\\d|102[0-3])$
     ${result}=    Get doc info
     Check restored cbworkloadgen docs contents    ${result}    1024    1024
@@ -105,7 +108,7 @@ Test filter values to auto-created bucket
     Configure backup    repo=auto_create_filter_values
     Run backup          repo=auto_create_filter_values
     Delete bucket cli
-    Run restore         repo=auto_create_filter_values    auto-create-buckets=None
+    Run restore and wait until persisted    repo=auto_create_filter_values    items=1024    auto-create-buckets=None
     ...               filter-values=\\{\\"group\\":\\"example\\",\\"num\\":(\\d{1,3}|10[0-1]\\d|102[0-3])\\}
     ${result}=    Get doc info
     Length should be    ${result}    1024
@@ -121,7 +124,8 @@ Test filterd values restored to other bucket
     Configure backup    repo=map_filter_values
     Run backup          repo=map_filter_values
     Delete bucket cli
-    Run restore         repo=map_filter_values    map-data=default=new_bucket
+    Run restore and wait until persisted    repo=map_filter_values    bucket=new_bucket    items=1024
+    ...               map-data=default=new_bucket
     ...               filter-values=\\{\\"group\\":\\"example\\",\\"num\\":(\\d{1,3}|10[0-1]\\d|102[0-3])\\}
     ${result}=    Get doc info    bucket=new_bucket
     Length should be    ${result}    1024
@@ -136,8 +140,9 @@ Test filterd bucket restored to other auto-created bucket
     Load documents into bucket using cbworkloadgen
     Configure backup    repo=auto_map_filter_keys
     Run backup          repo=auto_map_filter_keys
-    Run restore         repo=auto_map_filter_keys    auto-create-buckets=None     map-data=default=new_bucket
-    ...                 filter-keys=pymc(\\d{1,3}|10[0-1]\\d|102[0-3])$
+    Run restore and wait until persisted    repo=auto_map_filter_keys    bucket=new_bucket    items=1024
+    ...                 auto-create-buckets=None
+    ...                 map-data=default=new_bucket    filter-keys=pymc(\\d{1,3}|10[0-1]\\d|102[0-3])$
     ${result}=    Get doc info    bucket=new_bucket
     Check restored cbworkloadgen docs contents    ${result}    1024    1024
 
@@ -150,7 +155,9 @@ Test map restore on recreated bucket
     Delete bucket cli    bucket=new_bucket
     Create CB bucket if it does not exist cli
     Load documents into bucket using cbworkloadgen
+    Configure backup    repo=simple
     Run backup          repo=simple
-    Run restore         repo=simple    auto-create-buckets=None     map-data=default=new_bucket
+    Run restore and wait until persisted    repo=simple    bucket=new_bucket    auto-create-buckets=None
+    ...                 map-data=default=new_bucket
     ${result}=    Get doc info    bucket=new_bucket
     Check restored cbworkloadgen docs contents    ${result}    2048    1024
