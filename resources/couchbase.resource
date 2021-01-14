@@ -6,6 +6,7 @@ Library    Process
 ${BIN_PATH}    %{HOME}${/}source${/}install${/}bin
 ${THREADS}     1
 ${CBWORKLOADGEN_WAIT_TIME}    20
+${WORKSPACE}       Get Environment Variable    PWD
 
 *** Keywords ***
 Create CB bucket if it does not exist cli
@@ -18,7 +19,15 @@ Create CB bucket if it does not exist cli
     Return from keyword if    ${resp.status_code} == 200
     ${resp}=    Run process    ${BIN_PATH}${/}couchbase-cli    bucket-create    -c    ${host}    -u    ${user}
     ...                        -p    ${password}    --bucket    ${bucket}    --bucket-ramsize    ${ramQuota}
-    ...                        --bucket-replica    0    --bucket-type    couchbase    --enable-flush    1
+    ...                        --bucket-replica    0    --bucket-type    couchbase    --enable-flush    1    --wait
+    Log To Console    ${resp.stdout}     DEBUG
+    Should be equal as integers    ${resp.rc}    0
+
+Set index memory quota
+    [Arguments]    ${host}=localhost:9000    ${user}=Administrator    ${password}=asdasd    ${ramQuota}=400
+    [Documentation]    Set the RAM quota for the Index service.
+    ${resp}=    Run process    ${BIN_PATH}${/}couchbase-cli    setting-cluster    -c    ${host}    -u    ${user}
+    ...                        -p    ${password}    --cluster-index-ramsize     ${ramQuota}
     Should be equal as integers    ${resp.rc}    0
 
 Delete bucket cli
@@ -209,13 +218,32 @@ Get bucket uuid
 
 Get item count
     [Arguments]    ${bucket}    ${host}=localhost   ${user}=Administrator    ${password}=asdasd
-    [Documentation]    Get the number of items in a bucket.
+    [Documentation]    Get the number of items that have been persisted to disk in a bucket.
+    ${ports}=    Get service ports    bucket=${bucket}
+    ${auth}=    Create List    ${user}    ${password}
+    Create session    admin_api    http://${host}:${ports['mgmt']}    auth=${auth}
+    ${resp}=    Get request    admin_api    /pools/default/buckets/${bucket}
+    Return from keyword if    ${resp.status_code} != 200    0
+    FOR    ${i}    IN RANGE    5
+        ${result}=         Run Process     ${BIN_PATH}${/}cbstats    -u    ${user}    -p    ${password}
+        ...                -b    ${bucket}    ${host}:${ports['kv']}    -j    all
+        Exit for loop if    ${result.rc}==0
+        Log To Console    ${result.stdout}     DEBUG
+        Sleep    1
+    END
+    Should Be Equal As Integers    ${result.rc}    0
+    ${result_dict}=    Evaluate    json.loads('''${result.stdout}''')    json
+    Return from keyword    ${result_dict['ep_total_persisted']}
+
+Get current item number
+    [Arguments]    ${bucket}=default    ${host}=localhost   ${user}=Administrator    ${password}=asdasd
+    [Documentation]    Get the number of items currently in a bucket (not necessarily persisted to disk).
     ${ports}=    Get service ports    bucket=${bucket}
     ${result}=         Run Process     ${BIN_PATH}${/}cbstats    -u    ${user}    -p    ${password}
     ...                -b    ${bucket}    ${host}:${ports['kv']}    -j    all
     Should Be Equal As Integers    ${result.rc}    0
     ${result_dict}=    Evaluate    json.loads('''${result.stdout}''')    json
-    Return from keyword    ${result_dict['ep_total_persisted']}
+    Return from keyword    ${result_dict['curr_items']}
 
 Get service ports
     [Arguments]    ${bucket}=default    ${host}=http://localhost:9000    ${user}=Administrator    ${password}=asdasd
@@ -234,10 +262,27 @@ Get service ports
 Wait for items to be persisted to disk
     [Arguments]    ${previous_items}    ${items}    ${bucket}=default
     [Documentation]    Checks the expected number of items have been persisted to disk.
-    FOR    ${i}   IN RANGE    120
+    FOR    ${i}   IN RANGE    10
         ${result}=    Get item count    bucket=${bucket}
         ${expected_result}=    Evaluate    ${previous_items}+${items}
+        Return from keyword if       ${result}==${expected_result}    Fail    Too many documents persisted to disk
         ${exit}=      Evaluate    ${result}==${expected_result}
-        Exit for loop IF    ${exit}
-        Sleep    0.5
+        Return from keyword if    ${exit}
+        Exponential sleep    ${i}
     END
+    Fail    Timeout: Not all docs persisted to disk
+
+Load data to all services
+    [Arguments]    ${bucket}=default    ${data_items}=2048
+    [Documentation]    Load data to all couchbase services.
+    Load index data        bucket=${bucket}
+    Load documents into bucket using cbc bucket level    items=${data_items}    bucket=${bucket}
+    Load fts data          bucket=${bucket}
+    Load analytics data    bucket=${bucket}
+    Load eventing data
+
+Exponential sleep
+    [Arguments]    ${iteration}
+    [Documentation]    Sleep for an amount of time that increases exponentially with each loop.
+    ${time}=      Evaluate    0.5*(${iteration}+1)**2
+    Sleep    ${time}
