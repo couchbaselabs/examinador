@@ -1,4 +1,5 @@
 reports
+.vscode/
 robot-env
 libraries/__pycache__
 tags

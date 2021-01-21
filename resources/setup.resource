@@ -26,10 +26,11 @@ Start ${node_num} cluster run nodes
     ...    in the command line. Before starting the node it will clean the logs and data. After starting
     ...    cluster run it will wait for 5 seconds for it to be ready, by default but this can be configured.
     Remove cluster run data and logs
-    Start Process    ./cluster_run     --nodes    ${node_num}    --dont-rename    cwd=${NS_SERVER_PATH}    alias=cluster    stdout=DEVNULL    stderr=DEVNULL
-    Log      cluster run process started
-    Sleep    ${WAIT_UNTIL_READY}
-    Log      Waited for ${WAIT_UNTIL_READY} seconds
+    Log       Starting cluster_run cluster -n ${node_num}    console=True
+    Start Process    ./cluster_run     --nodes    ${node_num}    cwd=${NS_SERVER_PATH}    alias=cluster    stdout=DEVNULL    stderr=DEVNULL
+    Log      cluster run process started    console=True
+    ${last_node_port}=    Evaluate    9000 + ${node_num} - 1
+    check_node_started    host=http://localhost    port=${last_node_port}
 
 
 Start cluster_run nodes and connect them
@@ -39,7 +40,7 @@ Start cluster_run nodes and connect them
     ...    variable 'SKIP_SETUP' to true.
     Run keyword if     ${SKIP_SETUP}                Return from keyword
     Start ${node_num} cluster run nodes
-    Connect nodes    ${NS_SERVER_PATH}    ${connect_nodes}    ${services}    ${data_size}    wait_for=${WAIT_UNTIL_READY}
+    Connect nodes    ${NS_SERVER_PATH}    ${connect_nodes}    ${services}    ${data_size}
 
 Environment dependent clean up
     [Documentation]
