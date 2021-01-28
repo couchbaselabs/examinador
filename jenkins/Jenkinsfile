@@ -20,7 +20,6 @@ pipeline {
     environment {
         SOURCE = "${WORKSPACE}/source"
         EXAMINADOR = "${WORKSPACE}/examinador"
-        LOCALSTACK = "${WORKSPACE}/localstack"
     }
 
     stages {
@@ -89,21 +88,12 @@ pipeline {
                           pip3 install webdrivermanager
                           webdrivermanager chrome --linkpath ${EXAMINADOR}/robot-env/bin
                     '''
-                  }
-            }
-        }
 
-        stage("Setup localstack") {
-            steps {
-                dir("${LOCALSTACK}") {
-                    // install localstack and awscli
+                    //Install and start localstack
                     sh '''#!/bin/bash
+                          source robot-env/bin/activate
                           pip3 install localstack
                           pip3 install awscli
-                    '''
-
-                    // start localstack and set credentials
-                    sh '''#!/bin/bash
                           SERVICES=s3 localstack start
                           export AWS_ACCESS_KEY_ID=test
                           export AWS_SECRET_ACCESS_KEY=test
