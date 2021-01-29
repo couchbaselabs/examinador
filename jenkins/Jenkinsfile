@@ -88,17 +88,6 @@ pipeline {
                           pip3 install webdrivermanager
                           webdrivermanager chrome --linkpath ${EXAMINADOR}/robot-env/bin
                     '''
-
-                    //Install and start localstack
-                    sh '''#!/bin/bash
-                          source robot-env/bin/activate
-                          pip3 install localstack
-                          pip3 install awscli
-                          SERVICES=s3 localstack start
-                          export AWS_ACCESS_KEY_ID=test
-                          export AWS_SECRET_ACCESS_KEY=test
-                          export AWS_DEFAULT_REGION=us-east-1
-                    '''
                   }
             }
         }
@@ -162,6 +151,7 @@ pipeline {
                     sh '''#!/bin/bash
                           source robot-env/bin/activate
                           ulimit -n 9000
+                          docker-compose up -d
                           robot-env/bin/robot --variable NS_SERVER_PATH:${SOURCE}/ns_server --variable BIN_PATH:${SOURCE}/install/bin --variable WORKSPACE:${WORKSPACE} --outputdir ${WORKSPACE}/reports --exclude in_progress --exclude wait_for_bug_fix --exclude UI --consolewidth 120 -L DEBUG *_tests rest_api_longer
                     '''
                 }
