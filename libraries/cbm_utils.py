@@ -35,26 +35,13 @@ class cbm_utils:
         self.archive = archive
 
 
-    @keyword(types=[str, dict, str, str, str, str])
-    def sdk_replace(self, key: str, value: dict, host: str = "http://localhost:9000", bucket: str = "default",
-            user: str = "Administrator", password: str = "asdasd"):
-        """This function uses the Couchbase SDK to replace a value with a new given value for the document of the
-        given key."""
-        cluster = Cluster(host, ClusterOptions(PasswordAuthenticator(user, password)))
-        cb = cluster.bucket(bucket)
-        result = cb.replace(key, value)
-        cluster.disconnect()
-        if result.rc != 0:
-            raise subprocess.CalledProcessError(result.rc, result.args, result.stdout)
-
-
     @keyword(types=[str, str, str, str, str, int])
     def restore_docs(self, repo: Optional[str] = None, archive: Optional[str] = None,
             host: str = "http://localhost:9000", user: str = "Administrator", password: str = "asdasd",
             timeout_value: int = 120, **kwargs):
         """This function runs a restore."""
         archive = self.archive if archive is None else archive
-        other_args = self.format_flags(kwargs)
+        other_args = self.__format_flags(kwargs)
         complete = subprocess.run([join(self.BIN_PATH, 'cbbackupmgr'), 'restore', '-a', archive, '-r', repo, '-c',
                         host, '-u', user, '-p', password, '--no-progress-bar'] + other_args, capture_output=True,
                         shell=False, timeout=timeout_value)
@@ -71,7 +58,7 @@ class cbm_utils:
                 **kwargs):
         """This function will configure a backup repository."""
         archive = self.archive if archive is None else archive
-        other_args = self.format_flags(kwargs)
+        other_args = self.__format_flags(kwargs)
         complete = subprocess.run([join(self.BIN_PATH, 'cbbackupmgr'), 'config', '-a', archive, '-r', repo]
                         + other_args, capture_output=True, shell=False, timeout=timeout_value)
 
@@ -87,7 +74,7 @@ class cbm_utils:
             user: str = "Administrator", password: str = "asdasd", timeout_value: int = 60, **kwargs):
         """This function will run a backup."""
         archive = self.archive if archive is None else archive
-        other_args = self.format_flags(kwargs)
+        other_args = self.__format_flags(kwargs)
         complete = subprocess.run([join(self.BIN_PATH, 'cbbackupmgr'), 'backup', '-a', archive, '-r', repo, '-c',
                         host, '-u', user, '-p', password, '--no-progress-bar'] + other_args, capture_output=True,
                         shell=False, timeout=timeout_value)
@@ -104,7 +91,7 @@ class cbm_utils:
             host: str = "http://localhost:9000", user: str = "Administrator", password: str = "asdasd", **kwargs):
         """This function will run a backup."""
         archive = self.archive if archive is None else archive
-        other_args = self.format_flags(kwargs)
+        other_args = self.__format_flags(kwargs)
         complete = subprocess.Popen([join(self.BIN_PATH, 'cbbackupmgr'), 'backup', '-a', archive, '-r', repo, '-c',
                                host, '-u', user, '-p', password, '--no-progress-bar'] + other_args)
 
@@ -118,7 +105,7 @@ class cbm_utils:
             timeout_value: int = 120, collection_string: str = "default", **kwargs):
         """This function runs examine on a backup."""
         archive = self.archive if archive is None else archive
-        other_args = self.format_flags(kwargs)
+        other_args = self.__format_flags(kwargs)
         complete = subprocess.run([join(self.BIN_PATH, 'cbbackupmgr'), 'examine', '-a', archive, '-r', repo,
                         '--collection-string', collection_string, '--key', key] + other_args,
                         capture_output=True, shell=False, timeout=timeout_value)
@@ -133,8 +120,41 @@ class cbm_utils:
         return str(complete.stdout)
 
 
+    @keyword(types=[str, str, str])
+    def run_remove(self, repo: Optional[str] = None, archive: Optional[str] = None, timeout_value: int = 120, **kwargs):
+        """This function runs remove on a backup."""
+        archive = self.archive if archive is None else archive
+        other_args = self.__format_flags(kwargs)
+        complete = subprocess.run([join(self.BIN_PATH, 'cbbackupmgr'), 'remove', '-a', archive, '-r', repo]
+                        + other_args, capture_output=True, shell=False, timeout=timeout_value)
+
+        logger.debug(f'Return code: {complete.returncode}')
+        logger.debug(f'Arguments: {complete.args}')
+        logger.debug(f'Output: {complete.stdout}')
+        if complete.returncode != 0:
+            raise subprocess.CalledProcessError(complete.returncode, complete.args, complete.stdout)
+
+
+    @keyword(types=[str, str])
+    def get_info_as_json(self, repo: Optional[str] = None, archive: Optional[str] = None, timeout_value: int = 120,
+            **kwargs):
+        """This function runs info on a backup."""
+        archive = self.archive if archive is None else archive
+        other_args = self.__format_flags(kwargs)
+        complete = subprocess.run([join(self.BIN_PATH, 'cbbackupmgr'), 'info', '-a', archive, '-r', repo, '--json']
+                        + other_args, capture_output=True, shell=False, timeout=timeout_value)
+
+        logger.debug(f'Return code: {complete.returncode}')
+        logger.debug(f'Arguments: {complete.args}')
+        logger.debug(f'Output: {complete.stdout}')
+        if complete.returncode != 0:
+            raise subprocess.CalledProcessError(complete.returncode, complete.args, complete.stdout)
+
+        return json.loads(complete.stdout)
+
+
     @staticmethod
-    def format_flags(kwargs):
+    def __format_flags(kwargs):
         """Format extra flags into a list."""
         other_args = []
         for flag in kwargs:

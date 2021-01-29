@@ -10,17 +10,8 @@ ${BIN_PATH}        %{HOME}${/}source${/}install${/}bin
 ${WORKSPACE}       Get Environment Variable    PWD
 
 *** Keywords ***
-Get info as json
-    [Arguments]        ${repo}    ${arch}=${TEMP_DIR}${/}data${/}backups    ${type}=0x03
-    ${result}=         Run Process     ${BIN_PATH}${/}cbbackupmgr    info    --archive     ${arch}     -r    ${repo}
-    ...                                --json
-    Log To Console    ${result.stdout}     DEBUG
-    Should Be Equal As Integers    ${result.rc}    0
-    ${result_dict}=    Evaluate    json.loads('''${result.stdout}''')    json
-    Return from keyword    ${result_dict}
-
 Get info as user
-    [Arguments]        ${repo}    ${arch}=${TEMP_DIR}${/}data${/}backups    ${type}=0x03    ${depth}=2
+    [Arguments]        ${repo}    ${arch}=${TEMP_DIR}${/}data${/}backups    ${depth}=2
     ${result}=         Run Process     ${BIN_PATH}${/}cbbackupmgr    info    --archive     ${arch}     -r    ${repo}
     ...                                --depth    ${depth}
     Should Be Equal As Integers    ${result.rc}    0

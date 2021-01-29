@@ -2,6 +2,7 @@
 
 import time
 import json
+import subprocess
 from typing import Dict, List, Optional
 
 from couchbase.cluster import Cluster, ClusterOptions, QueryOptions
@@ -15,6 +16,18 @@ from couchbase_core.cluster import PasswordAuthenticator
 
 from robot.api.deco import keyword
 from robot.api import logger
+
+@keyword(types=[str, dict, str, str, str, str])
+def sdk_replace(key: str, value: dict, host: str = "http://localhost:9000", bucket: str = "default",
+        user: str = "Administrator", password: str = "asdasd"):
+    """This function uses the Couchbase SDK to replace a value with a new given value for the document of the
+    given key."""
+    cluster = Cluster(host, ClusterOptions(PasswordAuthenticator(user, password)))
+    cb = cluster.bucket(bucket)
+    result = cb.replace(key, value)
+    cluster.disconnect()
+    if result.rc != 0:
+        raise AssertionError(result.rc, result.args, result.stdout)
 
 
 @keyword(types=[str, str, str, str])
