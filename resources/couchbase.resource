@@ -286,3 +286,23 @@ Exponential sleep
     [Documentation]    Sleep for an amount of time that increases exponentially with each loop.
     ${time}=      Evaluate    0.5*(${iteration}+1)**2
     Sleep    ${time}
+
+Wait for indexer to be active
+    [Arguments]    ${host}=http://localhost    ${user}=Administrator    ${password}=asdasd
+    [Documentation]    Waits until the indexer is in an active state.
+    FOR    ${i}    IN RANGE    10
+        ${ports}=    Get service ports
+        Log To Console    ${ports}     DEBUG
+        Exit for loop if    'indexHttp' in ${ports}
+        Exponential sleep    ${i}
+    END
+    ${auth}=    Create List    ${user}    ${password}
+    Create session    admin_api    ${host}:${ports['indexHttp']}    auth=${auth}
+    FOR    ${i}    IN RANGE    10
+        ${resp}=    Get request    admin_api    /api/v1/stats
+        Log To Console    ${resp.json()}     DEBUG
+        Status should be    200    ${resp}
+        Return from keyword if    '${resp.json()}[indexer][indexer_state]' == 'Active'
+        Exponential sleep    ${i}
+    END
+    Fail    Indexer failed to enter active state

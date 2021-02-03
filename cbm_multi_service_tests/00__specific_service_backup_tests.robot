@@ -11,6 +11,7 @@ Resource           ../resources/cbm.resource
 Resource           ../resources/eventing.resource
 
 Suite setup        Run keywords    Delete bucket cli
+...                AND    Wait for indexer to be active
 ...                AND    Create CB bucket if it does not exist cli
 ...                AND    Create CB bucket if it does not exist cli    bucket=meta
 ...                AND    Create eventing file
