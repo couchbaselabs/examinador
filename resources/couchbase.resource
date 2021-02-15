@@ -120,16 +120,29 @@ Set ramQuota
     ${resp}=    Post request    admin_api    /pools/default/buckets/${bucket}    {"ramQuota":${ramQuota}}
     Status should be    200    ${resp}
 
-Flush bucket REST
+Enable flush
     [Arguments]    ${bucket}=default    ${host}=http://localhost:9000    ${user}=Administrator    ${password}=asdasd
-    ...            ${ramQuota}=100
     [Documentation]    Flush all documents from a bucket.
     ${auth}=    Create List    ${user}    ${password}
     Create session    admin_api    ${host}    auth=${auth}
     ${resp}=    Post request    admin_api    /pools/default/buckets/${bucket}    {"flushEnabled":1}
     Status should be    200    ${resp}
+
+Flush bucket REST
+    [Arguments]    ${bucket}=default    ${host}=http://localhost:9000    ${user}=Administrator    ${password}=asdasd
+    [Documentation]    Flush all documents from a bucket.
+    ${items}=    Get current item number    ${bucket}
+    Return from keyword if    ${items} == 0
+    ${auth}=    Create List    ${user}    ${password}
+    Create session    admin_api    ${host}    auth=${auth}
     ${resp}=    Post request    admin_api    /pools/default/buckets/${bucket}/controller/doFlush
     Status should be    200    ${resp}
+    FOR    ${i}    IN RANGE    10
+        ${items}=    Get current item number    ${bucket}
+        Return from keyword if    ${items} == 0
+        exponential sleep    ${i}
+    END
+    Fail    Timeout: Bucket failed to be flushed
 
 Load documents into bucket using cbm
     [Arguments]    ${items}=1000    ${bucket}=default    ${host}=http://localhost:9000    ${user}=Administrator
