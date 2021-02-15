@@ -51,9 +51,9 @@ Test advanced info per repo
     ...    ${ARCHIVE}${/}simple${/}${result}[backups][0][date]
     ...    ${/}buck1-${bucket_uuid}${/}data
     ${data}=    Get cbriftdump data     dir=${dir}
-    Check cbworkloadgen rift contents    ${data}    expected_len_json=2048    size=1024
+    Verify cbworkloadgen documents    ${data}    expected_len_json=2048    size=1024
     ${dir}=    catenate    SEPARATOR=
     ...    ${ARCHIVE}${/}simple${/}${result}[backups][1][date]
     ...    ${/}buck1-${bucket_uuid}${/}data
     ${data}=    Get cbriftdump data     dir=${dir}
-    Check cbworkloadgen rift contents    ${data}    expected_len_json=2048    size=1024
+    Verify cbworkloadgen documents    ${data}    expected_len_json=2048    size=1024

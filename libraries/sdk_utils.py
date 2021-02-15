@@ -31,6 +31,18 @@ def drop_gsi_indexes(host: str = "http://localhost:9000", bucket: str = "default
     cluster.disconnect()
 
 
+@keyword(types=[int, str, str, str, str, str, str])
+def load_docs_sdk(items: int = 2048, key_pref: str = "pymc", group: str = "group", host: str = "http://localhost:9000",
+        bucket: str = "default", user: str = "Administrator", password: str = "asdasd"):
+    """Creates a query index and waits for it to be built."""
+    cluster = Cluster(host, ClusterOptions(PasswordAuthenticator(user, password)))
+    cb = cluster.bucket(bucket)
+    for i in range(items):
+        doc = {"group": group, "id": i}
+        cb.upsert(key_pref+str(i), doc)
+    cluster.disconnect()
+
+
 @keyword(types=[QueryIndexManager, str, str, str, str])
 def load_index_data(mgr: Optional[QueryIndexManager] = None, host: str = "http://localhost:9000",
         bucket: str = "default", user: str = "Administrator", password: str = "asdasd"):

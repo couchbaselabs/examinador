@@ -36,7 +36,7 @@ Test include bucket backup
     ...    ${ARCHIVE}${/}include_buck2${/}${result}[backups][${number_of_backups-1}][date]
     ...    ${/}buck2-${bucket_uuid}${/}data
     ${data}=    Get cbriftdump data     dir=${dir}
-    Check cbworkloadgen rift contents    ${data}    expected_len_json=2048    size=1024
+    Verify cbworkloadgen documents    ${data}    expected_len_json=2048    size=1024
 
 Test exclude bucket backup
     [Tags]    P0    Backup
@@ -58,7 +58,7 @@ Test exclude bucket backup
     ...    ${ARCHIVE}${/}exclude_buck2${/}${result}[backups][${number_of_backups-1}][date]
     ...    ${/}buck1-${bucket_uuid}${/}data
     ${data}=    Get cbriftdump data     dir=${dir}
-    Check cbworkloadgen rift contents    ${data}    expected_len_json=2048    size=1024
+    Verify cbworkloadgen documents    ${data}    expected_len_json=2048    size=1024
 
 Test include scopes backup
     [Tags]    P1    Backup

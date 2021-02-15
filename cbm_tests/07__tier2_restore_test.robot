@@ -10,7 +10,8 @@ Resource           ../resources/couchbase.resource
 Resource           ../resources/cbm.resource
 
 Suite setup        Delete bucket cli
-Suite Teardown     Collect backup logs and remove archive
+Suite Teardown     Run keywords    Delete bucket cli    bucket=new_bucket
+...                AND    Collect backup logs and remove archive
 
 ***Variables***
 ${BIN_PATH}        %{HOME}${/}test-source${/}install${/}bin

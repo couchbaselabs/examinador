@@ -1,4 +1,5 @@
 """This contain miscelaneous utility funtions used by the tests"""
+import binascii
 import json
 import random
 import re
@@ -174,6 +175,12 @@ def should_be_approx_x_from_now(time_str: str, offset: str = '1h', error_margin:
     if abs(diff - expected_diff) > error_margin:
         raise AssertionError(f'The task was scheduled at {timestamp} when it should have been scheduled at'
                              f'{now} + {offset} with a margin of {error_margin}s')
+
+
+@keyword(types=[str])
+def hex_encode(data: str) -> str:
+    """Takes a string and returns it encoded in hex."""
+    return data.encode().hex()
 
 
 def generate_valid_task_template() -> Dict:

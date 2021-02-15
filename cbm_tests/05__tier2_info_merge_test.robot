@@ -67,6 +67,6 @@ Test backups across multiple days merge
     ...    ${ARCHIVE}${/}across_day_merge${/}${result}[backups][0][date]
     ...    ${/}default-${bucket_uuid}${/}data
     ${data}=    Get cbriftdump data    dir=${dir}
-    Check cbworkloadgen rift contents    ${data}    expected_len_json=4096    size=1024
+    Verify cbworkloadgen documents    ${data}    expected_len_json=4096    size=1024
     Check key is included in backup      ${data}    pymd    2048
     Check key is included in backup      ${data}    pyme    2048

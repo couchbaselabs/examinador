@@ -33,7 +33,7 @@ Test multiple document type backup
     ...    ${ARCHIVE}${/}simple${/}${result}[backups][${number_of_backups-1}][date]
     ...    ${/}default-${bucket_uuid}${/}data
     ${data}=    Get cbriftdump data     dir=${dir}
-    Check cbworkloadgen rift contents    ${data}    expected_len_binary=2048    expected_len_json=2048
+    Verify cbworkloadgen documents    ${data}    expected_len_binary=2048    expected_len_json=2048
     ...                    expected_len_binary_xattr=2048    expected_len_json_xattr=2048    size=1024
 
 Test purge backup
@@ -55,7 +55,7 @@ Test purge backup
     ...    ${ARCHIVE}${/}simple${/}${result}[backups][0][date]
     ...    ${/}default-${bucket_uuid}${/}data
     ${data}=    Get cbriftdump data     dir=${dir}
-    Check cbworkloadgen rift contents    ${data}    expected_len_json=2048    size=1024
+    Verify cbworkloadgen documents    ${data}    expected_len_json=2048    size=1024
 
 Test resume backup
     [Tags]    P0    Backup
@@ -77,4 +77,4 @@ Test resume backup
     ...    ${ARCHIVE}${/}simple${/}${result2}[backups][0][date]
     ...    ${/}default-${bucket_uuid}${/}data
     ${data}=    Get cbriftdump data     dir=${dir}
-    Check cbworkloadgen rift contents    ${data}    expected_len_json=2048    size=1024
+    Verify cbworkloadgen documents    ${data}    expected_len_json=2048    size=1024

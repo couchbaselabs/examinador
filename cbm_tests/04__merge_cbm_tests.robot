@@ -39,7 +39,7 @@ Test non-overlapping backups merge
     ...    ${ARCHIVE}${/}simple${/}${result}[backups][${number_of_backups-1}][date]
     ...    ${/}default-${bucket_uuid}${/}data
     ${data}=    Get cbriftdump data     dir=${dir}
-    Check cbworkloadgen rift contents    ${data}    expected_len_json=6144    size=1024
+    Verify cbworkloadgen documents    ${data}    expected_len_json=6144    size=1024
     Check key not included in backup     ${data}    pymc
 
 Test overlapping backups merge
@@ -66,4 +66,4 @@ Test overlapping backups merge
     ...    ${ARCHIVE}${/}simple${/}${result}[backups][${number_of_backups-1}][date]
     ...    ${/}default-${bucket_uuid}${/}data
     ${data}=    Get cbriftdump data     dir=${dir}
-    Check cbworkloadgen rift contents    ${data}    expected_len_json=8192    size=1024
+    Verify cbworkloadgen documents    ${data}    expected_len_json=8192    size=1024

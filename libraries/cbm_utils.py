@@ -59,9 +59,9 @@ class cbm_utils:
                         host, '-u', user, '-p', password, '--no-progress-bar'] + other_args, capture_output=True,
                         shell=False, timeout=timeout_value)
 
-        logger.debug(complete.returncode)
-        logger.debug(complete.args)
-        logger.debug(complete.stdout)
+        logger.debug(f'Return code: {complete.returncode}')
+        logger.debug(f'Arguments: {complete.args}')
+        logger.debug(f'Output: {complete.stdout}')
         if complete.returncode != 0:
             raise subprocess.CalledProcessError(complete.returncode, complete.args, complete.stdout)
 
@@ -75,9 +75,9 @@ class cbm_utils:
         complete = subprocess.run([join(self.BIN_PATH, 'cbbackupmgr'), 'config', '-a', archive, '-r', repo]
                         + other_args, capture_output=True, shell=False, timeout=timeout_value)
 
-        logger.debug(complete.returncode)
-        logger.debug(complete.args)
-        logger.debug(complete.stdout)
+        logger.debug(f'Return code: {complete.returncode}')
+        logger.debug(f'Arguments: {complete.args}')
+        logger.debug(f'Output: {complete.stdout}')
         if complete.returncode != 0:
             raise subprocess.CalledProcessError(complete.returncode, complete.args, complete.stdout)
 
@@ -92,9 +92,9 @@ class cbm_utils:
                         host, '-u', user, '-p', password, '--no-progress-bar'] + other_args, capture_output=True,
                         shell=False, timeout=timeout_value)
 
-        logger.debug(complete.returncode)
-        logger.debug(complete.args)
-        logger.debug(complete.stdout)
+        logger.debug(f'Return code: {complete.returncode}')
+        logger.debug(f'Arguments: {complete.args}')
+        logger.debug(f'Output: {complete.stdout}')
         if complete.returncode != 0:
             raise subprocess.CalledProcessError(complete.returncode, complete.args, complete.stdout)
 
@@ -108,9 +108,29 @@ class cbm_utils:
         complete = subprocess.Popen([join(self.BIN_PATH, 'cbbackupmgr'), 'backup', '-a', archive, '-r', repo, '-c',
                                host, '-u', user, '-p', password, '--no-progress-bar'] + other_args)
 
-        logger.debug(complete.returncode, complete.args)
+        logger.debug(f'rc: {complete.returncode}, args: {complete.args}')
         time.sleep(1)
         complete.kill()
+
+
+    @keyword(types=[str, str, str, int, str])
+    def run_examine(self, repo: Optional[str] = None, key: Optional[str] = None, archive: Optional[str] = None,
+            timeout_value: int = 120, collection_string: str = "default", **kwargs):
+        """This function runs examine on a backup."""
+        archive = self.archive if archive is None else archive
+        other_args = self.format_flags(kwargs)
+        complete = subprocess.run([join(self.BIN_PATH, 'cbbackupmgr'), 'examine', '-a', archive, '-r', repo,
+                        '--collection-string', collection_string, '--key', key] + other_args,
+                        capture_output=True, shell=False, timeout=timeout_value)
+
+        logger.debug(f'Return code: {complete.returncode}')
+        logger.debug(f'Arguments: {complete.args}')
+        logger.debug(f'Output: {complete.stdout}')
+        if complete.returncode != 0:
+            raise subprocess.CalledProcessError(complete.returncode, complete.args, complete.stdout)
+        if '--json' in other_args:
+            return self.examine_to_list(complete.stdout), json.loads(complete.stdout)
+        return str(complete.stdout)
 
 
     @staticmethod
@@ -125,11 +145,11 @@ class cbm_utils:
 
 
     @keyword(types=[List[Dict], int, int, int, int, int])
-    def check_cbworkloadgen_rift_contents(self, data: List[Dict], size: int, expected_len_binary: int = 0,
+    def verify_cbworkloadgen_documents(self, data: List[Dict], size: int, expected_len_binary: int = 0,
             expected_len_json: int = 0, expected_len_binary_xattr: int = 0, expected_len_json_xattr: int = 0) :
-        """This function will check the contents of the rift dump and validate them.
+        """This function will check the contents of the rift dump or similar output and validate them.
 
-        Checks that the contents of the rift dump of cbworkloadgen generated documents contains; the expected number
+        Checks that the contents of the cbworkloadgen generated documents contains; the expected number
         of documents of each type, that each document is not deleted, that the index matches the key and the body is
         made up of a certain number of 0s.
 
@@ -146,7 +166,7 @@ class cbm_utils:
         json_with_xattr_doc_count = 0
 
         for doc in data:
-            if doc["deleted"] != "false":
+            if doc["deleted"] != "false" and doc["deleted"] is not False:
                 raise AssertionError('Document contents changed: document deleted')
             if doc["metadata"]["datatype"] == 3:
                 json_doc_count += 1
@@ -277,11 +297,18 @@ class cbm_utils:
 
 
     @keyword(types=[str])
+    def examine_to_list(self, data: str) -> List[str]:
+        """This function create a list of the document returned by examine from each of the backups."""
+        doc_list = [backup['document'] for backup in json.loads(data) if backup['event_type'] == 1]
+        return doc_list
+
+
+    @keyword(types=[str])
     def cbtransfer_to_list(self, data: str) -> List[Dict]:
         """This function will convert the output of the cbtransfer bucket information into a list of dictionaries,
         with a dictionary for each of the documents."""
         result_list = []
-        result= data.split('\n')
+        result = data.split('\n')
         for i in result:
             if not i.startswith("set"):
                 result_list.append(json.loads(i))

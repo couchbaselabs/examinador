@@ -6,6 +6,7 @@ Library            OperatingSystem
 Library            Collections
 Library            ../libraries/cbm_utils.py    ${BIN_PATH}    ${ARCHIVE}
 Library            ../libraries/sdk_utils.py
+Library            ../libraries/utils.py
 Resource           ../resources/couchbase.resource
 Resource           ../resources/cbm.resource
 
@@ -40,7 +41,7 @@ Test Simple backup
     ...    ${ARCHIVE}${/}simple${/}${result}[backups][${number_of_backups-1}][date]
     ...    ${/}default-${bucket_uuid}${/}data
     ${data}=    Get cbriftdump data     dir=${dir}
-    Check cbworkloadgen rift contents    ${data}    expected_len_json=2048    size=1024
+    Verify cbworkloadgen documents    ${data}    expected_len_json=2048    size=1024
 
 Test Restore Backup
     [Tags]    P0    Restore
@@ -83,7 +84,7 @@ Test Incremental backup
     ...    ${ARCHIVE}${/}simple${/}${result}[backups][${number_of_backups-1}][date]
     ...    ${/}default-${bucket_uuid}${/}data
     ${data}=    Get cbriftdump data     dir=${dir}
-    Check cbworkloadgen rift contents    ${data}    expected_len_json=2048    size=1024
+    Verify cbworkloadgen documents    ${data}    expected_len_json=2048    size=1024
     Check key not included in backup     ${data}    pymc
     Check key not included in backup     ${data}    pymd
 
@@ -131,7 +132,7 @@ Test Force Full Backup
     ...    ${ARCHIVE}${/}simple${/}${result}[backups][${number_of_backups-1}][date]
     ...    ${/}default-${bucket_uuid}${/}data
     ${data}=    Get cbriftdump data     dir=${dir}
-    Check cbworkloadgen rift contents    ${data}    expected_len_json=6144    size=1024
+    Verify cbworkloadgen documents    ${data}    expected_len_json=6144    size=1024
 
 Test filter docs restored
     [Tags]    P1    Restore
