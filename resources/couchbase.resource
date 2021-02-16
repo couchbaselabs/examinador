@@ -167,11 +167,13 @@ Load documents into bucket using cbc bucket level
     [Arguments]    ${host}=http://localhost:9000    ${user}=Administrator
     ...            ${password}=asdasd    ${bucket}=default    ${key}=key    ${group}=example    ${items}=10
     [Documentation]    Uses cbc-create to load data into the scope.
+    ${previous_items}=    Get item count    bucket=${bucket}
     FOR    ${i}    IN RANGE    ${items}
         ${result}=    Run process    ${BIN_PATH}${/}cbc    create    -U    ${host}/${bucket}    -u    ${user}
         ...                         -P     ${password}    --json    ${key}${i}    -V    {"group":"${group}","num":${i}}
         Should Be Equal As Integers    ${result.rc}    0
     END
+    Wait for items to be persisted to disk    ${previous_items}    ${items}    bucket=${bucket}
 
 Load documents into bucket using cbworkloadgen
     [Arguments]    ${items}=2048    ${bucket}=default    ${host}=localhost:9000    ${user}=Administrator
