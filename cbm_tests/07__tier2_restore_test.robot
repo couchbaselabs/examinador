@@ -147,17 +147,20 @@ Test filterd bucket restored to other auto-created bucket
     Check restored cbworkloadgen docs contents    ${result}    1024    1024
 
 Test map restore on recreated bucket
-    [Tags]    P2    Restore    wait_for_bug_fix
+    [Tags]    P2    Restore
     [Documentation]    Tests that when a bucket that is backed up then deleted then a bucket with the same name is
     ...                created and backed up, the backup can be mapped to another bucket that is auto-created when
-    ...                restored with the --map-data.
+    ...                restored with the --map-data flag.
     Delete bucket cli
     Delete bucket cli    bucket=new_bucket
     Create CB bucket if it does not exist cli
     Load documents into bucket using cbworkloadgen
-    Configure backup    repo=simple
-    Run backup          repo=simple
-    Run restore and wait until persisted    repo=simple    bucket=new_bucket    auto-create-buckets=None
+    Configure backup    repo=map_recreated
+    Run backup          repo=map_recreated
+    Delete bucket cli
+    Create CB bucket if it does not exist cli
+    Load documents into bucket using cbworkloadgen
+    Run restore and wait until persisted    repo=map_recreated    bucket=new_bucket    auto-create-buckets=None
     ...                 map-data=default=new_bucket
     ${result}=    Get doc info    bucket=new_bucket
     Check restored cbworkloadgen docs contents    ${result}    2048    1024
