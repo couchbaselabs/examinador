@@ -22,6 +22,7 @@ Create CB bucket if it does not exist cli
     ...                        --bucket-replica    0    --bucket-type    couchbase    --enable-flush    1    --wait
     Log To Console    ${resp.stdout}     DEBUG
     Should be equal as integers    ${resp.rc}    0
+    Sleep    5
 
 Set index memory quota
     [Arguments]    ${host}=localhost:9000    ${user}=Administrator    ${password}=asdasd    ${ramQuota}=400
