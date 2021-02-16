@@ -62,7 +62,7 @@ Get cbriftdump data
 Merge multiple backups
     [Arguments]         ${repo}    ${start}    ${end}    ${arch}=${TEMP_DIR}/data/backups
     ${trigger}=         Run Process     ${BIN_PATH}${/}cbbackupmgr     merge    --archive    ${arch}    -r    ${repo}
-    ...                 --start    ${start}    --end    ${end}
+    ...                 --start    ${start}    --end    ${end}    --no-progress-bar
     Should Be Equal As Integers    ${trigger.rc}    0
 
 Run restore and wait until persisted

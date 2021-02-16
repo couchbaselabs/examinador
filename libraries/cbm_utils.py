@@ -56,8 +56,8 @@ class cbm_utils:
         archive = self.archive if archive is None else archive
         other_args = self.format_flags(kwargs)
         complete = subprocess.run([join(self.BIN_PATH, 'cbbackupmgr'), 'restore', '-a', archive, '-r', repo, '-c',
-                        host, '-u', user, '-p', password] + other_args, capture_output=True, shell=False,
-                        timeout=timeout_value)
+                        host, '-u', user, '-p', password, '--no-progress-bar'] + other_args, capture_output=True,
+                        shell=False, timeout=timeout_value)
 
         logger.debug(complete.returncode)
         logger.debug(complete.args)
@@ -89,8 +89,8 @@ class cbm_utils:
         archive = self.archive if archive is None else archive
         other_args = self.format_flags(kwargs)
         complete = subprocess.run([join(self.BIN_PATH, 'cbbackupmgr'), 'backup', '-a', archive, '-r', repo, '-c',
-                        host, '-u', user, '-p', password] + other_args, capture_output=True, shell=False,
-                        timeout=timeout_value)
+                        host, '-u', user, '-p', password, '--no-progress-bar'] + other_args, capture_output=True,
+                        shell=False, timeout=timeout_value)
 
         logger.debug(complete.returncode)
         logger.debug(complete.args)
@@ -106,7 +106,7 @@ class cbm_utils:
         archive = self.archive if archive is None else archive
         other_args = self.format_flags(kwargs)
         complete = subprocess.Popen([join(self.BIN_PATH, 'cbbackupmgr'), 'backup', '-a', archive, '-r', repo, '-c',
-                               host, '-u', user, '-p', password] + other_args)
+                               host, '-u', user, '-p', password, '--no-progress-bar'] + other_args)
 
         logger.debug(complete.returncode, complete.args)
         time.sleep(1)
