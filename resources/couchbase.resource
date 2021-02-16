@@ -281,10 +281,11 @@ Wait for items to be persisted to disk
     FOR    ${i}   IN RANGE    10
         ${result}=    Get item count    bucket=${bucket}
         ${expected_result}=    Evaluate    ${previous_items}+${items}
-        Return from keyword if       ${result}==${expected_result}    Fail    Too many documents persisted to disk
-        ${exit}=      Evaluate    ${result}==${expected_result}
-        Return from keyword if    ${exit}
+        Return from keyword if    ${result}==${expected_result}
+        Run keyword if    ${result}>=${expected_result}
+        ...               Log    Cannot confirm correct number of docs persisted to disk    WARN
         Exponential sleep    ${i}
+        Return from keyword if    ${result}>=${expected_result}
     END
     Fail    Timeout: Not all docs persisted to disk
 
