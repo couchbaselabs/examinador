@@ -1,4 +1,5 @@
 """This file contains usefull and complex setup functionality"""
+import shutil
 import subprocess
 import time
 import os
@@ -111,6 +112,18 @@ def confirm_backup_service_running(host: str, log_path: str, user: str = 'Admini
     if not worked:
         log_end_of_backup_service_logs(log_path, context)
         raise AssertionError(f'Backup service is not running in host {host}')
+
+
+@keyword(types=[str])
+def remove_directory_and_ignore_errors(path: str):
+    """Remove directory specifed by path and everything in it and log a warning for any errors"""
+    shutil.rmtree(path, onerror = log_error)
+    logger.info(f'Directory {path} has been removed')
+
+
+def log_error(_, path, exc_info):
+    """Log any errors that occurred while removing a directory"""
+    logger.warn(f'Error while removing directory {path}: {exc_info}')
 
 
 def get_last_lines_of_log(log_path: str, context: int):

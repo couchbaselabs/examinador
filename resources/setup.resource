@@ -16,8 +16,9 @@ ${DELETE_LOGS}         False
 *** Keywords ***
 Remove cluster run data and logs
     [Documentation]    This will remove the data and log directories created by cluster run.
-    Remove Directory    ${NS_SERVER_PATH}/logs    recursive=True
-    Remove Directory    ${NS_SERVER_PATH}/data    recursive=True
+    Remove directory and ignore errors    ${NS_SERVER_PATH}/logs
+    Remove directory and ignore errors    ${NS_SERVER_PATH}/data
+
 
 Start ${node_num} cluster run nodes
     [Documentation]
