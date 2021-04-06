@@ -48,9 +48,9 @@ Create CB scope if it does not exist
     [Documentation]    Create a couchbase scope if it does not exist.
     ${auth}=    Create List    ${user}    ${password}
     Create session    admin_api    ${host}    auth=${auth}
-    ${resp}=    Get request    admin_api    /pools/default/buckets/${bucket}/collections/${scope}
+    ${resp}=    Get request    admin_api    /pools/default/buckets/${bucket}/scopes/${scope}
     Return from keyword if    ${resp.status_code} == 200
-    ${resp}=    Post request    admin_api    /pools/default/buckets/${bucket}/collections    {"name":"${scope}"}
+    ${resp}=    Post request    admin_api    /pools/default/buckets/${bucket}/scopes    {"name":"${scope}"}
     Status should be    200    ${resp}
 
 Create CB scope if it does not exist cli
@@ -59,7 +59,7 @@ Create CB scope if it does not exist cli
     [Documentation]    Create a couchbase scope if it does not exist.
     ${auth}=    Create List    ${user}    ${password}
     Create session    admin_api    ${host}    auth=${auth}
-    ${resp}=    Get request    admin_api    /pools/default/buckets/${bucket}/collections/${scope}
+    ${resp}=    Get request    admin_api    /pools/default/buckets/${bucket}/scopes/${scope}
     Return from keyword if    ${resp.status_code} == 200
     ${resp}=    Run process    ${BIN_PATH}${/}couchbase-cli    collection-manage    -c    ${host}    -u    ${user}
     ...                        -p    ${password}    --bucket    ${bucket}    --create-scope    ${scope}
@@ -71,7 +71,7 @@ Get scopes info
     [Documentation]    Get information on existing scopes.
     ${auth}=    Create List    ${user}    ${password}
     Create session    admin_api    ${host}    auth=${auth}
-    ${resp}=    Get request    admin_api    /pools/default/buckets/${bucket}/collections
+    ${resp}=    Get request    admin_api    /pools/default/buckets/${bucket}/scopes
     Status should be    200    ${resp}
     Return from keyword    ${resp.json()}
 
@@ -81,9 +81,9 @@ Create collection if it does not exist
     [Documentation]    Create a collection within a given scope if it does not already exist.
     ${auth}=    Create List    ${user}    ${password}
     Create session    admin_api    ${host}    auth=${auth}
-    ${resp}=    Get request    admin_api    /pools/default/buckets/${bucket}/collections/${scope}/${collection}
+    ${resp}=    Get request    admin_api    /pools/default/buckets/${bucket}/scopes/${scope}/${collection}
     Return from keyword if    ${resp.status_code} == 200
-    ${resp}=    Post request    admin_api    /pools/default/buckets/${bucket}/collections/${scope}
+    ${resp}=    Post request    admin_api    /pools/default/buckets/${bucket}/scopes/${scope}
     ...          {"name":${collection}}
     Status should be    200    ${resp}
 
@@ -93,7 +93,7 @@ Create collection if it does not exist cli
     [Documentation]    Create a collection within a given scope if it does not already exist.
     ${auth}=    Create List    ${user}    ${password}
     Create session    admin_api    ${host}    auth=${auth}
-    ${resp}=    Get request    admin_api    /pools/default/buckets/${bucket}/collections/${scope}/${collection}
+    ${resp}=    Get request    admin_api    /pools/default/buckets/${bucket}/scopes/${scope}/${collection}
     Return from keyword if    ${resp.status_code} == 200
     ${resp}=    Run process    ${BIN_PATH}${/}couchbase-cli    collection-manage    -c    ${host}    -u    ${user}
     ...                      -p    ${password}    --bucket    ${bucket}    --create-collection    ${scope}.${collection}
