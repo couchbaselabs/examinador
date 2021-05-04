@@ -92,12 +92,12 @@ class cbm_utils:
         """This function will run a backup."""
         archive = self.archive if archive is None else archive
         other_args = self.__format_flags(kwargs)
-        complete = subprocess.Popen([join(self.BIN_PATH, 'cbbackupmgr'), 'backup', '-a', archive, '-r', repo, '-c',
-                               host, '-u', user, '-p', password, '--no-progress-bar'] + other_args)
+        with subprocess.Popen([join(self.BIN_PATH, 'cbbackupmgr'), 'backup', '-a', archive, '-r', repo, '-c',
+            host, '-u', user, '-p', password, '--no-progress-bar'] + other_args) as complete:
 
-        logger.debug(f'rc: {complete.returncode}, args: {complete.args}')
-        time.sleep(1)
-        complete.kill()
+            logger.debug(f'rc: {complete.returncode}, args: {complete.args}')
+            time.sleep(1)
+            complete.kill()
 
 
     @keyword(types=[str, str, str, int, str])
