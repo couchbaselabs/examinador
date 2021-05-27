@@ -66,9 +66,8 @@ def load_index_data(mgr: Optional[QueryIndexManager] = None, host: str = "http:/
     index_mgr.create_primary_index(bucket, CreatePrimaryQueryIndexOptions(ignore_if_exists=True))
     for _ in range(120):
         time.sleep(1)
-        result = cluster.query("SELECT * FROM system:indexes WHERE name='#primary';")
-        for row in result:
-            if row["indexes"]["state"] == "online":
+        for idx in index_mgr.get_all_indexes(bucket):
+            if idx.name == "#primary" and idx.state == "online":
                 cluster.disconnect()
                 return
     cluster.disconnect()
