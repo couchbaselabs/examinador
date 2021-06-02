@@ -12,6 +12,8 @@ from couchbase.management.search import UpsertSearchIndexOptions, SearchIndex
 from couchbase.management.queries import QueryIndexManager, CreatePrimaryQueryIndexOptions
 from couchbase.management.analytics import AnalyticsIndexManager, CreateDatasetOptions
 from couchbase.exceptions import NetworkException
+from couchbase.diagnostics import ServiceType, PingState
+from couchbase.bucket import PingOptions
 from couchbase_core.cluster import PasswordAuthenticator
 
 from robot.api.deco import keyword
@@ -22,8 +24,7 @@ def sdk_replace(key: str, value: dict, host: str = "http://localhost:9000", buck
         user: str = "Administrator", password: str = "asdasd"):
     """This function uses the Couchbase SDK to replace a value with a new given value for the document of the
     given key."""
-    cluster = Cluster(host, ClusterOptions(PasswordAuthenticator(user, password)))
-    cb = cluster.bucket(bucket)
+    cluster, cb = connect_to_cluster(host, user, password, bucket)
     result = cb.replace(key, value)
     cluster.disconnect()
     if result.rc != 0:
@@ -34,8 +35,7 @@ def sdk_replace(key: str, value: dict, host: str = "http://localhost:9000", buck
 def drop_gsi_indexes(host: str = "http://localhost:9000", bucket: str = "default",
         user: str = "Administrator", password: str = "asdasd"):
     """Drops any GSI in the cluster."""
-    cluster = Cluster(host, ClusterOptions(PasswordAuthenticator(user, password)))
-    cb = cluster.bucket(bucket) # pylint: disable=unused-variable
+    cluster, cb = connect_to_cluster(host, user, password, bucket) # pylint: disable=unused-variable
     index_mgr = cluster.query_indexes()
     for idx in get_all_indexes_with_retry(index_mgr, service="gsi", bucket=bucket):
         if idx.name == "#primary":
@@ -48,8 +48,7 @@ def drop_gsi_indexes(host: str = "http://localhost:9000", bucket: str = "default
 def load_docs_sdk(items: int = 2048, key_pref: str = "pymc", group: str = "group", host: str = "http://localhost:9000",
         bucket: str = "default", user: str = "Administrator", password: str = "asdasd"):
     """Creates a query index and waits for it to be built."""
-    cluster = Cluster(host, ClusterOptions(PasswordAuthenticator(user, password)))
-    cb = cluster.bucket(bucket)
+    cluster, cb = connect_to_cluster(host, user, password, bucket)
     for i in range(items):
         doc = {"group": group, "id": i}
         cb.upsert(key_pref+str(i), doc)
@@ -60,8 +59,7 @@ def load_docs_sdk(items: int = 2048, key_pref: str = "pymc", group: str = "group
 def load_index_data(mgr: Optional[QueryIndexManager] = None, host: str = "http://localhost:9000",
         bucket: str = "default", user: str = "Administrator", password: str = "asdasd"):
     """Creates a query index and waits for it to be built."""
-    cluster = Cluster(host, ClusterOptions(PasswordAuthenticator(user, password)))
-    cb = cluster.bucket(bucket) # pylint: disable=unused-variable
+    cluster, cb = connect_to_cluster(host, user, password, bucket) # pylint: disable=unused-variable
     index_mgr = cluster.query_indexes() if mgr is None else mgr
     index_mgr.create_primary_index(bucket, CreatePrimaryQueryIndexOptions(ignore_if_exists=True))
     for _ in range(120):
@@ -79,8 +77,7 @@ def load_analytics_data(host: str = "http://localhost:9000", bucket: str = "defa
         user: str = "Administrator", password: str = "asdasd", dataset: str = "analytics_data",
         name: str = "analytics_index", field: str = "name"):
     """Creates an analytics dataset and index and waits for them to be built."""
-    cluster = Cluster(host, ClusterOptions(PasswordAuthenticator(user, password)))
-    cb = cluster.bucket(bucket) # pylint: disable=unused-variable
+    cluster, cb = connect_to_cluster(host, user, password, bucket) # pylint: disable=unused-variable
     analytics_mgr = cluster.analytics_indexes()
     analytics_mgr.create_dataset(dataset, "default", CreateDatasetOptions(ignore_if_exists=True))
     analytics_mgr.create_index(name, dataset, {field:AnalyticsDataType.STRING})
@@ -98,16 +95,14 @@ def load_analytics_data(host: str = "http://localhost:9000", bucket: str = "defa
 def load_fts_data(host: str = "http://localhost:9000", bucket: str = "default",
         user: str = "Administrator", password: str = "asdasd"):
     """Creates a full-text search index and waits for it to be built."""
-    cluster = Cluster(host, ClusterOptions(PasswordAuthenticator(user, password)))
-    cb = cluster.bucket(bucket) # pylint: disable=unused-variable
+    cluster, cb = connect_to_cluster(host, user, password, bucket) # pylint: disable=unused-variable
     fts_mgr = cluster.search_indexes()
     fts_index = get_index()
     fts_mgr.upsert_index(fts_index)
     for _ in range(120):
         time.sleep(1)
-        result = cluster.query("SELECT * FROM system:indexes WHERE name='fts_index';")
-        for row in result:
-            if row["indexes"]["state"] == "online":
+        for idx in fts_mgr.get_all_indexes():
+            if idx["name"] == "fts_index":
                 cluster.disconnect()
                 return
     cluster.disconnect()
@@ -119,8 +114,7 @@ def check_indexes(host: str = "http://localhost:9000", bucket: str = "default",
         user: str = "Administrator", password: str = "asdasd", service: str = "gsi"):
     """Uses the Couchbase SDK to get all indexes and checks that those indexes are all using the
     correct service."""
-    cluster = Cluster(host, ClusterOptions(PasswordAuthenticator(user, password)))
-    cb = cluster.bucket(bucket) # pylint: disable=unused-variable
+    cluster, cb = connect_to_cluster(host, user, password, bucket) # pylint: disable=unused-variable
     index_mgr = cluster.query_indexes()
     fts_mgr = cluster.search_indexes()
     analytics_mgr = cluster.analytics_indexes()
@@ -149,8 +143,7 @@ def check_indexes(host: str = "http://localhost:9000", bucket: str = "default",
 def drop_all_indexes(host: str = "http://localhost:9000", bucket: str = "default",
         user: str = "Administrator", password: str = "asdasd"):
     """Drops all types of index that exist in the cluster."""
-    cluster = Cluster(host, ClusterOptions(PasswordAuthenticator(user, password)))
-    cb = cluster.bucket(bucket) # pylint: disable=unused-variable
+    cluster, cb = connect_to_cluster(host, user, password, bucket) # pylint: disable=unused-variable
     index_mgr = cluster.query_indexes()
     fts_mgr = cluster.search_indexes()
     analytics_mgr = cluster.analytics_indexes()
@@ -216,6 +209,24 @@ def get_all_indexes_with_retry(mgr, service: Optional[str] = None, bucket: Optio
 
     raise AssertionError("Failed to retrieve indexes")
 
+def connect_to_cluster(host: str, user: str, password: str, bucket: str,
+    services: List[ServiceType] =  [ServiceType.Query]):
+    """Creates a connection to a cluster and checks its connected to the given services before returning."""
+    cluster = Cluster(host, ClusterOptions(PasswordAuthenticator(user, password)))
+    cb = cluster.bucket(bucket) # pylint: disable=unused-variable
+    for _ in range(100):
+        result = cb.ping(PingOptions(service_types=services))
+        ready = True
+        for service in services:
+            try:
+                if result.endpoints[service][0].state != PingState.OK:
+                    ready = False
+            except (KeyError, IndexError) as e:
+                raise AssertionError(f"Service {service.value} not available") from e
+        if ready:
+            return cluster, cb
+        time.sleep(1)
+    raise AssertionError("Failed to connect to cluster")
 
 @keyword(types=[str, str, str])
 def get_index(name: str = "fts_index", field_name: str = "group", field_type: str = "text"):

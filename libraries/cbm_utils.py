@@ -12,7 +12,6 @@ from datetime import datetime, timedelta
 import sdk_utils
 
 from couchbase.cluster import Cluster
-from couchbase.cluster import ClusterOptions
 from couchbase.cluster import QueryOptions
 from couchbase.management.queries import QueryIndexManager, CreatePrimaryQueryIndexOptions
 from couchbase_core.cluster import PasswordAuthenticator
@@ -365,8 +364,7 @@ class cbm_utils:
     def get_doc_info(self, host: str = "http://localhost:9000", bucket: str = "default",
             user: str = "Administrator", password: str = "asdasd"):
         """This function will use the Couchbase SDK to get the contents of the bucket."""
-        cluster = Cluster(host, ClusterOptions(PasswordAuthenticator(user, password)))
-        cb = cluster.bucket(bucket) # pylint: disable=unused-variable
+        cluster, cb = sdk_utils.connect_to_cluster(host, user, password, bucket) # pylint: disable=unused-variable
         mgr = cluster.query_indexes()
         sdk_utils.load_index_data(mgr, bucket=bucket)
 
