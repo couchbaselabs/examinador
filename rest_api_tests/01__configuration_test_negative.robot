@@ -26,14 +26,14 @@ Try to update to invalid values
     [Tags]    post
     [Documentation]
     ...    The backup service configuration values must follow the rules below:
-    ...    1 <= history_rotation_period <= 365 and 5 <= history_rotation_size <= 200
+    ...    5 <= history_rotation_size <= 200
     ...    Any values that do not fall in that range or are not integers should fail.
     [Template]    Update config with invalid values
-    "alpha"    "omega"    # Try strings
-    -1          5         # One of the values is out of the integer range
-    5.1         100.5     # Floats should not be allowed
-    3           90000     # Second value is outside the range
-    {"a":1}     20        # One of them is a JSON object
+    "alpha"     # Try a string value
+    -1          # Try a value out of the unsigned integer range
+    5.1         # Floating point values should not be allowed
+    90000       # Value larger than we support/allow
+    {"a":1}     # Value is an unexpected JSON object
 
 Try to patch without sending values
     [Tags]    patch
@@ -45,11 +45,11 @@ Try to patch without sending values
 Try to patch with invalid values
     [Tags]    post
     [Template]    Patch config with invalid values
-    "alpha"    "omega"    # Try strings
-    -1          5         # One of the values is out of the integer range
-    5.1         100.5     # Floats should not be allowed
-    3           90000     # Second value is outside the range
-    {"a":1}     20        # One of them is a JSON object
+    "alpha"     # Try a string value
+    -1          # Try a value out of the unsigned integer range
+    5.1         # Floating point values should not be allowed
+    90000       # Value larger than we support/allow
+    {"a":1}     # Value is an unexpected JSON object
 
 *** Keywords ***
 Create REST session
@@ -71,21 +71,21 @@ Expect bad request response and no config change
     Dictionaries should be equal     ${after}    ${before}    The configuration should have not changed
 
 Update config with invalid values
-    [Arguments]    ${history_rotation_period}    ${history_rotation_size}
+    [Arguments]    ${history_rotation_size}
     [Documentation]
     ...         Sends a POST request with the given values which should be invalid. It expects the service to return
     ...         with status 404 qand the configuration value to stay the same before and after the POST request.
     ${before}=    Get config
     ${resp}=      POST request    backup_service    /config
-    ...     {"history_rotation_period":${history_rotation_period},"history_rotation_size":${history_rotation_size}}
+    ...     {"history_rotation_size":${history_rotation_size}}
     Expect bad request response and no config change    ${resp}    ${before}
 
 Patch config with invalid values
-    [Arguments]    ${history_rotation_period}    ${history_rotation_size}
+    [Arguments]    ${history_rotation_size}
     [Documentation]
     ...         Sends a PATCH request with the given values which should be invalid. It expects the service to return
     ...         with status 400 and the configuration value to stay the same before and after the PATCH request.
     ${before}=    Get config
     ${resp}=      PATCH request    backup_service    /config
-    ...     {"history_rotation_period":${history_rotation_period},"history_rotation_size":${history_rotation_size}}
+    ...     {"history_rotation_size":${history_rotation_size}}
     Expect bad request response and no config change    ${resp}    ${before}

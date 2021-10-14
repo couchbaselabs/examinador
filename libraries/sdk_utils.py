@@ -314,5 +314,5 @@ def create_eventing_file(source_bucket: str = "default", meta_bucket: str = "met
             "using_timer":false,
             "src_mutation":false
             }]
-    with open("eventing_function.txt", "w") as outfile:
+    with open("eventing_function.txt", "w", encoding="utf-8") as outfile:
         json.dump(data, outfile)
