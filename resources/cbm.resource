@@ -7,7 +7,7 @@ Resource           ../resources/couchbase.resource
 
 *** Variables ***
 ${BIN_PATH}        %{HOME}${/}source${/}install${/}bin
-${WORKSPACE}       Get Environment Variable    PWD
+${WORKSPACE}       %{PWD}
 
 *** Keywords ***
 Get info as user

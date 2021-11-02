@@ -24,6 +24,8 @@ The following are listed with the following syntax "**VARIABLE_NAME: (type) [def
 
 **BIN_PATH: (str) [$HOME/source/install/bin]** The location to the build Couchbase directory.
 
+**WORKSPACE: (str) [$CWD]** The location of the examinador directory.
+
 ### Setup and teardown
 
 This variables override or alter the behaviour of the current setups and teardown functions.

@@ -6,7 +6,7 @@ Library    Process
 ${BIN_PATH}    %{HOME}${/}source${/}install${/}bin
 ${THREADS}     1
 ${CBWORKLOADGEN_WAIT_TIME}    20
-${WORKSPACE}       Get Environment Variable    PWD
+${WORKSPACE}    %{PWD}
 
 *** Keywords ***
 Create CB bucket if it does not exist cli
