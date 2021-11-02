@@ -7,7 +7,7 @@ Resource           ../resources/couchbase.resource
 Resource           ../resources/cbm.resource
 Suite setup        Start cluster_run nodes and connect them    node_num=1    connect_nodes=1
 ...                services=n0:kv+index+n1ql
-Suite teardown     Run keywords    Collect server logs
+Suite teardown     Run keywords    Process server logs
 ...                AND    Delete bucket cli    bucket=meta
 ...                AND    Drop gsi indexes
 ...                AND    Environment dependent clean up

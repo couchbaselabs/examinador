@@ -10,6 +10,7 @@ ${BACKUP_NODE}         http://localhost:7101
 ${WAIT_UNTIL_READY}    25
 ${RUNNING_MODE}        CV
 ${SKIP_SETUP}          False
+${SKIP_LOGS}           False
 ${SKIP_TEARDOWN}       False
 ${DELETE_LOGS}         False
 
@@ -42,6 +43,10 @@ Start cluster_run nodes and connect them
     Run keyword if     ${SKIP_SETUP}                Return from keyword
     Start ${node_num} cluster run nodes
     Connect nodes    ${NS_SERVER_PATH}    ${connect_nodes}    ${services}    ${data_size}
+
+Process server logs
+    Run keyword if       ${SKIP_LOGS}       Return from keyword
+    ...       ELSE                          Collect server logs
 
 Environment dependent clean up
     [Documentation]

@@ -39,6 +39,9 @@ is `Start cluster_run nodes and connect them` for teardown they run `Environment
 **SKIP_TEARDOWN: (bool) [False]** Will skip the teardown stage which means it won't stop the running cluster
     nor will it delete the data and logs.
 
+**SKIP_LOGS: (bool) [False]** When set to `True` the logs collection will be skipped, otherwise collected (might take
+    some time).
+
 **DELETE_LOGS: (bool) [False]** When set to `True` the teardown will stop the nodes and delete the data and
     the logs. If set to `False` it won't delete the logs.
 
