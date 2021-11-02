@@ -15,10 +15,11 @@ Suite setup        Run keywords    Delete bucket cli
 ...                AND    Create CB bucket if it does not exist cli
 ...                AND    Create CB bucket if it does not exist cli    bucket=meta
 ...                AND    Create eventing file
+...                AND    Create eventing file legacy
 ...                AND    Load data to all services
 Suite Teardown     Run keywords    Collect backup logs and remove archive
 ...                AND    Drop all indexes
-...                AND    Delete eventing data
+...                AND    Delete all eventing data
 
 ***Variables***
 ${BIN_PATH}        %{HOME}${/}test-source${/}install${/}bin
@@ -69,7 +70,7 @@ Test eventing backup
     Configure backup     repo=backup_eventing     disable-data=None    disable-gsi-indexes=None
     ...                  disable-ft-indexes=None     disable-ft-alias=None    disable-analytics=None
     Run backup          repo=backup_eventing
-    Check backup item counts    backup_eventing    events=1
+    Check backup item counts    backup_eventing    events=2
 
 *** Keywords ***
 Check backup item counts

@@ -296,7 +296,8 @@ Load data to all services
     Load documents into bucket using cbc bucket level    items=${data_items}    bucket=${bucket}
     Load fts data          bucket=${bucket}
     Load analytics data    bucket=${bucket}
-    Load eventing data
+    Load eventing data    func_file_name=eventing_function.txt    func_name=eventing_func
+    Load eventing data    func_file_name=eventing_function_legacy.txt    func_name=eventing_func_legacy
 
 Exponential sleep
     [Arguments]    ${iteration}

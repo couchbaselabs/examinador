@@ -287,12 +287,11 @@ def get_index(name: str = "fts_index", field_name: str = "group", field_type: st
       }
     return SearchIndex(name,"fulltext-index","default","",params,"",{},"couchbase",plan_params)
 
-
 @keyword(types=[str, str, str])
-def create_eventing_file(source_bucket: str = "default", meta_bucket: str = "meta", func_name: str = "eventing_func"):
+def create_eventing_file_legacy(source_bucket: str = "default", meta_bucket: str = "meta",
+                                func_name: str = "eventing_func_legacy"):
     """Creates a simple eventing function file. A function can be used to process and respond to data
     changes; this function logs a document's ID to the meta bucket whenever the document is updated."""
-    false = False
     data =  [{"appcode":"function OnUpdate(doc, meta) \
             {\n    log('docId', meta.id);\n}\nfunction OnDelete(meta, options){\n}",
             "depcfg":{"buckets":[],"curl":[],"metadata_bucket":meta_bucket,"source_bucket":source_bucket},
@@ -300,19 +299,61 @@ def create_eventing_file(source_bucket: str = "default", meta_bucket: str = "met
             "settings":{
             "dcp_stream_boundary":"everything",
             "deadline_timeout":62,
-            "deployment__status":false,
+            "deployment__status":False,
             "description":"",
             "execution_timeout":60,
             "language_compatibility":"6.5.0",
             "log_level":"INFO",
             "n1ql_consistency":"none",
-            "processing_status":false,
+            "processing_status":False,
             "user_prefix":"eventing",
-            "using_timer":false,
+            "using_timer":False,
             "worker_count":3
             },
-            "using_timer":false,
-            "src_mutation":false
+            "using_timer":False,
+            "src_mutation":False
             }]
+    with open("eventing_function_legacy.txt", "w", encoding="utf-8") as outfile:
+        json.dump(data, outfile)
+
+@keyword(types=[str, str, str])
+def create_eventing_file(source_bucket: str = "default", meta_bucket: str = "meta", func_name: str = "eventing_func"):
+    """Creates a simple eventing function file. A function can be used to process and respond to data
+    changes; this function logs a document's ID to the meta bucket whenever the document is updated."""
+    data = [{"appcode": "function OnUpdate(doc, meta) \
+            {\n    log(\"Doc created/updated\", meta.id);\n}\n\n \
+            function OnDelete(meta, options) {\n    log(\"Doc deleted/expired\", meta.id);\n}",
+            "depcfg": {
+                "source_bucket": source_bucket,
+                "source_scope": "_default",
+                "source_collection": "_default",
+                "metadata_bucket": meta_bucket,
+                "metadata_scope": "_default",
+                "metadata_collection": "_default"
+            },
+            "version": "evt-0.0.0-0000-ee",
+            "enforce_schema": False,
+            "handleruuid": 578797332,
+            "function_instance_id": "F0Vej3",
+            "appname": func_name,
+            "settings": {
+                "dcp_stream_boundary": "everything",
+                "deployment_status": False,
+                "description": "",
+                "execution_timeout": 60,
+                "language_compatibility": "6.6.2",
+                "log_level": "INFO",
+                "n1ql_consistency": "none",
+                "num_timer_partitions": 128,
+                "processing_status": False,
+                "timer_context_size": 1024,
+                "user_prefix": "eventing",
+                "worker_count": 1
+            },
+            "function_scope": {
+                "bucket": source_bucket,
+                "scope": "_default"
+            }}]
+
     with open("eventing_function.txt", "w", encoding="utf-8") as outfile:
         json.dump(data, outfile)

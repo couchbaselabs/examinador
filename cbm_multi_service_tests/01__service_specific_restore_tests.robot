@@ -29,15 +29,15 @@ Test data restore
     Run backup           repo=restore_multi
     Flush bucket REST
     Drop all indexes
-    Delete eventing data
+    Delete all eventing data
     Check indexes    service=data
     Run restore and wait until persisted    repo=restore_multi     disable-gsi-indexes=None    disable-ft-indexes=None
     ...                  disable-ft-alias=None    disable-analytics=None    disable-eventing=None
     ${result}=    Get doc info
     Check restored cbc docs contents    ${result}    2048    example
     Check indexes    service=data
-    ${eventing_func_exists}=    Check eventing function exists
-    Should be equal as strings    ${eventing_func_exists}    False
+    ${all_eventing_func_correct_status}=    Confirm existence status of all eventing functions    should_exist=False
+    Should be equal    ${all_eventing_func_correct_status}    True
 
 Test index restore
     [Tags]             Tier1    P2    Restore
@@ -51,8 +51,8 @@ Test index restore
     ${result}=    Get current item number
     Should be equal as integers    ${result}    0
     Check indexes
-    ${eventing_func_exists}=    Check eventing function exists
-    Should be equal as strings    ${eventing_func_exists}    False
+    ${all_eventing_func_correct_status}=    Confirm existence status of all eventing functions    should_exist=False
+    Should be equal    ${all_eventing_func_correct_status}    True
 
 Test fts restore
     [Tags]             Tier1    P2    Restore
@@ -65,8 +65,8 @@ Test fts restore
     ${result}=    Get current item number
     Should be equal as integers    ${result}    0
     Check indexes    service=fts
-    ${eventing_func_exists}=    Check eventing function exists
-    Should be equal as strings    ${eventing_func_exists}    False
+    ${all_eventing_func_correct_status}=    Confirm existence status of all eventing functions    should_exist=False
+    Should be equal    ${all_eventing_func_correct_status}    True
 
 Test analytics restore
     [Tags]             Tier1    P2    Restore
@@ -80,8 +80,8 @@ Test analytics restore
     ${result}=    Get current item number
     Should be equal as integers    ${result}    0
     Check indexes    service=analytics
-    ${eventing_func_exists}=    Check eventing function exists
-    Should be equal as strings    ${eventing_func_exists}    False
+    ${all_eventing_func_correct_status}=    Confirm existence status of all eventing functions    should_exist=False
+    Should be equal    ${all_eventing_func_correct_status}    True
 
 Test eventing restore
     [Tags]             Tier1    P2    Restore
@@ -94,7 +94,7 @@ Test eventing restore
     ...                          disable-ft-indexes=None    disable-ft-alias=None    disable-analytics=None
     ${result}=    Get current item number
     Should be equal as integers    ${result}    0
-    ${eventing_func_exists}=    Check eventing function exists
-    Should be equal as strings    ${eventing_func_exists}    True
+    ${all_eventing_func_correct_status}=    Confirm existence status of all eventing functions    should_exist=True
+    Should be equal    ${all_eventing_func_correct_status}    True
     Drop all indexes
-    Delete eventing data
+    Delete all eventing data
