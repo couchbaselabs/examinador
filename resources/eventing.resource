@@ -19,7 +19,6 @@ Load eventing data
     Should Be Equal As Integers    ${result.rc}    0
     ${result}=         Run Process     ${BIN_PATH}${/}couchbase-cli    eventing-function-setup    -c    ${host}
     ...                -u    ${user}    -p    ${password}    --deploy    --name    eventing_func
-    ...                --boundary    from-now
     Log To Console    ${result.stdout}     DEBUG
     Should Be Equal As Integers    ${result.rc}    0
     FOR    ${i}   IN RANGE    10
