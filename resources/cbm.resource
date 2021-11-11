@@ -21,7 +21,7 @@ Collect backup logs and remove archive
     [Arguments]        ${arch}=${TEMP_DIR}${/}data${/}backups    ${host}=http://localhost:9000    ${user}=Administrator
     ...                ${password}=asdasd
     ${result}=         Run Process     ${BIN_PATH}${/}cbbackupmgr    collect-logs    --archive     ${arch}
-    ...                -o    ${WORKSPACE}${/}reports
+    ...                -o    ${WORKSPACE}${/}reports    --skip-sys-info
     Log To Console    ${result.stdout}     DEBUG
     Should Be Equal As Integers    ${result.rc}    0
     Remove Directory    ${arch}    recursive=True
