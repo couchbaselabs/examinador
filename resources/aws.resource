@@ -5,7 +5,7 @@ Library    OperatingSystem
 Library            ../libraries/cbm_utils.py    ${BIN_PATH}    ${S3_ARCHIVE}
 
 *** Variables ***
-${BIN_PATH}              %{HOME}${/}source${/}install${/}bin
+${BIN_PATH}              ${SOURCE}${/}install${/}bin
 ${S3_ARCHIVE}            s3://aws-buck/archive
 ${S3_ENDPOINT}           http://localhost:4566
 ${ACCESS_KEY_ID}         test

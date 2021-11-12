@@ -14,15 +14,17 @@ For example
 ## Location Variables
 
 This are variables that point `Examinador` to the correct place for variables scripts and
-executables.
+executables. Notice that some of them depend on $SOURCE variable, which points to the source directory of a
+compiled Couchbase server and does not have a default value, therefore it must be supplied whenever
+`Examinador` is run.
 
 The following are listed with the following syntax "**VARIABLE_NAME: (type) [default_value]** Description".
 
-**NS_SERVER_PATH: (str) [$HOME/source/ns_server]** The location to the ns_server repo.
+**NS_SERVER_PATH: (str) [$SOURCE/ns_server]** The location to the ns_server repo.
 
 **COUCHBASE_LOG_PATH: (str) [NS_SERVER_PATH/logs/n_1]** Location for the logs.
 
-**BIN_PATH: (str) [$HOME/source/install/bin]** The location to the build Couchbase directory.
+**BIN_PATH: (str) [$SOURCE/install/bin]** The location to the build Couchbase directory.
 
 **WORKSPACE: (str) [$CWD]** The location of the examinador directory.
 

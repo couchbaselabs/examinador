@@ -3,7 +3,7 @@ Library    RequestsLibrary
 Library    Process
 
 *** Variables ***
-${BIN_PATH}    %{HOME}${/}source${/}install${/}bin
+${BIN_PATH}    ${SOURCE}${/}install${/}bin
 ${THREADS}     1
 ${CBWORKLOADGEN_WAIT_TIME}    20
 ${WORKSPACE}    %{PWD}

@@ -14,7 +14,7 @@ Suite setup        Delete bucket cli
 Suite Teardown     Run keywords    Collect backup logs and remove archive
 
 ***Variables***
-${BIN_PATH}        %{HOME}${/}test-source${/}install${/}bin
+${BIN_PATH}        ${SOURCE}${/}install${/}bin
 ${ARCHIVE}         ${TEMP_DIR}${/}data${/}backups
 
 ***Test Cases***

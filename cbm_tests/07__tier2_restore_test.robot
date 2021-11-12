@@ -14,7 +14,7 @@ Suite Teardown     Run keywords    Delete bucket cli    bucket=new_bucket
 ...                AND    Collect backup logs and remove archive
 
 ***Variables***
-${BIN_PATH}        %{HOME}${/}test-source${/}install${/}bin
+${BIN_PATH}        ${SOURCE}${/}install${/}bin
 ${ARCHIVE}         ${TEMP_DIR}${/}data${/}backups
 
 ***Test Cases***

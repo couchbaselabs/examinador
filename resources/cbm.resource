@@ -6,7 +6,7 @@ Library            ../libraries/cbm_utils.py     ${BIN_PATH}    ${TEMP_DIR}${/}d
 Resource           ../resources/couchbase.resource
 
 *** Variables ***
-${BIN_PATH}        %{HOME}${/}source${/}install${/}bin
+${BIN_PATH}        ${SOURCE}${/}install${/}bin
 ${WORKSPACE}       %{PWD}
 
 *** Keywords ***

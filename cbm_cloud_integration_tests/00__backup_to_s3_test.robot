@@ -15,7 +15,7 @@ Suite Teardown     Run keywords    Remove Directory    ${TEMP_DIR}${/}staging   
 ...                AND    Remove AWS S3 bucket
 
 ***Variables***
-${BIN_PATH}              %{HOME}${/}test-source${/}install${/}bin
+${BIN_PATH}              ${SOURCE}${/}install${/}bin
 ${S3_ARCHIVE}            s3://aws-buck/archive
 ${S3_ENDPOINT}           http://localhost:4566
 ${ACCESS_KEY_ID}         test

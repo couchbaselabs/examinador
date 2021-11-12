@@ -6,7 +6,7 @@ Library            OperatingSystem
 Suite Teardown     Remove Directory    ${TEMP_DIR}${/}data${/}backups    recursive=True
 
 ***Variables***
-${BIN_PATH}    %{HOME}${/}source${/}install${/}bin
+${BIN_PATH}    ${SOURCE}${/}install${/}bin
 
 ***Test Cases***
 Test CBM Version runs
