@@ -122,11 +122,11 @@ Set ramQuota
 
 Enable flush
     [Arguments]    ${bucket}=default    ${host}=http://localhost:9000    ${user}=Administrator    ${password}=asdasd
-    [Documentation]    Flush all documents from a bucket.
-    ${auth}=    Create List    ${user}    ${password}
-    Create session    admin_api    ${host}    auth=${auth}
-    ${resp}=    Post request    admin_api    /pools/default/buckets/${bucket}    {"flushEnabled":1}
-    Status should be    200    ${resp}
+    [Documentation]    Enable flush for a bucket.
+    ${resp}=    Run process    ${BIN_PATH}${/}couchbase-cli    bucket-edit    -c    ${host}    -u    ${user}
+    ...                        -p    ${password}    --bucket    ${bucket}    --enable-flush    1
+    Log To Console    ${resp.stdout}
+    Should be equal as integers    ${resp.rc}    0
 
 Flush bucket REST
     [Arguments]    ${bucket}=default    ${host}=http://localhost:9000    ${user}=Administrator    ${password}=asdasd
