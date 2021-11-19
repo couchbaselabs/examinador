@@ -11,6 +11,7 @@ from couchbase.search import SearchQuery, SearchOptions, PrefixQuery
 from couchbase.management.search import UpsertSearchIndexOptions, SearchIndex
 from couchbase.management.queries import QueryIndexManager, CreatePrimaryQueryIndexOptions
 from couchbase.management.analytics import AnalyticsIndexManager, CreateDatasetOptions
+from couchbase.management.views import DesignDocumentNamespace
 from couchbase.exceptions import NetworkException
 from couchbase.diagnostics import ServiceType, PingState
 from couchbase.bucket import PingOptions
@@ -18,6 +19,8 @@ from couchbase_core.cluster import PasswordAuthenticator
 
 from robot.api.deco import keyword
 from robot.api import logger
+from robot.utils.asserts import assert_equal
+from robot.utils.asserts import fail
 
 @keyword(types=[str, dict, str, str, str, str])
 def sdk_replace(key: str, value: dict, host: str = "http://localhost:9000", bucket: str = "default",
@@ -139,6 +142,45 @@ def check_indexes(host: str = "http://localhost:9000", bucket: str = "default",
         raise AssertionError("Analytics index not restored")
 
 
+def get_all_indexes_collection_aware(host: str = "http://localhost:9000", bucket: str = "default",
+        user: str = "Administrator", password: str = "asdasd"):
+    """Gets all indexes (collection aware)."""
+    cluster, cb = connect_to_cluster(host, user, password, bucket) # pylint: disable=unused-variable
+    indexes = cluster.query("SELECT idx.* FROM system:indexes AS idx;")
+
+    return indexes
+
+
+@keyword(types=[str, str, str, str])
+def get_number_of_indexes_collection_aware(host: str = "http://localhost:9000", bucket: str = "default",
+        user: str = "Administrator", password: str = "asdasd"):
+    """This function will use the Couchbase SDK to get all of the indexes (collection aware)."""
+    num_of_indexes = len(list(get_all_indexes_collection_aware(host, bucket, user, password)))
+
+    return num_of_indexes
+
+
+@keyword(types=[str, str, str, str])
+def check_all_indexes_have_been_built_collection_aware(host: str = "http://localhost:9000", bucket: str = "default",
+        user: str = "Administrator", password: str = "asdasd"):
+    """Checks that all of the indexes have been built (collection aware)."""
+    for i in range(12):
+        indexes = get_all_indexes_collection_aware(host, bucket, user, password)
+        is_built = True
+        for idx_dict in indexes:
+            if idx_dict["state"] != "online":
+                logger.debug(f'Not all indexes have been built, index with name {idx_dict["name"]} is in state \
+                    {idx_dict["state"]}')
+                is_built = False
+                break
+
+        if is_built:
+            return
+        if i != 11:
+            time.sleep(5)
+    fail("Imported indexes failed to be built in 60 seconds")
+
+
 @keyword(types=[str, str, str, str])
 def drop_all_indexes(host: str = "http://localhost:9000", bucket: str = "default",
         user: str = "Administrator", password: str = "asdasd"):
@@ -167,13 +209,46 @@ def drop_all_indexes(host: str = "http://localhost:9000", bucket: str = "default
     cluster.disconnect()
 
 
+def drop_index_collection_aware(cluster: Cluster, name: str, bucket: str = "default", scope: str = "_default",
+        collection: str = "_default"):
+    """Drops the specified index (collection aware)."""
+    result = cluster.query(f'DROP INDEX {name} ON {bucket}.{scope}.{collection};')
+    logger.debug("Query status:" + str(result.metadata().status()))
+
+
+@keyword(types=[str, str, str, str])
+def drop_all_indexes_collection_aware(host: str = "http://localhost:9000", bucket: str = "default",
+        user: str = "Administrator", password: str = "asdasd"):
+    """Drops all indexes for a specified bucket (collection aware)."""
+    indexes = get_all_indexes_collection_aware(host, bucket, user, password)
+    cluster, cb = connect_to_cluster(host, user, password, bucket) # pylint: disable=unused-variable
+
+    for idx_dict in indexes:
+        name = idx_dict["name"]
+        keyspace = idx_dict["keyspace_id"]
+        if keyspace != bucket:
+            drop_index_collection_aware(cluster, name, bucket=bucket, scope=idx_dict["scope_id"], collection=keyspace)
+        else:
+            drop_index_collection_aware(cluster, name, bucket=bucket)
+
+    cluster.disconnect()
+
+    for _ in range(30):
+        remaining_idx_num = get_number_of_indexes_collection_aware(host, bucket, user, password)
+        if remaining_idx_num == 0:
+            break
+        time.sleep(1)
+
+    assert_equal(remaining_idx_num, 0, "Failed to drop all bucket indexes after 30 seconds")
+
+
 def wait_for_index_to_be_dropped(mgr, name: str, service: str, bucket: Optional[str] = None):
     """Waits until the given index has been dropped."""
     for _ in range(60):
         if check_index_does_not_exist(mgr, name, service, bucket):
             return
         time.sleep(1)
-    raise AssertionError("Timeout: Index failed to be dropped after 60s")
+    fail("Timeout: Index failed to be dropped after 60s")
 
 
 def check_index_does_not_exist(mgr, name: str, service: str, bucket: Optional[str] = None):
@@ -196,7 +271,8 @@ def check_index_does_not_exist(mgr, name: str, service: str, bucket: Optional[st
     return True
 
 
-def get_all_indexes_with_retry(mgr, service: Optional[str] = None, bucket: Optional[str] = None):
+def get_all_indexes_with_retry(mgr, service: Optional[str] = None, #pylint: disable=inconsistent-return-statements
+        bucket: Optional[str] = None):
     """Retries getting all indexes up to ten times or until a result is returned."""
     for i in range(10):
         try:
@@ -207,13 +283,66 @@ def get_all_indexes_with_retry(mgr, service: Optional[str] = None, bucket: Optio
             logger.debug(f"{e}: Failed to get indexes, will retry {10-i} more times")
             time.sleep(1)
 
-    raise AssertionError("Failed to retrieve indexes")
+    fail("Failed to retrieve indexes")
 
-def connect_to_cluster(host: str, user: str, password: str, bucket: str,
-    services: List[ServiceType] =  [ServiceType.Query]):
+
+@keyword(types=[str, str, str, str])
+def drop_all_design_docs(host: str = "http://localhost:9000", bucket: str = "default",
+        user: str = "Administrator", password: str = "asdasd"):
+    """Drops all design docs that exist in a bucket."""
+    cluster, cb = connect_to_cluster(host, user, password, bucket)
+    view_mgr = cb.view_indexes()
+
+    for namespace in [DesignDocumentNamespace.PRODUCTION, DesignDocumentNamespace.DEVELOPMENT]:
+        docs = get_all_design_docs_with_retry(view_mgr, namespace)
+        for doc in docs:
+            view_mgr.drop_design_document(doc.name, namespace)
+            wait_for_design_doc_to_be_dropped(view_mgr, doc.name, namespace)
+
+    new_docs_num = 0
+    for namespace in [DesignDocumentNamespace.PRODUCTION, DesignDocumentNamespace.DEVELOPMENT]:
+        new_docs_num += len(get_all_design_docs_with_retry(view_mgr, namespace))
+    if new_docs_num != 0:
+        fail("Not all design docs have been dropped")
+
+    cluster.disconnect()
+
+
+def get_all_design_docs_with_retry(mgr, namespace): #pylint: disable=inconsistent-return-statements
+    """Retries getting all design docs up to ten times or until a result is returned."""
+    for i in range(10):
+        try:
+            docs = mgr.get_all_design_documents(namespace)
+            return docs
+        except NetworkException as e:
+            logger.debug(f"{e}: Failed to get design docs, will retry {10-i} more times")
+            time.sleep(1)
+
+    fail("Failed to retrieve design docs")
+
+
+def wait_for_design_doc_to_be_dropped(mgr, name, namespace):
+    """Waits until the given design doc has been dropped."""
+    for _ in range(60):
+        if not design_doc_exists(mgr, name, namespace):
+            return
+        time.sleep(1)
+    fail("Timeout: Design doc failed to be dropped after 60s")
+
+
+def design_doc_exists(mgr, name, namespace):
+    """Checks there is a design doc with a given name."""
+    for doc in get_all_design_docs_with_retry(mgr, namespace):
+        if doc.name == name:
+            return True
+    return False
+
+
+def connect_to_cluster(host: str, user: str, password: str, bucket: str, #pylint: disable=inconsistent-return-statements
+        services: List[ServiceType] =  [ServiceType.Query]):
     """Creates a connection to a cluster and checks its connected to the given services before returning."""
     cluster = Cluster(host, ClusterOptions(PasswordAuthenticator(user, password)))
-    cb = cluster.bucket(bucket) # pylint: disable=unused-variable
+    cb = cluster.bucket(bucket)
     for _ in range(100):
         result = cb.ping(PingOptions(service_types=services))
         ready = True
@@ -226,7 +355,36 @@ def connect_to_cluster(host: str, user: str, password: str, bucket: str,
         if ready:
             return cluster, cb
         time.sleep(1)
-    raise AssertionError("Failed to connect to cluster")
+    fail("Failed to connect to cluster")
+
+
+@keyword(types=[str, str, str, str])
+def get_doc_info(host: str = "http://localhost:9000", bucket: str = "default",
+        user: str = "Administrator", password: str = "asdasd"):
+    """This function will use the Couchbase SDK to get the contents of the bucket."""
+    cluster, cb = connect_to_cluster(host, user, password, bucket) # pylint: disable=unused-variable
+    mgr = cluster.query_indexes()
+    load_index_data(mgr, bucket=bucket)
+
+    result = cluster.query(f"SELECT * FROM {bucket};")
+
+    doc_list = [row[bucket] for row in result]
+
+    mgr.drop_primary_index(bucket)
+    wait_for_index_to_be_dropped(mgr, '#primary', service="gsi", bucket=bucket)
+    cluster.disconnect()
+    return doc_list
+
+
+def format_flags(kwargs):
+    """Format extra flags into a list."""
+    other_args = []
+    for flag in kwargs:
+        other_args.append(f'--{flag}')
+        if kwargs.get(flag) != 'None':
+            other_args.append(kwargs.get(flag))
+    return other_args
+
 
 @keyword(types=[str, str, str])
 def get_index(name: str = "fts_index", field_name: str = "group", field_type: str = "text"):
@@ -348,7 +506,7 @@ def create_eventing_file(source_bucket: str = "default", meta_bucket: str = "met
                 "processing_status": False,
                 "timer_context_size": 1024,
                 "user_prefix": "eventing",
-                "worker_count": 1
+                "worker_count": 3
             },
             "function_scope": {
                 "bucket": source_bucket,

@@ -10,6 +10,7 @@ from typing import Dict, List, Optional
 from datetime import datetime, timedelta
 
 import sdk_utils
+import utils
 
 from couchbase.cluster import Cluster
 from couchbase.cluster import QueryOptions
@@ -40,16 +41,12 @@ class cbm_utils:
             timeout_value: int = 120, **kwargs):
         """This function runs a restore."""
         archive = self.archive if archive is None else archive
-        other_args = self.__format_flags(kwargs)
+        other_args = sdk_utils.format_flags(kwargs)
         complete = subprocess.run([join(self.BIN_PATH, 'cbbackupmgr'), 'restore', '-a', archive, '-r', repo, '-c',
                         host, '-u', user, '-p', password, '--no-progress-bar'] + other_args, capture_output=True,
                         shell=False, timeout=timeout_value)
-
-        logger.debug(f'Return code: {complete.returncode}')
-        logger.debug(f'Arguments: {complete.args}')
-        logger.debug(f'Output: {complete.stdout}')
-        if complete.returncode != 0:
-            raise subprocess.CalledProcessError(complete.returncode, complete.args, complete.stdout)
+        utils.log_subprocess_run_results(complete)
+        utils.check_subprocess_status(complete)
 
 
     @keyword(types=[str, str, int])
@@ -57,15 +54,11 @@ class cbm_utils:
                 **kwargs):
         """This function will configure a backup repository."""
         archive = self.archive if archive is None else archive
-        other_args = self.__format_flags(kwargs)
+        other_args = sdk_utils.format_flags(kwargs)
         complete = subprocess.run([join(self.BIN_PATH, 'cbbackupmgr'), 'config', '-a', archive, '-r', repo]
                         + other_args, capture_output=True, shell=False, timeout=timeout_value)
-
-        logger.debug(f'Return code: {complete.returncode}')
-        logger.debug(f'Arguments: {complete.args}')
-        logger.debug(f'Output: {complete.stdout}')
-        if complete.returncode != 0:
-            raise subprocess.CalledProcessError(complete.returncode, complete.args, complete.stdout)
+        utils.log_subprocess_run_results(complete)
+        utils.check_subprocess_status(complete)
 
 
     @keyword(types=[str, str, str, str, str, int])
@@ -73,16 +66,12 @@ class cbm_utils:
             user: str = "Administrator", password: str = "asdasd", timeout_value: int = 60, **kwargs):
         """This function will run a backup."""
         archive = self.archive if archive is None else archive
-        other_args = self.__format_flags(kwargs)
+        other_args = sdk_utils.format_flags(kwargs)
         complete = subprocess.run([join(self.BIN_PATH, 'cbbackupmgr'), 'backup', '-a', archive, '-r', repo, '-c',
                         host, '-u', user, '-p', password, '--no-progress-bar'] + other_args, capture_output=True,
                         shell=False, timeout=timeout_value)
-
-        logger.debug(f'Return code: {complete.returncode}')
-        logger.debug(f'Arguments: {complete.args}')
-        logger.debug(f'Output: {complete.stdout}')
-        if complete.returncode != 0:
-            raise subprocess.CalledProcessError(complete.returncode, complete.args, complete.stdout)
+        utils.log_subprocess_run_results(complete)
+        utils.check_subprocess_status(complete)
 
 
     @keyword(types=[str, str, str, str, str])
@@ -90,7 +79,7 @@ class cbm_utils:
             host: str = "http://localhost:9000", user: str = "Administrator", password: str = "asdasd", **kwargs):
         """This function will run a backup."""
         archive = self.archive if archive is None else archive
-        other_args = self.__format_flags(kwargs)
+        other_args = sdk_utils.format_flags(kwargs)
         with subprocess.Popen([join(self.BIN_PATH, 'cbbackupmgr'), 'backup', '-a', archive, '-r', repo, '-c',
             host, '-u', user, '-p', password, '--no-progress-bar'] + other_args) as complete:
 
@@ -104,16 +93,12 @@ class cbm_utils:
             timeout_value: int = 120, collection_string: str = "default", **kwargs):
         """This function runs examine on a backup."""
         archive = self.archive if archive is None else archive
-        other_args = self.__format_flags(kwargs)
+        other_args = sdk_utils.format_flags(kwargs)
         complete = subprocess.run([join(self.BIN_PATH, 'cbbackupmgr'), 'examine', '-a', archive, '-r', repo,
                         '--collection-string', collection_string, '--key', key] + other_args,
                         capture_output=True, shell=False, timeout=timeout_value)
-
-        logger.debug(f'Return code: {complete.returncode}')
-        logger.debug(f'Arguments: {complete.args}')
-        logger.debug(f'Output: {complete.stdout}')
-        if complete.returncode != 0:
-            raise subprocess.CalledProcessError(complete.returncode, complete.args, complete.stdout)
+        utils.log_subprocess_run_results(complete)
+        utils.check_subprocess_status(complete)
         if '--json' in other_args:
             return self.examine_to_list(complete.stdout), json.loads(complete.stdout)
         return str(complete.stdout)
@@ -123,15 +108,11 @@ class cbm_utils:
     def run_remove(self, repo: Optional[str] = None, archive: Optional[str] = None, timeout_value: int = 120, **kwargs):
         """This function runs remove on a backup."""
         archive = self.archive if archive is None else archive
-        other_args = self.__format_flags(kwargs)
+        other_args = sdk_utils.format_flags(kwargs)
         complete = subprocess.run([join(self.BIN_PATH, 'cbbackupmgr'), 'remove', '-a', archive, '-r', repo]
                         + other_args, capture_output=True, shell=False, timeout=timeout_value)
-
-        logger.debug(f'Return code: {complete.returncode}')
-        logger.debug(f'Arguments: {complete.args}')
-        logger.debug(f'Output: {complete.stdout}')
-        if complete.returncode != 0:
-            raise subprocess.CalledProcessError(complete.returncode, complete.args, complete.stdout)
+        utils.log_subprocess_run_results(complete)
+        utils.check_subprocess_status(complete)
 
 
     @keyword(types=[str, str])
@@ -139,28 +120,13 @@ class cbm_utils:
             **kwargs):
         """This function runs info on a backup."""
         archive = self.archive if archive is None else archive
-        other_args = self.__format_flags(kwargs)
+        other_args = sdk_utils.format_flags(kwargs)
         complete = subprocess.run([join(self.BIN_PATH, 'cbbackupmgr'), 'info', '-a', archive, '-r', repo, '--json']
                         + other_args, capture_output=True, shell=False, timeout=timeout_value)
-
-        logger.debug(f'Return code: {complete.returncode}')
-        logger.debug(f'Arguments: {complete.args}')
-        logger.debug(f'Output: {complete.stdout}')
-        if complete.returncode != 0:
-            raise subprocess.CalledProcessError(complete.returncode, complete.args, complete.stdout)
+        utils.log_subprocess_run_results(complete)
+        utils.check_subprocess_status(complete)
 
         return json.loads(complete.stdout)
-
-
-    @staticmethod
-    def __format_flags(kwargs):
-        """Format extra flags into a list."""
-        other_args = []
-        for flag in kwargs:
-            other_args.append(f'--{flag}')
-            if kwargs.get(flag) != 'None':
-                other_args.append(kwargs.get(flag))
-        return other_args
 
 
     @keyword(types=[List[Dict], int, int, int, int, int])
@@ -292,13 +258,7 @@ class cbm_utils:
             expected_length: The expected number of documents.
             group: The expected value of the group field.
         """
-        if len(data) != expected_length:
-            raise AssertionError(f'Document contents changed: unexpected number of documents: {len(data)} \
-                                    != {expected_length}')
-
-        for doc in data:
-            if not doc["group"] == group:
-                raise AssertionError(f'Document contents changed: {doc["group"]} != {group}')
+        utils.check_simple_data_contents(data, expected_length, group)
 
 
     @keyword(types=[str])
@@ -358,22 +318,3 @@ class cbm_utils:
             if buck["name"] == bucket:
                 return i
         raise AssertionError(f"Bucket {bucket} not backed up")
-
-
-    @keyword(types=[str, str, str, str])
-    def get_doc_info(self, host: str = "http://localhost:9000", bucket: str = "default",
-            user: str = "Administrator", password: str = "asdasd"):
-        """This function will use the Couchbase SDK to get the contents of the bucket."""
-        cluster, cb = sdk_utils.connect_to_cluster(host, user, password, bucket) # pylint: disable=unused-variable
-        mgr = cluster.query_indexes()
-        sdk_utils.load_index_data(mgr, bucket=bucket)
-
-        result = cluster.query(f"SELECT * FROM {bucket};")
-        doc_list = []
-        for row in result:
-            doc_list.append(row[bucket])
-
-        mgr.drop_primary_index(bucket)
-        sdk_utils.wait_for_index_to_be_dropped(mgr, '#primary', service="gsi", bucket=bucket)
-        cluster.disconnect()
-        return doc_list

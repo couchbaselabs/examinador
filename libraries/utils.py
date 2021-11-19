@@ -1,5 +1,6 @@
 """This contain miscelaneous utility funtions used by the tests"""
 import binascii
+import subprocess
 import json
 import random
 import re
@@ -12,6 +13,8 @@ import requests
 from dateutil.parser import parse
 from robot.api.deco import keyword
 from robot.api import logger
+from robot.utils.asserts import assert_equal
+from robot.utils.asserts import fail
 
 
 ROBOT_AUTO_KEYWORDS = False
@@ -225,3 +228,36 @@ def sorted_json_string(dict_like: Union[Dict, str], remove_empty: List[str] = []
         if remove in dict_value and (dict_value[remove] == '' or dict_value[remove] is None):
             del dict_value[remove]
     return json.dumps(dict_value, sort_keys=True)
+
+
+def log_subprocess_run_results(completed_process):
+    """Log information about a completed subprocess"""
+    logger.debug(f'Return code: {completed_process.returncode}')
+    logger.debug(f'Arguments: {completed_process.args}')
+    logger.debug(f'Output: {completed_process.stdout}')
+
+
+def check_subprocess_status(completed_process):
+    "Check subprocess return code and raise an error if it is not 0"
+    if completed_process.returncode != 0:
+        raise subprocess.CalledProcessError(completed_process.returncode, completed_process.args,
+            completed_process.stdout)
+
+
+def check_simple_data_contents(data, expected_length, group):
+    """Check that the simple data contents are as expected"""
+    assert_equal(len(data), expected_length, "Document contents changed: unexpected number of documents")
+
+    for doc in data:
+        assert_equal(doc["group"], group, "Document contents changed: group has changed")
+
+
+def check_all_nums_distinct(data, expected_length):
+    """Check that all of the given documents have distinct nums from 0 to expected_length - 1"""
+    remaining_num_values = set(range(expected_length))
+    for doc in data:
+        current_num = doc['num']
+        if current_num in remaining_num_values:
+            remaining_num_values.remove(current_num)
+        else:
+            fail(f'Document contents changed: found unexpected doc with num = {doc["num"]}')

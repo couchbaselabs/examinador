@@ -144,6 +144,19 @@ Flush bucket REST
     END
     Fail    Timeout: Bucket failed to be flushed
 
+Delete bucket if it does exist cli
+    [Arguments]    ${bucket}=default    ${host}=http://localhost:9000    ${user}=Administrator    ${password}=asdasd
+    [Documentation]    Delete a bucket.
+    ${auth}=    Create List    ${user}    ${password}
+    Create session    admin_api    ${host}    auth=${auth}
+    ${resp}=    Get request    admin_api    /pools/default/buckets/${bucket}
+    Return from keyword if    ${resp.status_code} != 200
+    ${resp}=    Run process    ${BIN_PATH}${/}couchbase-cli    bucket-delete    -c    ${host}    -u    ${user}
+    ...                        -p    ${password}    --bucket    ${bucket}
+    Log To Console    ${resp.stdout}     DEBUG
+    Should be equal as integers    ${resp.rc}    0
+    Sleep    5
+
 Load documents into bucket using cbm
     [Arguments]    ${items}=1000    ${bucket}=default    ${host}=http://localhost:9000    ${user}=Administrator
     ...            ${password}=asdasd    ${size}=1024
