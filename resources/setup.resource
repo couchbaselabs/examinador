@@ -37,12 +37,13 @@ Start ${node_num} cluster run nodes
 
 Start cluster_run nodes and connect them
     [Arguments]    ${node_num}=1    ${connect_nodes}=1    ${services}=n0:kv+backup    ${data_size}=256
+    ...            ${index_size}=256
     [Documentation]
     ...    Shortcut to start nodes and connect them in one keyword. This can be skip by setting the command line
     ...    variable 'SKIP_SETUP' to true.
     Run keyword if     ${SKIP_SETUP}                Return from keyword
     Start ${node_num} cluster run nodes
-    Connect nodes    ${NS_SERVER_PATH}    ${connect_nodes}    ${services}    ${data_size}
+    Connect nodes    ${NS_SERVER_PATH}    ${connect_nodes}    ${services}    ${data_size}    ${index_size}
 
 Process server logs
     Run keyword if       ${SKIP_LOGS}       Return from keyword

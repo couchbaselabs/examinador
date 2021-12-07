@@ -45,7 +45,7 @@ def check_node_started(host: str, port: int, max_tries: int = 30):
 
 
 @keyword(types=[str, int, str, int])
-def connect_nodes(cwd: str, node_num: int, services: str, data_size: int = 256):
+def connect_nodes(cwd: str, node_num: int, services: str, data_size: int = 256, index_size: int = 256):
     """Runs cluster connect with the given options. It will sleep for wait_for seconds after to give time for the
     rebalance to take place and the nodes to get initialize.
 
@@ -62,8 +62,8 @@ def connect_nodes(cwd: str, node_num: int, services: str, data_size: int = 256):
     for i in range(5):
         logger.info(f'Connecting nodes {services}', also_console=True)
         complete = subprocess.run([join(cwd, 'cluster_connect'), '-n', str(node_num), '-T', services, '-s',
-                                   str(data_size), '-r', '0', '-M', 'memory_optimized'], capture_output=True,
-                                   timeout=120)
+                                   str(data_size), '-I', str(index_size), '-r', '0', '-M', 'memory_optimized'],
+                                   capture_output=True, timeout=120)
         if complete.returncode != 0:
             logger.warn(f'Cluster connect failed, rc {complete.returncode}: {complete.stdout}')
             time.sleep(5 * (i + 1))
