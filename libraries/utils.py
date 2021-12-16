@@ -1,20 +1,21 @@
 """This contain miscelaneous utility funtions used by the tests"""
-import binascii
-import subprocess
 import json
+import os
 import random
 import re
 import string
+import subprocess
 import time
+
 from datetime import datetime
 from typing import Dict, Union, List, Tuple
 
 import requests
+
 from dateutil.parser import parse
 from robot.api.deco import keyword
 from robot.api import logger
-from robot.utils.asserts import assert_equal
-from robot.utils.asserts import fail
+from robot.utils.asserts import assert_equal, fail
 
 
 ROBOT_AUTO_KEYWORDS = False
@@ -184,6 +185,16 @@ def should_be_approx_x_from_now(time_str: str, offset: str = '1h', error_margin:
 def hex_encode(data: str) -> str:
     """Takes a string and returns it encoded in hex."""
     return data.encode().hex()
+
+
+@keyword(types=[str])
+def get_data_directory_path_of_only_backup(repo_path: str):
+    """Returns the data directory of the only backup in a given backup repository"""
+    repo_subdir_paths = [f.path for f in os.scandir(repo_path) if f.is_dir()]
+    assert_equal(len(repo_subdir_paths), 1, "The number of backups is not 1")
+    backup_subdir_paths = [f.path for f in os.scandir(repo_subdir_paths[0]) if f.is_dir()]
+    assert_equal(len(backup_subdir_paths), 1, "The number of buckets in a backup is not 1")
+    return os.path.join(backup_subdir_paths[0], 'data')
 
 
 def generate_valid_task_template() -> Dict:

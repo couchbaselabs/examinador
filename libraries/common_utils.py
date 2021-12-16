@@ -31,10 +31,13 @@ class common_utils:
     """Common Examinador functions and keywords."""
     ROBOT_LIBRARY_SCOPE = 'SUITE'
 
+
     def __init__(self, source_path: str):
         self.SOURCE = source_path
         self.BIN_PATH = join(self.SOURCE, 'install', 'bin')
 
+
+    @keyword(types=[str, int])
     def retrieve_docs_from_backup(self, dir_path: str, timeout_value: int = 60):
         """Retrieve all data documents from a backup in a local backup directory.
 
@@ -86,6 +89,7 @@ class common_utils:
         return documents
 
 
+    @keyword(types=[str, str, int])
     def retrieve_docs_from_cluster_node(self, bucket: str = "default", node: str = "n_0", timeout_value: int = 60):
         """Retrieve all data documents from a local Couchbase cluster data node.
 
@@ -185,6 +189,7 @@ class common_utils:
 
 
     @staticmethod
+    @keyword(types=[List[Document], List[Document], List[str], bool])
     def validate_docs(docs: List[Document], validation_docs: List[Document], metadata_keys_to_ignore: List[str] = None,
             only_validate_data: bool = False):
         """Validate all provided documents by comparing them to the specified validation documents.
