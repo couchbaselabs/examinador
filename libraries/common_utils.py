@@ -234,11 +234,6 @@ class common_utils:
     @staticmethod
     def _get_key_from_full_id(full_id: str):
         """Get a document key from the full id returned by couch_dbdump."""
-        # TEMP: There seems to be a bug with some ids returned by cb_dbdump where the key is prepended by either \t, \r,
-        # \x0b, \x0f, or \x11
-        # Linked to: MB-49820
-        full_id = re.sub("\t|\r|\x0b|\x0f|\x11", "", full_id)
-
         id_split = full_id.split(")")
         if len(id_split) != 2:
             logger.debug("Could not extract the key: unexpected full id format for a document with the full id " \
