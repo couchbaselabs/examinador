@@ -81,6 +81,7 @@ class common_utils:
                 f"document data dictionary key is missing for a document with the key '{document.key}'")
 
             # Add all other keys to the document's metadata
+            document.metadata = {}
             for key, key_value in doc_dict.items():
                 document.metadata[key] = key_value
 
@@ -159,6 +160,7 @@ class common_utils:
                 f"document data dictionary key is missing for a document with the key '{document.key}'")
 
             # Add all other keys to the document's metadata
+            document.metadata = {}
             for key, key_value in doc_dict.items():
                 document.metadata[key] = key_value
 
