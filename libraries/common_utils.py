@@ -123,18 +123,6 @@ class common_utils:
         dump_split = process_results.stdout.split(b'\n')
         docs_with_meta = dump_split[1:len(dump_split) - 1]
 
-        # TEMP: Replace all hex values that are stored as "name":{hex_value} with "name":"{hex_value}"
-        # because json.loads() cannot deserialize hex values as integers since it's not valid JSON. Ideally,
-        # couch_dbdump should return hex values as strings so this is a temporary, codding-around-a-problem solution.
-        # Linked to: MB-49817
-        docs_with_meta = [re.sub(b'":\s*0x[0-9A-Fa-f]*', # pylint: disable=anomalous-backslash-in-string
-            common_utils._replace_match, doc) for doc in docs_with_meta]
-
-        # TEMP: There seems to be a problem with the "content_meta" key specifically, apart from returning raw hex
-        # values it also returns 00 in hex for 0 in decimal instead of 0x0 in hex as you would expect
-        # Linked to: MB-49817
-        docs_with_meta = [re.sub(b'"content_meta":00', b'"content_meta":"0x0"', doc, 1) for doc in docs_with_meta]
-
         # TEMP: cb_dbdump outputs \\u00ffffff instead of \x so many unicode symbols are not displayed correctly
         # Linked to: MB-49819
         docs_with_meta = [re.sub(b'(\\\\u00ffffff..)+', common_utils._substitute_unidentified_with_x, doc)
@@ -159,25 +147,16 @@ class common_utils:
         for doc_dict in data_docs_dicts:
             document = Document()
             document.key = common_utils._get_key_from_full_id(doc_dict['id'])
-
-            # TEMP: fail_if_none should be set to True after MB-49820 is fixed
-            document.collection_id = common_utils._get_collection_id_from_full_id(doc_dict['id'],
-                fail_if_none=False)
-
+            document.collection_id = common_utils._get_collection_id_from_full_id(doc_dict['id'])
             document.data_type = doc_dict.get('datatype')
             assert_not_none(document.data_type,
                 f"Data type dictionary key is missing in metadata for a document with the key '{document.key}'")
 
             # The 'body' key contains the actual document data
             # Pop the key so that data does not get added as a metadata key in the following for loop
-            doc_data = doc_dict.pop('body', None)
-            assert_not_none(doc_data,
+            document.data = doc_dict.pop('body', None)
+            assert_not_none(document.data,
                 f"document data dictionary key is missing for a document with the key '{document.key}'")
-
-            if document.is_json():
-                document.data = json.loads(doc_data)
-            else: # Do not try to de-serialize non-JSON documents
-                document.data = doc_data
 
             # Add all other keys to the document's metadata
             for key, key_value in doc_dict.items():
