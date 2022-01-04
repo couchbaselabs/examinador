@@ -202,6 +202,13 @@ class common_utils:
 
 
     @staticmethod
+    @keyword(types=[List[Document]])
+    def sort_list_of_documents(docs: List[Document]):
+        """Sort a list of documents based on their collection ids and keys."""
+        docs.sort(key=lambda x: (x.collection_id, x.key))
+
+
+    @staticmethod
     def _assert_docs_equal(valid_doc: Document, doc: Document, attrs_to_validate):
         """Check if two documents have the same contents and metadata but only for the specified attributes."""
         attributes_dict_1 = vars(valid_doc)
