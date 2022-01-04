@@ -6,6 +6,7 @@ Library            OperatingSystem
 Library            Collections
 Library            ../libraries/cbm_utils.py    ${BIN_PATH}    ${ARCHIVE}
 Library            ../libraries/sdk_utils.py
+Library            ../libraries/common_utils.py    ${SOURCE}
 Resource           ../resources/couchbase.resource
 Resource           ../resources/cbm.resource
 
@@ -165,3 +166,26 @@ Test map restore on recreated bucket
     ...                 map-data=default=new_bucket
     ${result}=    Get doc info    bucket=new_bucket
     Check restored cbworkloadgen docs contents    ${result}    2048    1024
+
+Test restore with force-updates flag
+    [Tags]    P2    Restore
+    [Documentation]    Tests that when restore is run with the --force-updates flag, the conflict resolution step is
+    ...                skipped and all restored documents are accepted and have re-genetated CAS values.
+    Delete bucket cli
+    Create CB bucket if it does not exist cli
+    Load documents into bucket using cbworkloadgen
+    @{before_docs}=    Retrieve docs from cluster node
+    Sort list of documents    ${before_docs}
+    Configure backup    repo=force_updates_2
+    Run backup          repo=force_updates_2
+    Run restore and wait until persisted    repo=force_updates_2    force-updates=None
+    @{after_docs}=    Retrieve docs from cluster node
+    Sort list of documents    ${after_docs}
+    ${index}=    Set Variable    0
+    FOR    ${doc}    IN    @{before_docs}
+        ${restored_doc}=    Get From List    ${after_docs}    ${index}
+        Should Be Equal As Strings    ${doc.key}    ${restored_doc.key}
+        Should Be Equal As Integers    ${doc.collection_id}    ${restored_doc.collection_id}
+        Should Be True    ${restored_doc.metadata}[cas] > ${doc.metadata}[cas]
+        ${index}=    Evaluate    ${index} + 1
+    END
