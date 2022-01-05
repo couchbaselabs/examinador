@@ -124,11 +124,6 @@ class common_utils:
         dump_split = process_results.stdout.split(b'\n')
         docs_with_meta = dump_split[1:len(dump_split) - 1]
 
-        # TEMP: cb_dbdump outputs \\u00ffffff instead of \x so many unicode symbols are not displayed correctly
-        # Linked to: MB-49819
-        docs_with_meta = [re.sub(b'(\\\\u00ffffff..)+', common_utils._substitute_unidentified_with_x, doc)
-            for doc in docs_with_meta]
-
         # Deserialize the documents with metadata and separate vBucket information documents from the actual data
         # documents
         data_docs_dicts = []
@@ -231,19 +226,14 @@ class common_utils:
 
 
     @staticmethod
-    def _get_collection_id_from_full_id(full_id: str, # pylint: disable=inconsistent-return-statements
-            fail_if_none: bool = True):
+    def _get_collection_id_from_full_id(full_id: str):
         """Get a document collection from the full id returned by couch_dbdump."""
         search_result = re.search('collection:(.*?)(:|\))', full_id) # pylint: disable=anomalous-backslash-in-string
-        if search_result is None:
-            if fail_if_none:
-                assert_not_none(search_result,
-                    f"Failed to get the corresponding collection id from the full document id '{full_id}'")
-            else:
-                return None
-        else:
-            collection_id = int(search_result.group(1), 16)
-            return collection_id
+        assert_not_none(search_result,
+            f"Failed to get the corresponding collection id from the full document id '{full_id}'")
+        assert search_result is not None # Required to pass the mypy static typing check
+        collection_id = int(search_result.group(1), 16)
+        return collection_id
 
 
     @staticmethod
@@ -253,13 +243,3 @@ class common_utils:
         # Remove all whitespaces between the colon and the value, and add a double quotation mark before the value
         matched_bytes = re.sub(b'":\s*', b'":"', matched_bytes, 1) # pylint: disable=anomalous-backslash-in-string
         return matched_bytes + b'"'
-
-
-    @staticmethod
-    def _substitute_unidentified_with_x(match_object):
-        """Temporary function to substitute all \\\\u00ffffff with \\x"""
-        matched_bytes = match_object.group(0)
-        bytes_hex_values = re.sub(b'\\\\u00ffffff(..)', b'\g<1>', # pylint: disable=anomalous-backslash-in-string
-            matched_bytes)
-        bytes_fixed = unhexlify(bytes_hex_values)
-        return bytes_fixed
