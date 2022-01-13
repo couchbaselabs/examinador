@@ -1,7 +1,8 @@
 *** Settings ***
-Library    RequestsLibrary
-Library    Process
+Library            RequestsLibrary
+Library            Process
 Resource           ../resources/couchbase.resource
+Resource           ../resources/common.resource
 
 *** Variables ***
 ${BIN_PATH}    ${SOURCE}${/}install${/}bin
@@ -15,19 +16,16 @@ Load eventing data
     [Arguments]    ${func_file_name}    ${func_name}    ${host}=http://localhost:9000   ${user}=Administrator
     ...            ${password}=asdasd
     [Documentation]    Load and deploy an eventing function.
-    ${result}=         Run Process     ${BIN_PATH}${/}couchbase-cli    eventing-function-setup    -c    ${host}
+    ${command}=        Create List     ${BIN_PATH}${/}couchbase-cli    eventing-function-setup    -c    ${host}
     ...                -u    ${user}    -p    ${password}    --import    --file    ${func_file_name}
-    Log To Console    ${result.stdout}     DEBUG
-    Should Be Equal As Integers    ${result.rc}    0
-    ${result}=         Run Process     ${BIN_PATH}${/}couchbase-cli    eventing-function-setup    -c    ${host}
+    Run and log and check process    ${command}
+    ${command}=        Create List     ${BIN_PATH}${/}couchbase-cli    eventing-function-setup    -c    ${host}
     ...                -u    ${user}    -p    ${password}    --deploy    --name    ${func_name}
-    Log To Console    ${result.stdout}     DEBUG
-    Should Be Equal As Integers    ${result.rc}    0
+    Run and log and check process    ${command}
     FOR    ${i}   IN RANGE    10
-        ${result}=         Run Process     ${BIN_PATH}${/}couchbase-cli    eventing-function-setup    -c    ${host}
+        ${command}=        Create List     ${BIN_PATH}${/}couchbase-cli    eventing-function-setup    -c    ${host}
         ...                -u    ${user}    -p    ${password}    --list
-        Log To Console    ${result.stdout}     DEBUG
-        Should Be Equal As Integers    ${result.rc}    0
+        Run and log and check process    ${command}
         ${status}=    Check eventing function deployed    func_name=${func_name}
         Exit for loop IF    ${status}
         Exponential sleep    ${i}
@@ -36,23 +34,21 @@ Load eventing data
 Delete eventing function data
     [Arguments]    ${func_name}    ${host}=http://localhost:9000   ${user}=Administrator    ${password}=asdasd
     [Documentation]    Delete an eventing function.
-    ${result}=         Run Process     ${BIN_PATH}${/}couchbase-cli    eventing-function-setup    -c    ${host}
+    ${command}=        Create List     ${BIN_PATH}${/}couchbase-cli    eventing-function-setup    -c    ${host}
     ...                -u    ${user}    -p    ${password}    --undeploy    --name    ${func_name}
-    Log To Console    ${result.stdout}     DEBUG
-    Should Be Equal As Integers    ${result.rc}    0
+    Run and log and check process    ${command}
     FOR    ${i}   IN RANGE    10
-        ${result}=         Run Process     ${BIN_PATH}${/}couchbase-cli    eventing-function-setup    -c    ${host}
+        ${command}=        Create List     ${BIN_PATH}${/}couchbase-cli    eventing-function-setup    -c    ${host}
         ...                -u    ${user}    -p    ${password}    --list
-        Log To Console    ${result.stdout}     DEBUG
-        Should Be Equal As Integers    ${result.rc}    0
+        Run and log and check process    ${command}
         ${status}=    Check eventing function deployed    func_name=${func_name}
         Exit for loop IF    not ${status}
         Exponential sleep    ${i}
     END
     FOR    ${i}   IN RANGE    9
-        ${result}=         Run Process     ${BIN_PATH}${/}couchbase-cli    eventing-function-setup    -c    ${host}
+        ${command}=        Create List     ${BIN_PATH}${/}couchbase-cli    eventing-function-setup    -c    ${host}
         ...                -u    ${user}    -p    ${password}    --delete    --name    ${func_name}
-        Log To Console    ${result.stdout}     DEBUG
+        ${result}=    Run and log and check process    ${command}    check_exit_code=False
         ${exit}=    Evaluate    ${result.rc} == 0
         Exit for loop IF    ${exit}
         Exponential sleep    ${i}
