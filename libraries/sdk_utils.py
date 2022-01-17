@@ -164,7 +164,9 @@ def get_number_of_indexes_collection_aware(host: str = "http://localhost:9000", 
 def check_all_indexes_have_been_built_collection_aware(host: str = "http://localhost:9000", bucket: str = "default",
         user: str = "Administrator", password: str = "asdasd"):
     """Checks that all of the indexes have been built (collection aware)."""
-    for i in range(12):
+    num_of_tries = 24
+    sleep_time = 5
+    for i in range(num_of_tries):
         indexes = get_all_indexes_collection_aware(host, bucket, user, password)
         is_built = True
         for idx_dict in indexes:
@@ -176,9 +178,9 @@ def check_all_indexes_have_been_built_collection_aware(host: str = "http://local
 
         if is_built:
             return
-        if i != 11:
-            time.sleep(5)
-    fail("Imported indexes failed to be built in 60 seconds")
+        if i != num_of_tries - 1:
+            time.sleep(sleep_time)
+    fail(f"Imported indexes failed to be built in {num_of_tries * sleep_time} seconds")
 
 
 @keyword(types=[str, str, str, str])
