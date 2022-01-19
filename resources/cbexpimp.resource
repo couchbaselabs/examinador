@@ -61,7 +61,6 @@ Install sample buckets
     [Arguments]    ${payload}    ${bucket}=default    ${host}=http://localhost:9000    ${user}=Administrator
     ...            ${password}=asdasd
     [Documentation]    This function will install specified sample buckets using REST API.
-    ${auth}=    Create List    ${user}    ${password}
-    Create session    admin_api    ${host}    auth=${auth}
-    ${resp}=    Post request    admin_api    /sampleBuckets/install    ${payload}
-    Status should be    202    ${resp}
+    ${req}=    Set Variable    /sampleBuckets/install
+    Run and log and check request    ${req}    POST    202    payload=${payload}    host=${host}    user=${user}
+    ...                              password=${password}

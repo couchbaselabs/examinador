@@ -14,9 +14,9 @@ Create CB bucket if it does not exist cli
     [Arguments]    ${bucket}=default    ${host}=http://localhost:9000    ${user}=Administrator    ${password}=asdasd
     ...            ${ramQuota}=100
     [Documentation]    Create a couchbase bucket if it does not exist, using the couchbase-cli.
-    ${auth}=    Create List    ${user}    ${password}
-    Create session    admin_api    ${host}    auth=${auth}
-    ${resp}=    Get request    admin_api    /pools/default/buckets/${bucket}
+    ${req}=    Set Variable    /pools/default/buckets/${bucket}
+    ${resp}=    Run and log request    ${req}    GET    host=${host}    user=${user}    password=${password}
+    ...         log_response=False
     Return from keyword if    ${resp.status_code} == 200
     ${command}=    Create List    ${BIN_PATH}${/}couchbase-cli    bucket-create    -c    ${host}    -u    ${user}
     ...                           -p    ${password}    --bucket    ${bucket}    --bucket-ramsize    ${ramQuota}
@@ -34,9 +34,9 @@ Set index memory quota
 Delete bucket cli
     [Arguments]    ${bucket}=default    ${host}=http://localhost:9000    ${user}=Administrator    ${password}=asdasd
     [Documentation]    Delete a bucket using the bucket-delete couchbase-cli command.
-    ${auth}=    Create List    ${user}    ${password}
-    Create session    admin_api    ${host}    auth=${auth}
-    ${resp}=    Get request    admin_api    /pools/default/buckets/${bucket}
+    ${req}=    Set Variable    /pools/default/buckets/${bucket}
+    ${resp}=    Run and log request    ${req}    GET    host=${host}    user=${user}    password=${password}
+    ...         log_response=False
     Return from keyword if    ${resp.status_code} != 200
     ${command}=    Create List    ${BIN_PATH}${/}couchbase-cli    bucket-delete    -c    ${host}    -u    ${user}
     ...            -p    ${password}    --bucket    ${bucket}
@@ -46,20 +46,20 @@ Create CB scope if it does not exist
     [Arguments]    ${bucket}=default    ${host}=http://localhost:9000    ${user}=Administrator    ${password}=asdasd
     ...            ${scope}=default
     [Documentation]    Create a couchbase scope if it does not exist.
-    ${auth}=    Create List    ${user}    ${password}
-    Create session    admin_api    ${host}    auth=${auth}
-    ${resp}=    Get request    admin_api    /pools/default/buckets/${bucket}/scopes/${scope}
+    ${req}=    Set Variable    /pools/default/buckets/${bucket}/scopes/${scope}
+    ${resp}=    Run and log request    ${req}    GET    host=${host}    user=${user}    password=${password}
     Return from keyword if    ${resp.status_code} == 200
-    ${resp}=    Post request    admin_api    /pools/default/buckets/${bucket}/scopes    {"name":"${scope}"}
-    Status should be    200    ${resp}
+    ${req}=    Set Variable    /pools/default/buckets/${bucket}/scopes
+    ${pd}=    Set Variable    {"name":"${scope}"}
+    Run and log and check request    ${req}    POST    200    payload=${pd}    host=${host}    user=${user}
+    ...                              password=${password}
 
 Create CB scope if it does not exist cli
     [Arguments]    ${bucket}=default    ${host}=http://localhost:9000    ${user}=Administrator    ${password}=asdasd
     ...            ${scope}=default
     [Documentation]    Create a couchbase scope if it does not exist.
-    ${auth}=    Create List    ${user}    ${password}
-    Create session    admin_api    ${host}    auth=${auth}
-    ${resp}=    Get request    admin_api    /pools/default/buckets/${bucket}/scopes/${scope}
+    ${req}=    Set Variable    /pools/default/buckets/${bucket}/scopes/${scope}
+    ${resp}=    Run and log request    ${req}    GET    host=${host}    user=${user}    password=${password}
     Return from keyword if    ${resp.status_code} == 200
     ${command}=    Create List    ${BIN_PATH}${/}couchbase-cli    collection-manage    -c    ${host}    -u    ${user}
     ...            -p    ${password}    --bucket    ${bucket}    --create-scope    ${scope}
@@ -69,31 +69,29 @@ Get scopes info
     [Arguments]    ${bucket}=default    ${host}=http://localhost:9000    ${user}=Administrator    ${password}=asdasd
     ...            ${scope}=default
     [Documentation]    Get information on existing scopes.
-    ${auth}=    Create List    ${user}    ${password}
-    Create session    admin_api    ${host}    auth=${auth}
-    ${resp}=    Get request    admin_api    /pools/default/buckets/${bucket}/scopes
-    Status should be    200    ${resp}
+    ${req}=    Set Variable    /pools/default/buckets/${bucket}/scopes
+    ${resp}=    Run and log and check request    ${req}    GET    200    host=${host}    user=${user}
+    ...         password=${password}
     Return from keyword    ${resp.json()}
 
 Create collection if it does not exist
     [Arguments]    ${bucket}=default    ${host}=http://localhost:9000    ${user}=Administrator    ${password}=asdasd
     ...            ${scope}=default     ${collection}=default
     [Documentation]    Create a collection within a given scope if it does not already exist.
-    ${auth}=    Create List    ${user}    ${password}
-    Create session    admin_api    ${host}    auth=${auth}
-    ${resp}=    Get request    admin_api    /pools/default/buckets/${bucket}/scopes/${scope}/${collection}
+    ${req}=    Set Variable    /pools/default/buckets/${bucket}/scopes/${scope}/${collection}
+    ${resp}=    Run and log request    ${req}    GET    host=${host}    user=${user}    password=${password}
     Return from keyword if    ${resp.status_code} == 200
-    ${resp}=    Post request    admin_api    /pools/default/buckets/${bucket}/scopes/${scope}
-    ...          {"name":${collection}}
-    Status should be    200    ${resp}
+    ${req}=    Set Variable    /pools/default/buckets/${bucket}/scopes/${scope}
+    ${pd}=    Set Variable    {"name":"${collection}"}
+    Run and log and check request    ${req}    POST    200    payload=${pd}    host=${host}    user=${user}
+    ...                              password=${password}
 
 Create collection if it does not exist cli
     [Arguments]    ${bucket}=default    ${host}=http://localhost:9000    ${user}=Administrator    ${password}=asdasd
     ...            ${scope}=default     ${collection}=default
     [Documentation]    Create a collection within a given scope if it does not already exist.
-    ${auth}=    Create List    ${user}    ${password}
-    Create session    admin_api    ${host}    auth=${auth}
-    ${resp}=    Get request    admin_api    /pools/default/buckets/${bucket}/scopes/${scope}/${collection}
+    ${req}=    Set Variable    /pools/default/buckets/${bucket}/scopes/${scope}/${collection}
+    ${resp}=    Run and log request    ${req}    GET    host=${host}    user=${user}    password=${password}
     Return from keyword if    ${resp.status_code} == 200
     ${command}=    Create List    ${BIN_PATH}${/}couchbase-cli    collection-manage    -c    ${host}    -u    ${user}
     ...            -p    ${password}    --bucket    ${bucket}    --create-collection    ${scope}.${collection}
@@ -103,22 +101,23 @@ Create CB bucket if it does not exist
     [Arguments]    ${bucket}=default    ${host}=http://localhost:9000    ${user}=Administrator    ${password}=asdasd
     ...            ${ramQuota}=100
     [Documentation]    Create a couchbase bucket if it does not exist.
-    ${auth}=    Create List    ${user}    ${password}
-    Create session    admin_api    ${host}    auth=${auth}
-    ${resp}=    Get request    admin_api    /pools/default/buckets/${bucket}
+    ${req}=    Set Variable    /pools/default/buckets/${bucket}
+    ${resp}=    Run and log request    ${req}    GET    host=${host}    user=${user}    password=${password}
+    ...         log_response=False
     Return from keyword if    ${resp.status_code} == 200
-    ${resp}=    Post request    admin_api    /pools/default/buckets
-    ...          {"name":"${bucket}","ramQuota":${ramQuota},"replicaNumber":0,"bucketType":"couchbase"}
-    Status should be    200    ${resp}
+    ${req}=    Set Variable    /pools/default/buckets
+    ${pd}=    Set Variable    {"name":"${bucket}","ramQuota":${ramQuota},"replicaNumber":0,"bucketType":"couchbase"}
+    Run and log and check request    ${req}    POST    200    payload=${pd}    host=${host}    user=${user}
+    ...                              password=${password}
 
 Set ramQuota
     [Arguments]    ${bucket}=default    ${host}=http://localhost:9000    ${user}=Administrator    ${password}=asdasd
     ...            ${ramQuota}=100
     [Documentation]    Set a buckets RAM quota.
-    ${auth}=    Create List    ${user}    ${password}
-    Create session    admin_api    ${host}    auth=${auth}
-    ${resp}=    Post request    admin_api    /pools/default/buckets/${bucket}    {"ramQuota":${ramQuota}}
-    Status should be    200    ${resp}
+    ${req}=    Set Variable    /pools/default/buckets/${bucket}
+    ${pd}=    Set Variable    {"ramQuota":${ramQuota}}
+    Run and log and check request    ${req}    POST    200    payload=${pd}    host=${host}    user=${user}
+    ...                              password=${password}
 
 Enable flush
     [Arguments]    ${bucket}=default    ${host}=http://localhost:9000    ${user}=Administrator    ${password}=asdasd
@@ -132,10 +131,8 @@ Flush bucket REST
     [Documentation]    Flush all documents from a bucket.
     ${items}=    Get current item number    ${bucket}
     Return from keyword if    ${items} == 0
-    ${auth}=    Create List    ${user}    ${password}
-    Create session    admin_api    ${host}    auth=${auth}
-    ${resp}=    Post request    admin_api    /pools/default/buckets/${bucket}/controller/doFlush
-    Status should be    200    ${resp}
+    ${req}=    Set Variable    /pools/default/buckets/${bucket}/controller/doFlush
+    Run and log and check request    ${req}    POST    200    host=${host}    user=${user}    password=${password}
     FOR    ${i}    IN RANGE    10
         ${items}=    Get current item number    ${bucket}
         Return from keyword if    ${items} == 0
@@ -146,9 +143,9 @@ Flush bucket REST
 Delete bucket if it does exist cli
     [Arguments]    ${bucket}=default    ${host}=http://localhost:9000    ${user}=Administrator    ${password}=asdasd
     [Documentation]    Delete a bucket.
-    ${auth}=    Create List    ${user}    ${password}
-    Create session    admin_api    ${host}    auth=${auth}
-    ${resp}=    Get request    admin_api    /pools/default/buckets/${bucket}
+    ${req}=    Set Variable    /pools/default/buckets/${bucket}
+    ${resp}=    Run and log request    ${req}    GET    host=${host}    user=${user}    password=${password}
+    ...         log_response=False
     Return from keyword if    ${resp.status_code} != 200
     ${command}=    Create List    ${BIN_PATH}${/}couchbase-cli    bucket-delete    -c    ${host}    -u    ${user}    -p
     ...                           ${password}    --bucket    ${bucket}
@@ -234,19 +231,18 @@ Load Binary documents with xattr into bucket using cbworkloadgen
 Get bucket uuid
     [Arguments]    ${bucket}=default    ${host}=http://localhost:9000    ${user}=Administrator    ${password}=asdasd
     [Documentation]    Get a buckets uuid.
-    ${auth}=    Create List    ${user}    ${password}
-    Create session    admin_api    ${host}    auth=${auth}
-    ${resp}=    Get request    admin_api    /pools/default/buckets/${bucket}
-    Status should be    200    ${resp}
+    ${req}=    Set Variable    /pools/default/buckets/${bucket}
+    ${resp}=    Run and log and check request    ${req}    GET    200    host=${host}    user=${user}
+    ...         password=${password}    log_response=False
     Return from keyword    ${resp.json()["uuid"]}
 
 Get item count
     [Arguments]    ${bucket}    ${host}=localhost   ${user}=Administrator    ${password}=asdasd
     [Documentation]    Get the number of items that have been persisted to disk in a bucket.
     ${ports}=    Get service ports    bucket=${bucket}
-    ${auth}=    Create List    ${user}    ${password}
-    Create session    admin_api    http://${host}:${ports['mgmt']}    auth=${auth}
-    ${resp}=    Get request    admin_api    /pools/default/buckets/${bucket}
+    ${req}=    Set Variable    /pools/default/buckets/${bucket}
+    ${resp}=    Run and log request    ${req}    GET    host=http://${host}:${ports['mgmt']}    user=${user}
+    ...         password=${password}    log_response=False
     Return from keyword if    ${resp.status_code} != 200    0
     FOR    ${i}    IN RANGE    5
         ${command}=    Create List     ${BIN_PATH}${/}cbstats    -u    ${user}    -p    ${password}
@@ -272,10 +268,9 @@ Get current item number
 Get service ports
     [Arguments]    ${bucket}=default    ${host}=http://localhost:9000    ${user}=Administrator    ${password}=asdasd
     [Documentation]    Gets the ports for a node.
-    ${auth}=    Create List    ${user}    ${password}
-    Create session    admin_api    ${host}    auth=${auth}
-    ${resp}=    Get request    admin_api    /pools/default/nodeServices
-    Status should be    200    ${resp}
+    ${req}=    Set Variable    /pools/default/nodeServices
+    ${resp}=    Run and log and check request    ${req}    GET    200    host=${host}    user=${user}
+    ...         password=${password}
     ${num_nodes}=    Get Length    ${resp.json()['nodesExt']}
     FOR    ${node}    IN RANGE    ${num_nodes}
         Return from keyword if    '${resp.json()['nodesExt'][${node}]['thisNode']}'=='True'
@@ -324,10 +319,10 @@ Wait for indexer to be active
     END
     ${auth}=    Create List    ${user}    ${password}
     Create session    admin_api    ${host}:${ports['indexHttp']}    auth=${auth}
+    ${req}=    Set Variable    /api/v1/stats
     FOR    ${i}    IN RANGE    10
-        ${resp}=    Get request    admin_api    /api/v1/stats
-        Log To Console    ${resp.json()}     DEBUG
-        Status should be    200    ${resp}
+        ${resp}=    Run and log and check request    ${req}    GET    200    host=${host}    session=admin_api
+        ...         log_response=True
         Return from keyword if    '${resp.json()}[indexer][indexer_state]' == 'Active'
         Exponential sleep    ${i}
     END

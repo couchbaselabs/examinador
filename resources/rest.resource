@@ -63,7 +63,8 @@ Create repository for triggering adhoc tasks
 
 Trigger backup
     [Arguments]         ${repo}    ${state}=active    ${full}=false
-    ${trigger}=         Post request    backup_service    /cluster/self/repository/${state}/${repo}/backup    {"full_backup":${full}}
-    Status should be    200                  ${trigger}
-    Log                 ${trigger.json()}    DEBUG
-    Return from keyword    ${trigger.json()["task_name"]}
+    ${req}=    Set Variable    /cluster/self/repository/${state}/${repo}/backup
+    ${pd}=    Set Variable    {"full_backup":${full}}
+    ${resp}=    Run and log and check request    ${req}    POST    200    payload=${pd}     user=${user}
+    ...         password=${password}    session=backup_service    log_response=True
+    Return from keyword    ${resp.json()["task_name"]}

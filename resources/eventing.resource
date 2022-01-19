@@ -70,9 +70,9 @@ Check eventing function exists
     ...            ${password}=asdasd
     [Documentation]    Check the eventing function given as func_name has been created.
     ${ports}=    Get service ports    bucket=${bucket}
-    ${auth}=    Create List    ${user}    ${password}
-    Create session    admin_api    ${host}:${ports['eventingAdminPort']}    auth=${auth}
-    ${resp}=    Get request    admin_api    /api/v1/functions/${func_name}
+    ${req}=    Set Variable    /api/v1/functions/${func_name}
+    ${resp}=    Run and log request    ${req}    GET    host=${host}:${ports['eventingAdminPort']}    user=${user}
+    ...         password=${password}
     Return from keyword if    ${resp.status_code}==200    True
     Return from keyword    False
 
@@ -81,11 +81,9 @@ Check eventing function deployed
     ...            ${password}=asdasd
     [Documentation]    Check the eventing function given as func_name has been deployed.
     ${ports}=    Get service ports    bucket=${bucket}
-    ${auth}=    Create List    ${user}    ${password}
-    Create session    admin_api    ${host}:${ports['eventingAdminPort']}    auth=${auth}
-    ${resp}=    Get request    admin_api    /api/v1/functions/${func_name}
-    Log To Console    ${resp.json()}     DEBUG
-    Should be equal as integers    ${resp.status_code}    200
+    ${req}=    Set Variable    /api/v1/functions/${func_name}
+    ${resp}=    Run and log and check request    ${req}    GET    200    host=${host}:${ports['eventingAdminPort']}
+    ...         user=${user}    password=${password}    log_response=True
     Return from keyword if    '${resp.json()['appname']}'=='${func_name}'
     ...                        ${resp.json()['settings']['deployment_status']}
     Fail    Eventing function ${func_name} doesn't exist
