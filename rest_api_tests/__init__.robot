@@ -5,5 +5,5 @@ Resource          ../resources/setup.resource
 Resource          ../resources/cbm.resource
 Suite setup      Run keywords    Start cluster_run nodes and connect them    node_num=2    connect_nodes=2    services=n0:kv,n1:backup    AND
 ...              confirm backup service running    ${BACKUP_NODE}    ${COUCHBASE_LOG_PATH}
-Suite teardown     Run keywords    Collect server logs
+Suite teardown     Run keywords    Process server logs
 ...                AND    Environment dependent clean up
