@@ -17,7 +17,7 @@ Retrieve backup service configuration
     [Documentation]
     ...    Retrieves the backup service configuration via the REST API and confirm that the default value is returned
     ...    for history_rotation_size.
-    GET        /config                      headers=${BASIC_AUTH}
+    REST.GET        /config                      headers=${BASIC_AUTH}
     Object     response body                required=["history_rotation_size"]
     Integer    $.history_rotation_size      50
 
@@ -41,10 +41,10 @@ Set basic auth
 Update backup service configuartion
     [Arguments]    ${history_rotation_size}
     [Documentation]    Updates the backup service configuration. The values must be valid
-    POST    /config
+    REST.POST    /config
     ...     {"history_rotation_size":${history_rotation_size}}
     ...     headers=${BASIC_AUTH}
     Integer    response status              200
-    GET        /config                      headers=${BASIC_AUTH}
+    REST.GET        /config                      headers=${BASIC_AUTH}
     Integer    response status              200
     Integer    $.history_rotation_size      ${history_rotation_size}

@@ -31,9 +31,9 @@ Try to add plan that already exists
     [Documentation]
     ...    Check that creating a plan with the same name is not allowed and that the original plan does not get
     ...    modified.
-    POST       /plan/duplication    {}    headers=${BASIC_AUTH}
+    REST.POST       /plan/duplication    {}    headers=${BASIC_AUTH}
     Integer    response status         200
-    POST       /plan/duplication    {"services": ["data"]}    headers=${BASIC_AUTH}
+    REST.POST       /plan/duplication    {"services": ["data"]}    headers=${BASIC_AUTH}
     Integer    response status         400
     ${resp}=   GET request             backup_service            /plan/duplication
     Status should be                   200                       ${resp}
@@ -41,7 +41,7 @@ Try to add plan that already exists
 
 Try to delete plan that does not exist
     [Tags]    delete
-    DELETE    /plan/it-does-not-exist    headers=${BASIC_AUTH}
+    REST.DELETE    /plan/it-does-not-exist    headers=${BASIC_AUTH}
     Integer   response status               404
 
 Try to add invalid plans
@@ -72,26 +72,26 @@ Try and delete a plan that is being used
     ...                repository using the duplication plan and attempt to delete the plan. This should fail. After
     ...                it will remove the repository.
     [Setup]    Run Keywords        Create directory    ${TEMP_DIR}${/}delete_in_use    AND
-    ...        POST      /cluster/self/repository/active/delete_in_use            {"archive":"${TEMP_DIR}${/}delete_in_use${/}archive}", "plan": "duplication"}    headers=${BASIC_AUTH}    AND
+    ...        REST.POST      /cluster/self/repository/active/delete_in_use            {"archive":"${TEMP_DIR}${/}delete_in_use${/}archive}", "plan": "duplication"}    headers=${BASIC_AUTH}    AND
     ...        Integer   response status    200
     [Teardown]    Run keywords     Remove directory    ${TEMP_DIR}${/}delete_in_use    recursive=True    AND
-    ...           POST      /cluster/self/repository/active/delete_in_use/archive    {"id":"delete_in_use"}    headers=${BASIC_AUTH}    AND
-    ...           DELETE    /cluster/self/repository/archived/delete_in_use          headers=${BASIC_AUTH}
-    DELETE    /plan/duplication    headers=${BASIC_AUTH}
+    ...           REST.POST      /cluster/self/repository/active/delete_in_use/archive    {"id":"delete_in_use"}    headers=${BASIC_AUTH}    AND
+    ...           REST.DELETE    /cluster/self/repository/archived/delete_in_use          headers=${BASIC_AUTH}
+    REST.DELETE    /plan/duplication    headers=${BASIC_AUTH}
     Integer   response status         400
-    GET       /plan/duplication    headers=${BASIC_AUTH}
+    REST.GET       /plan/duplication    headers=${BASIC_AUTH}
     Integer   response status         200
 
 *** Keywords ***
 Add plan with invalid name
     [Arguments]    ${name}
-    POST       /plan/${name}    {}    headers=${BASIC_AUTH}
+    REST.POST       /plan/${name}    {}    headers=${BASIC_AUTH}
     Integer    response status     400
 
 Send invalid plan
     [Arguments]        ${name}    ${description}=None    ${services}=None    ${tasks}=None
     [Documentation]    Adds a new plan.
-    POST               /plan/${name}    {"description":${description},"services":${services},"tasks":${tasks}}
+    REST.POST               /plan/${name}    {"description":${description},"services":${services},"tasks":${tasks}}
     ...                headers=${BASIC_AUTH}
     Integer            response status     400
     ${resp}=           Get request         backup_service    /plan/${name}

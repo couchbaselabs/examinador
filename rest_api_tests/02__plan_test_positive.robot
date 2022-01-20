@@ -17,9 +17,9 @@ ${BACKUP_HOST}    http://localhost:7101/api/v1
 Add an empty plan
     [Tags]   post
     [Documentation]    Attempt to add a plan with name 'empty' that has no tasks or description.
-    POST        /plan/empty      {}    headers=${BASIC_AUTH}
+    REST.POST        /plan/empty      {}    headers=${BASIC_AUTH}
     Integer     response status     200
-    GET         /plan/empty      headers=${BASIC_AUTH}
+    REST.GET         /plan/empty      headers=${BASIC_AUTH}
     Object      response body       required=["name"]    properties={"name":{"type":"string","const":"empty"},"description":{"type":"null"},"tasks":{"type":"null"}}
 
 Try add plan with short name
@@ -61,16 +61,16 @@ Try add task with different periods
 
 Try and delete plan
     [Tags]     delete
-    DELETE     /plan/only-data    headers=${BASIC_AUTH}
+    REST.DELETE     /plan/only-data    headers=${BASIC_AUTH}
     Integer    response status       200
-    GET        /plan/only-data    headers=${BASIC_AUTH}
+    REST.GET        /plan/only-data    headers=${BASIC_AUTH}
     Integer    response status       404
 
 *** Keywords ***
 Add plan and confirm addition
     [Arguments]        ${name}    ${description}=None    ${services}=None    ${tasks}=None
     [Documentation]    Adds a new plan.
-    POST               /plan/${name}    {"description":${description},"services":${services},"tasks":${tasks}}
+    REST.POST               /plan/${name}    {"description":${description},"services":${services},"tasks":${tasks}}
     ...                headers=${BASIC_AUTH}
     Integer            response status     200
     ${resp}=           Get request         backup_service    /plan/${name}

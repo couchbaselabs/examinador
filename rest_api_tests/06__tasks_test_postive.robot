@@ -67,7 +67,7 @@ Merge everything together
 Delete a backup
     [Tags]    post    remove
     ${info}=    Get repository info    trigger-task-repository
-    Delete      /cluster/self/repository/active/trigger-task-repository/backups/${info["backups"][0]["date"]}    headers=${BASIC_AUTH}
+    REST.DELETE      /cluster/self/repository/active/trigger-task-repository/backups/${info["backups"][0]["date"]}    headers=${BASIC_AUTH}
     Integer     response status    200
     Directory should not exist    ${TEST_DIR}${/}trigger_archive${/}${info["backups"][0]["date"]}
 

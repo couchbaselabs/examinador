@@ -29,11 +29,11 @@ Add invalid respositories
 Try and delete active repository
     [Tags]    delete
     [Documentation]    Deleting an active repository is not allowed.
-    POST      /cluster/self/repository/active/negative_repository    {"archive":"${TEST_DIR}", "plan":"empty"}    headers=${BASIC_AUTH}
+    REST.POST      /cluster/self/repository/active/negative_repository    {"archive":"${TEST_DIR}", "plan":"empty"}    headers=${BASIC_AUTH}
     Integer   response status    200
-    DELETE    /cluster/self/repository/active/negative_repository    headers=${BASIC_AUTH}
+    REST.DELETE    /cluster/self/repository/active/negative_repository    headers=${BASIC_AUTH}
     Integer   response status    400
-    GET       /cluster/self/repository/active/negative_repository    headers=${BASIC_AUTH}
+    REST.GET       /cluster/self/repository/active/negative_repository    headers=${BASIC_AUTH}
     Integer   response status    200
 
 Try and add active instace with same name
@@ -46,5 +46,5 @@ Try and add active instace with same name
 Add invalid repository
     [Arguments]    ${name}    ${plan}=\   ${archive}=\    ${bucket}=\    ${expected}=400
     [Documentation]    Tries and create an repository with the given arguments
-    POST    /cluster/self/repository/active/${name}    {"archive":"${archive}","plan":"${plan}","bucket_name":"${bucket}"}    headers=${BASIC_AUTH}
+    REST.POST    /cluster/self/repository/active/${name}    {"archive":"${archive}","plan":"${plan}","bucket_name":"${bucket}"}    headers=${BASIC_AUTH}
     Integer    response status    ${expected}

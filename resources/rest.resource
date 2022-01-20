@@ -56,9 +56,9 @@ Create repository for triggering adhoc tasks
     ...    archive "${archive}".
     [Arguments]    ${plan}=trigger-task-plan    ${name}=trigger-task-repository    ${archive}=trigger_archive
     Create directory    ${TEST_DIR}${/}${archive}
-    POST                /plan/${plan}    {}    headers=${BASIC_AUTH}
+    REST.POST                /plan/${plan}    {}    headers=${BASIC_AUTH}
     Integer             response status        200
-    POST                /cluster/self/repository/active/${name}    {"archive":"${TEST_DIR}${/}${archive}", "plan":"${plan}"}    headers=${BASIC_AUTH}
+    REST.POST                /cluster/self/repository/active/${name}    {"archive":"${TEST_DIR}${/}${archive}", "plan":"${plan}"}    headers=${BASIC_AUTH}
     Integer             response status        200
 
 Trigger backup

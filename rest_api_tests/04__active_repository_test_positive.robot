@@ -33,9 +33,9 @@ Add active repository and confirm
     ...    This test will create a simple plan added and then create an repository with that plan then it will check
     ...    that the repository has been created and tasks are scheduled as expected and that the cbbackupmgr repo was
     ...    created.
-    POST       /plan/add_active_repository    {"tasks":[{"name":"t1","task_type":"BACKUP","schedule":{"job_type":"BACKUP","frequency":10,"period":"HOURS"}}]}    headers=${BASIC_AUTH}
+    REST.POST       /plan/add_active_repository    {"tasks":[{"name":"t1","task_type":"BACKUP","schedule":{"job_type":"BACKUP","frequency":10,"period":"HOURS"}}]}    headers=${BASIC_AUTH}
     Integer    response status                 200
-    POST       /cluster/self/repository/active/add_active_repository    {"archive":"${TEMP_DIR}${/}add_active_repository", "plan":"add_active_repository"}    headers=${BASIC_AUTH}
+    REST.POST       /cluster/self/repository/active/add_active_repository    {"archive":"${TEMP_DIR}${/}add_active_repository", "plan":"add_active_repository"}    headers=${BASIC_AUTH}
     Integer    response status                 200
     Sleep      500 ms   # Give enough time for the task to be scheduled
     ${resp}=   Get request                     backup_service       /cluster/self/repository/active/add_active_repository
@@ -55,7 +55,7 @@ Pause and resume repository before next supposed task run
     ${original}=        Get request    backup_service       /cluster/self/repository/active/add_active_repository
     Status should be    200           ${original}
     # Pause the repository
-    POST       /cluster/self/repository/active/add_active_repository/pause    {}    headers=${BASIC_AUTH}
+    REST.POST       /cluster/self/repository/active/add_active_repository/pause    {}    headers=${BASIC_AUTH}
     Integer    response status    200
     # Give it a bit to deschedule the tasks
     Sleep    500ms
@@ -65,7 +65,7 @@ Pause and resume repository before next supposed task run
     Should be equal     ${paused.json()["state"]}              paused
     Dictionary should not contain key    ${paused.json()}      scheduled
     # Resume task
-    POST       /cluster/self/repository/active/add_active_repository/resume    {}    headers=${BASIC_AUTH}
+    REST.POST       /cluster/self/repository/active/add_active_repository/resume    {}    headers=${BASIC_AUTH}
     Integer    response status    200
     # Give it a bit to schedule tasks
     Sleep    500ms
@@ -81,13 +81,13 @@ Archive active repository
     ...    Archive an active repository and then delete it. It will use the the same repository that was created in previous
     ...    tests. It will also check that when the archived repository is deleting *without* forcing the deletion of the
     ...    cbbackupmgr repository, the repository is still there.
-    POST    /cluster/self/repository/active/add_active_repository/archive    {"id":"archived-id"}    headers=${BASIC_AUTH}
+    REST.POST    /cluster/self/repository/active/add_active_repository/archive    {"id":"archived-id"}    headers=${BASIC_AUTH}
     Integer    response status    200
     ${archived}=    Get request    backup_service    /cluster/self/repository/archived/archived-id
     Status should be    200    ${archived}
     ${original}=    Get request    backup_service    /cluster/self/repository/active/add_active_repository
     Status should be    404    ${original}
-    DELETE     /cluster/self/repository/archived/archived-id    headers=${BASIC_AUTH}
+    REST.DELETE     /cluster/self/repository/archived/archived-id    headers=${BASIC_AUTH}
     Integer    response status     200
     ${not_found}=    Get request    backup_service    /cluster/self/repository/archived/archived-id
     Status should be    404        ${not_found}
@@ -101,14 +101,14 @@ Add bucket level repository
     [Documentation]    This test will create an repository that should only backup the default bucket. This test will
     ...   create a bucket 'default', if it is not already present in the system.
     Create Directory    ${TEMP_DIR}${/}bucket_repository
-    POST    /cluster/self/repository/active/bucket-repository    {"plan":"empty", "archive":"${TEMP_DIR}${/}bucket_repository", "bucket_name":"default"}    headers=${BASIC_AUTH}
+    REST.POST    /cluster/self/repository/active/bucket-repository    {"plan":"empty", "archive":"${TEMP_DIR}${/}bucket_repository", "bucket_name":"default"}    headers=${BASIC_AUTH}
     Integer    response status    200
-    GET    /cluster/self/repository/active/bucket-repository    headers=${BASIC_AUTH}
+    REST.GET    /cluster/self/repository/active/bucket-repository    headers=${BASIC_AUTH}
     String    $.bucket.name    default
 
 *** Keywords ***
 Get empty ${state} respositories
     [Documentation]    Retrieves the respositories in the state ${state} and checks that it gets and empty array
-    GET        /cluster/self/repository/${state}    headers=${BASIC_AUTH}
+    REST.GET        /cluster/self/repository/${state}    headers=${BASIC_AUTH}
     Integer    response status                    200
     Array      response body                      maxItems=0
