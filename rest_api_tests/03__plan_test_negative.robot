@@ -8,6 +8,7 @@ Library          RequestsLibrary
 Library         ../libraries/rest_utils.py
 Library         ../libraries/utils.py
 Resource        ../resources/rest.resource
+Resource        ../resources/common.resource
 Suite setup     Create REST session and auth
 
 *** Variables  ***
@@ -31,18 +32,15 @@ Try to add plan that already exists
     [Documentation]
     ...    Check that creating a plan with the same name is not allowed and that the original plan does not get
     ...    modified.
-    REST.POST       /plan/duplication    {}    headers=${BASIC_AUTH}
-    Integer    response status         200
-    REST.POST       /plan/duplication    {"services": ["data"]}    headers=${BASIC_AUTH}
-    Integer    response status         400
+    Run and log and check request    /plan/duplication    POST    200    {}    headers=${BASIC_AUTH}
+    Run and log and check request    /plan/duplication    POST    400    {"services": ["data"]}    headers=${BASIC_AUTH}
     ${resp}=   GET request             backup_service            /plan/duplication
     Status should be                   200                       ${resp}
     Dictionary like equals             ${resp.json()}            {"name":"duplication","services":null,"tasks":null}
 
 Try to delete plan that does not exist
     [Tags]    delete
-    REST.DELETE    /plan/it-does-not-exist    headers=${BASIC_AUTH}
-    Integer   response status               404
+    Run and log and check request    /plan/it-does-not-exist    DELETE    404    headers=${BASIC_AUTH}
 
 Try to add invalid plans
     [Tags]    post
@@ -72,27 +70,26 @@ Try and delete a plan that is being used
     ...                repository using the duplication plan and attempt to delete the plan. This should fail. After
     ...                it will remove the repository.
     [Setup]    Run Keywords        Create directory    ${TEMP_DIR}${/}delete_in_use    AND
-    ...        REST.POST      /cluster/self/repository/active/delete_in_use            {"archive":"${TEMP_DIR}${/}delete_in_use${/}archive}", "plan": "duplication"}    headers=${BASIC_AUTH}    AND
-    ...        Integer   response status    200
+    ...        Run and log and check request    /cluster/self/repository/active/delete_in_use    POST    200
+    ...        {"archive":"${TEMP_DIR}${/}delete_in_use${/}archive}", "plan": "duplication"}    headers=${BASIC_AUTH}
     [Teardown]    Run keywords     Remove directory    ${TEMP_DIR}${/}delete_in_use    recursive=True    AND
-    ...           REST.POST      /cluster/self/repository/active/delete_in_use/archive    {"id":"delete_in_use"}    headers=${BASIC_AUTH}    AND
-    ...           REST.DELETE    /cluster/self/repository/archived/delete_in_use          headers=${BASIC_AUTH}
-    REST.DELETE    /plan/duplication    headers=${BASIC_AUTH}
-    Integer   response status         400
-    REST.GET       /plan/duplication    headers=${BASIC_AUTH}
-    Integer   response status         200
+    ...           Run and log request    /cluster/self/repository/active/delete_in_use/archive    POST
+    ...           {"id":"delete_in_use"}    headers=${BASIC_AUTH}    AND
+    ...           Run and log request    /cluster/self/repository/archived/delete_in_use    DELETE
+    ...                                  headers=${BASIC_AUTH}
+    Run and log and check request    /plan/duplication    DELETE    400    headers=${BASIC_AUTH}
+    Run and log and check request    /plan/duplication    GET    200    headers=${BASIC_AUTH}
 
 *** Keywords ***
 Add plan with invalid name
     [Arguments]    ${name}
-    REST.POST       /plan/${name}    {}    headers=${BASIC_AUTH}
-    Integer    response status     400
+    Run and log and check request    /plan/${name}    POST    400    {}    headers=${BASIC_AUTH}
 
 Send invalid plan
     [Arguments]        ${name}    ${description}=None    ${services}=None    ${tasks}=None
     [Documentation]    Adds a new plan.
-    REST.POST               /plan/${name}    {"description":${description},"services":${services},"tasks":${tasks}}
-    ...                headers=${BASIC_AUTH}
-    Integer            response status     400
+    Run and log and check request    /plan/${name}    POST    400
+    ...                              {"description":${description},"services":${services},"tasks":${tasks}}
+    ...                              headers=${BASIC_AUTH}
     ${resp}=           Get request         backup_service    /plan/${name}
     Status should be   404                 ${resp}

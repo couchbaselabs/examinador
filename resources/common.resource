@@ -29,6 +29,24 @@ Run and log process
     Run Keyword If    ${log_stdout}    Log To Console    ${result.stdout}    DEBUG
     Return from keyword    ${result}
 
+Run and log and check request
+    [Arguments]    ${request}    ${method}    ${expected_status}    ${payload}=${NONE}    ${headers}=${NONE}
+    ...            ${log_response}=True
+    [Documentation]    Send and log a REST request at the DEBUG level, also check response status.
+    Run and log request    ${request}    ${method}    ${payload}    ${headers}    ${log_response}
+    Integer    response status    ${expected_status}
+
+Run and log request
+    [Arguments]    ${request}    ${method}    ${payload}=${NONE}    ${headers}=${NONE}
+    ...            ${log_response}=True
+    [Documentation]    Send and log a REST request at the DEBUG level.
+    IF    '${payload}' != '${NONE}'
+    Log To Console    Sending HTTP ${method} request to ${request} with payload ${payload} ...    DEBUG
+    ELSE
+    Log To Console    Sending HTTP ${method} request to ${request} ...    DEBUG
+    END
+    Run Keyword    REST.${method}    ${request}    ${payload}    headers=${headers}
+
 Run and log and check request on session
     [Arguments]    ${request}    ${method}    ${expected_status}    ${payload}=${NONE}    ${host}=http://localhost:9000
     ...            ${user}=Administrator    ${password}=asdasd    ${session}=${NONE}    ${params}=${NONE}

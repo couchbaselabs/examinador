@@ -8,6 +8,7 @@ Library         Collections
 Library         REST        ${BACKUP_HOST}
 Library         ../libraries/utils.py
 Resource        ../resources/rest.resource
+Resource        ../resources/common.resource
 Suite setup        Create client and repository dir    negative_repository_dir
 Suite Teardown     Remove Directory    ${TEMP_DIR}${/}negative_repository_dir    recursive=True
 
@@ -29,12 +30,12 @@ Add invalid respositories
 Try and delete active repository
     [Tags]    delete
     [Documentation]    Deleting an active repository is not allowed.
-    REST.POST      /cluster/self/repository/active/negative_repository    {"archive":"${TEST_DIR}", "plan":"empty"}    headers=${BASIC_AUTH}
-    Integer   response status    200
-    REST.DELETE    /cluster/self/repository/active/negative_repository    headers=${BASIC_AUTH}
-    Integer   response status    400
-    REST.GET       /cluster/self/repository/active/negative_repository    headers=${BASIC_AUTH}
-    Integer   response status    200
+    Run and log and check request    /cluster/self/repository/active/negative_repository    POST    200
+    ...                              {"archive":"${TEST_DIR}", "plan":"empty"}    headers=${BASIC_AUTH}
+    Run and log and check request    /cluster/self/repository/active/negative_repository    DELETE    400
+    ...                              headers=${BASIC_AUTH}
+    Run and log and check request    /cluster/self/repository/active/negative_repository    GET    200
+    ...                              headers=${BASIC_AUTH}
 
 Try and add active instace with same name
     [Tags]    post
@@ -46,5 +47,6 @@ Try and add active instace with same name
 Add invalid repository
     [Arguments]    ${name}    ${plan}=\   ${archive}=\    ${bucket}=\    ${expected}=400
     [Documentation]    Tries and create an repository with the given arguments
-    REST.POST    /cluster/self/repository/active/${name}    {"archive":"${archive}","plan":"${plan}","bucket_name":"${bucket}"}    headers=${BASIC_AUTH}
-    Integer    response status    ${expected}
+    Run and log and check request    /cluster/self/repository/active/${name}    POST    ${expected}
+    ...                              {"archive":"${archive}","plan":"${plan}","bucket_name":"${bucket}"}
+    ...                              headers=${BASIC_AUTH}

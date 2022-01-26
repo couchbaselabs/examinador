@@ -8,6 +8,7 @@ Library            RequestsLibrary
 Library            ../libraries/utils.py
 Resource           ../resources/rest.resource
 Resource           ../resources/couchbase.resource
+Resource           ../resources/common.resource
 Suite setup        Run keywords    Create client and repository dir   trigger_tasks          AND
 ...                Create repository for triggering adhoc tasks    name=${ADHOC_REPO}    AND
 ...                Create CB bucket if it does not exist                                   AND
@@ -67,8 +68,8 @@ Merge everything together
 Delete a backup
     [Tags]    post    remove
     ${info}=    Get repository info    trigger-task-repository
-    REST.DELETE      /cluster/self/repository/active/trigger-task-repository/backups/${info["backups"][0]["date"]}    headers=${BASIC_AUTH}
-    Integer     response status    200
+    Run and log and check request    /cluster/self/repository/active/trigger-task-repository/backups/${info["backups"][0]["date"]}
+    ...                              DELETE    200    headers=${BASIC_AUTH}
     Directory should not exist    ${TEST_DIR}${/}trigger_archive${/}${info["backups"][0]["date"]}
 
 *** Keywords ***
