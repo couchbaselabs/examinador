@@ -62,5 +62,5 @@ Install sample buckets
     ...            ${password}=asdasd
     [Documentation]    This function will install specified sample buckets using REST API.
     ${req}=    Set Variable    /sampleBuckets/install
-    Run and log and check request    ${req}    POST    202    payload=${payload}    host=${host}    user=${user}
-    ...                              password=${password}
+    Run and log and check request on session    ${req}    POST    202    payload=${payload}    host=${host}
+    ...                                         user=${user}    password=${password}

@@ -29,17 +29,17 @@ Run and log process
     Run Keyword If    ${log_stdout}    Log To Console    ${result.stdout}    DEBUG
     Return from keyword    ${result}
 
-Run and log and check request
+Run and log and check request on session
     [Arguments]    ${request}    ${method}    ${expected_status}    ${payload}=${NONE}    ${host}=http://localhost:9000
     ...            ${user}=Administrator    ${password}=asdasd    ${session}=${NONE}    ${params}=${NONE}
     ...            ${log_response}=True
     [Documentation]    Send and log a REST request at the DEBUG level, also check response status.
-    ${resp}=    Run and log request    ${request}    ${method}    ${payload}    ${host}    ${user}    ${password}
-    ...         ${session}    ${params}    ${log_response}
+    ${resp}=    Run and log request on session    ${request}    ${method}    ${payload}    ${host}    ${user}
+    ...         ${password}    ${session}    ${params}    ${log_response}
     Status should be    ${expected_status}    ${resp}
     Return from keyword    ${resp}
 
-Run and log request
+Run and log request on session
     [Arguments]    ${request}    ${method}    ${payload}=${NONE}    ${host}=http://localhost:9000
     ...            ${user}=Administrator    ${password}=asdasd    ${session}=${NONE}    ${params}=${NONE}
     ...            ${log_response}=True

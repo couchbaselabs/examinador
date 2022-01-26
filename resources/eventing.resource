@@ -71,8 +71,8 @@ Check eventing function exists
     [Documentation]    Check the eventing function given as func_name has been created.
     ${ports}=    Get service ports    bucket=${bucket}
     ${req}=    Set Variable    /api/v1/functions/${func_name}
-    ${resp}=    Run and log request    ${req}    GET    host=${host}:${ports['eventingAdminPort']}    user=${user}
-    ...         password=${password}
+    ${resp}=    Run and log request on session    ${req}    GET    host=${host}:${ports['eventingAdminPort']}
+    ...         user=${user}    password=${password}
     Return from keyword if    ${resp.status_code}==200    True
     Return from keyword    False
 
@@ -82,8 +82,8 @@ Check eventing function deployed
     [Documentation]    Check the eventing function given as func_name has been deployed.
     ${ports}=    Get service ports    bucket=${bucket}
     ${req}=    Set Variable    /api/v1/functions/${func_name}
-    ${resp}=    Run and log and check request    ${req}    GET    200    host=${host}:${ports['eventingAdminPort']}
-    ...         user=${user}    password=${password}    log_response=True
+    ${resp}=    Run and log and check request on session    ${req}    GET    200
+    ...         host=${host}:${ports['eventingAdminPort']}    user=${user}    password=${password}    log_response=True
     Return from keyword if    '${resp.json()['appname']}'=='${func_name}'
     ...                        ${resp.json()['settings']['deployment_status']}
     Fail    Eventing function ${func_name} doesn't exist

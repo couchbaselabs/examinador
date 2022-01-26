@@ -65,6 +65,6 @@ Trigger backup
     [Arguments]         ${repo}    ${state}=active    ${full}=false
     ${req}=    Set Variable    /cluster/self/repository/${state}/${repo}/backup
     ${pd}=    Set Variable    {"full_backup":${full}}
-    ${resp}=    Run and log and check request    ${req}    POST    200    payload=${pd}     user=${user}
+    ${resp}=    Run and log and check request on session    ${req}    POST    200    payload=${pd}     user=${user}
     ...         password=${password}    session=backup_service    log_response=True
     Return from keyword    ${resp.json()["task_name"]}
