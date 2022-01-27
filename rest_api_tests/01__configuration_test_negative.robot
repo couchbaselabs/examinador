@@ -3,6 +3,7 @@ Documentation    Backup serivce configuartion REST API negative tests.
 Force tags       config    negative
 Library          Collections
 Library          RequestsLibrary
+Resource         ../resources/common.resource
 Suite Setup      Create REST session    Administrator    asdasd
 
 *** Variables  ***
@@ -12,15 +13,17 @@ ${BACKUP_HOST}    http://localhost:7101/api/v1
 Try to get config with out authentification
     [Tags]    get
     Create session     no-auth-session    ${BACKUP_HOST}
-    ${resp}=           Get request        no-auth-session    /config
-    Status should be   401                ${resp}
+    ${req}=     Set Variable    /config
+    Run and log and check request on session    ${req}    GET    401    session=no-auth-session
+    ...                                           log_response=True
 
 Try to get config with wrong credentials
     [Tags]    get
     ${auth}=           Create List             bad-user                bad-password
     Create session     invalid-auth-session    ${BACKUP_HOST}          auth=${auth}
-    ${resp}=           Get request             invalid-auth-session    /config
-    Status should be   401                     ${resp}
+    ${req}=    Set Variable    /config
+    Run and log and check request on session    ${req}    GET    401    session=invalid-auth-session
+    ...                                         log_response=True
 
 Try to update to invalid values
     [Tags]    post
@@ -39,7 +42,9 @@ Try to patch without sending values
     [Tags]    patch
     [Documentation]     Try to do a patch operation on the configuration with an empty body
     ${before}=    Get config
-    ${resp}=      POST request    backup_service    /config    {}
+    ${req}=    Set Variable    /config
+    ${resp}=    Run and log request on session    ${req}    POST    payload={}     session=backup_service
+    ...                                           log_response=True
     Expect bad request response and no config change    ${resp}    ${before}
 
 Try to patch with invalid values
@@ -60,8 +65,9 @@ Create REST session
 
 Get config
     [Documentation]    Retrieve the current service configuration.
-    ${resp}=     GET request    backup_service    /config
-    Status should be           200               ${resp}
+    ${req}=    Set Variable    /config
+    ${resp}=    Run and log and check request on session    ${req}    GET    200    session=backup_service
+    ...                                                     log_response=True
     [Return]    ${resp.json()}
 
 Expect bad request response and no config change
@@ -76,8 +82,10 @@ Update config with invalid values
     ...         Sends a POST request with the given values which should be invalid. It expects the service to return
     ...         with status 404 qand the configuration value to stay the same before and after the POST request.
     ${before}=    Get config
-    ${resp}=      POST request    backup_service    /config
-    ...     {"history_rotation_size":${history_rotation_size}}
+    ${req}=    Set Variable    /config
+    ${pd}=    Set Variable    {"history_rotation_size":${history_rotation_size}}
+    ${resp}=    Run and log request on session    ${req}    POST    payload=${pd}     session=backup_service
+    ...                                           log_response=True
     Expect bad request response and no config change    ${resp}    ${before}
 
 Patch config with invalid values
@@ -86,6 +94,8 @@ Patch config with invalid values
     ...         Sends a PATCH request with the given values which should be invalid. It expects the service to return
     ...         with status 400 and the configuration value to stay the same before and after the PATCH request.
     ${before}=    Get config
-    ${resp}=      PATCH request    backup_service    /config
-    ...     {"history_rotation_size":${history_rotation_size}}
+    ${req}=    Set Variable    /config
+    ${pd}=    Set Variable    {"history_rotation_size":${history_rotation_size}}
+    ${resp}=    Run and log request on session    ${req}    PATCH    payload=${pd}     session=backup_service
+    ...                                           log_response=True
     Expect bad request response and no config change    ${resp}    ${before}

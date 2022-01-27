@@ -63,8 +63,9 @@ Add plan and confirm addition
     Run and log and check request    /plan/${name}    POST    200
     ...                              {"description":${description},"services":${services},"tasks":${tasks}}
     ...                              headers=${BASIC_AUTH}
-    ${resp}=           Get request         backup_service    /plan/${name}
-    Status should be   200                 ${resp}
+    ${req}=    Set Variable    /plan/${name}
+    ${resp}=    Run and log and check request on session    ${req}    GET    200    session=backup_service
+    ...                                                     log_response=True
     Dictionary like equals    ${resp.json()}    {"name":"${name}","description":${description},"services":${services},"tasks":${tasks}}    ['description']
 
 Add plan with default tasks and confirm addition

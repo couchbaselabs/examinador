@@ -83,14 +83,16 @@ Run ten backups
 Get history invalid
     [Arguments]         ${limit}=0    ${offset}=0
     ${params}=          Create Dictionary                limit=${limit}    offset=${offset}
-    ${resp}=            Get request      backup_service   /cluster/self/repository/active/${ADHOC_REPO}/taskHistory    params=${params}
-    Status should be    400            ${resp}
+    ${req}=    Set Variable    /cluster/self/repository/active/${ADHOC_REPO}/taskHistory
+    Run and log and check request on session    ${req}    GET    400    session=backup_service    params=${params}
+    ...                                         log_response=True
 
 Get repository info invalid
     [Arguments]         ${limit}=0    ${offset}=0
     ${params}=          Create Dictionary                limit=${limit}    offset=${offset}
-    ${resp}=            Get request    backup_service    /cluster/self/repository/active/${ADHOC_REPO}/info    params=${params}
-    Status should be    400            ${resp}
+    ${req}=    Set Variable    /cluster/self/repository/active/${ADHOC_REPO}/info
+    Run and log and check request on session    ${req}    GET    400    session=backup_service    params=${params}
+    ...                                         log_response=True
 
 Get info paginated and compare
     [Documentation]    Gets the info of the test repository and checks that the returned backups are of length

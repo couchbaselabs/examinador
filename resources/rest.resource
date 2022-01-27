@@ -38,10 +38,10 @@ Get task history
     [Arguments]   ${repository}    ${state}=active    ${limit}=0    ${offset}=0
     [Documentation]    Gets the task history for the requested repository.
     ${params}=          Create Dictionary                limit=${limit}    offset=${offset}
-    ${resp}=            Get request      backup_service   /cluster/self/repository/${state}/${repository}/taskHistory    params=${params}
-    Status should be    200              ${resp}
-    Log                 ${resp.json()}   DEBUG
-    Return from keyword                  ${resp.json()}
+    ${req}=    Set Variable    /cluster/self/repository/${state}/${repository}/taskHistory
+    ${resp}=    Run and log and check request on session    ${req}    GET    200    session=backup_service
+    ...                                           params=${params}    log_response=True
+    Return from keyword    ${resp.json()}
 
 Confirm task is last and successfull
     [Arguments]        ${history}                    ${backup_name}
@@ -51,9 +51,9 @@ Confirm task is last and successfull
 Get repository info
     [Arguments]    ${repository}    ${state}=active    ${limit}=0    ${offset}=0
     ${params}=             Create Dictionary                limit=${limit}    offset=${offset}
-    ${resp}=               Get request    backup_service    /cluster/self/repository/${state}/${repository}/info    params=${params}
-    Status should be       200                                     ${resp}
-    Log                    ${resp.json()}                          DEBUG
+    ${req}=    Set Variable    /cluster/self/repository/${state}/${repository}/info
+    ${resp}=    Run and log and check request on session    ${req}    GET    200    session=backup_service
+    ...                                           params=${params}    log_response=True
     Return from keyword    ${resp.json()}
 
 Create repository for triggering adhoc tasks

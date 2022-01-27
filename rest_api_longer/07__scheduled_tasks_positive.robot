@@ -8,6 +8,7 @@ Library            RequestsLibrary
 Library            ../libraries/utils.py
 Resource           ../resources/rest.resource
 Resource           ../resources/couchbase.resource
+Resource           ../resources/common.resource
 Suite setup        Run keywords    Create client and repository dir   scheduled              AND
 ...                Create CB bucket if it does not exist                                     AND
 ...                Load documents into bucket using cbm
@@ -31,9 +32,9 @@ Schedule backups every 5 minutes
     [Setup]       Create plan and repo with minute frequency    5-min-backup    every-5
     [Teardown]    archive and delete repo    ${BACKUP_NODE}     every-5
     Sleep               5s     # Give time for the task to get scheduled
-    ${resp}=            Get request    backup_service    /cluster/self/repository/active/every-5
-    Status should be    200               ${resp}
-    Log                 ${resp.json()}    DEBUG
+    ${req}=    Set Variable    /cluster/self/repository/active/every-5
+    ${resp}=    Run and log and check request on session    ${req}    GET    200    session=backup_service
+    ...                                                     log_response=True
     Dictionary should contain key      ${resp.json()["scheduled"]}    5-min-backup
     Is approx from now    ${resp.json()["scheduled"]["5-min-backup"]["next_run"]}    5m
     Sleep     6m
@@ -48,7 +49,11 @@ Schedule backups every 5 minutes
 *** Keywords ***
 Create plan and repo with minute frequency
     [Arguments]    ${task_name}    ${plan_name}    ${frequency}=5    ${task_type}=BACKUP
-    ${resp}=    POST request    backup_service    /plan/${plan_name}    {"tasks":[{"name":"${task_name}","task_type":"${task_type}","schedule":{"frequency":${frequency},"period":"MINUTES","job_type":"${task_type}"}}]}
-    Status should be    200     ${resp}
-    ${resp}=    POST request    backup_service    /cluster/self/repository/active/${plan_name}    {"plan":"${plan_name}", "archive":"${TEST_DIR}${/}${plan_name}"}
-    Status should be    200     ${resp}
+    ${req}=    Set Variable    /plan/${plan_name}
+    ${pd}=    Set Variable    {"tasks":[{"name":"${task_name}","task_type":"${task_type}","schedule":{"frequency":${frequency},"period":"MINUTES","job_type":"${task_type}"}}]}
+    Run and log and check request on session    ${req}    POST    200    payload=${pd}     session=backup_service
+    ...                                         log_response=True
+    ${req}=    Set Variable    /cluster/self/repository/active/${plan_name}
+    ${pd}=    Set Variable    {"plan":"${plan_name}", "archive":"${TEST_DIR}${/}${plan_name}"}
+    Run and log and check request on session    ${req}    POST    200    payload=${pd}     session=backup_service
+    ...                                         log_response=True

@@ -74,16 +74,16 @@ Delete a backup
 
 *** Keywords ***
 Trigger a merge
-    ${merge}=           Post request       backup_service    /cluster/self/repository/active/trigger-task-repository/merge    {}
-    Status should be    200                ${merge}
-    Log                 ${merge.json()}    DEBUG
-    Return from keyword    ${merge.json()["task_name"]}
+    ${req}=    Set Variable    /cluster/self/repository/active/trigger-task-repository/merge
+    ${resp}=    Run and log and check request on session    ${req}    POST    200    payload={}
+    ...                                                     session=backup_service    log_response=True
+    Return from keyword    ${resp.json()["task_name"]}
 
 Confirm task is running
     [Arguments]    ${task_name}    ${repository}    ${state}=active    ${task_type}=BACKUP
-    ${resp}=            Get request     backup_service    /cluster/self/repository/${state}/${repository}
-    Status should be                 200               ${resp}
-    Log                              ${resp.json()}    DEBUG
+    ${req}=    Set Variable    /cluster/self/repository/${state}/${repository}
+    ${resp}=    Run and log and check request on session    ${req}    GET    200    session=backup_service
+    ...                                                     log_response=True
     Dictionary should contain key    ${resp.json()["running_one_off"]}    ${task_name}
     ${task}=                         Get from dictionary                  ${resp.json()["running_one_off"]}    ${task_name}
     Should be equal                  ${task["type"]}                      ${task_type}

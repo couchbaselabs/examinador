@@ -41,9 +41,9 @@ Add active repository and confirm
     ...                              {"archive":"${TEMP_DIR}${/}add_active_repository", "plan":"add_active_repository"}
     ...                              headers=${BASIC_AUTH}
     Sleep      500 ms   # Give enough time for the task to be scheduled
-    ${resp}=   Get request                     backup_service       /cluster/self/repository/active/add_active_repository
-    Status should be                           200                  ${resp}
-    Log     ${resp.json()}    level=DEBUG
+    ${req}=    Set Variable    /cluster/self/repository/active/add_active_repository
+    ${resp}=    Run and log and check request on session    ${req}    GET    200    session=backup_service
+    ...                                                     log_response=True
     Should be equal                            ${resp.json()["plan_name"]}                   add_active_repository
     Should be approx x from now                ${resp.json()["scheduled"]["t1"]["next_run"]}    10h
     Directory should exist                     ${resp.json()["archive"]}${/}${resp.json()["repo"]}
@@ -55,16 +55,18 @@ Pause and resume repository before next supposed task run
     ...    fail as well. This test will pause the add_active_repository and confirm that the tasks get descheduled and
     ...    then it will  resume the task and confirm that the task is scheduled at its original time again.
     # Get original value of the repository
-    ${original}=        Get request    backup_service       /cluster/self/repository/active/add_active_repository
-    Status should be    200           ${original}
+    ${req}=    Set Variable    /cluster/self/repository/active/add_active_repository
+    ${original}=    Run and log and check request on session    ${req}    GET    200    session=backup_service
+    ...                                                         log_response=True
     # Pause the repository
     Run and log and check request    /cluster/self/repository/active/add_active_repository/pause    POST    200
     ...                              {}    headers=${BASIC_AUTH}
     # Give it a bit to deschedule the tasks
     Sleep    500ms
     # Retrieve repository and confirm state is paused and that no tasks are scheduled to run
-    ${paused}=          Get request    backup_service    /cluster/self/repository/active/add_active_repository
-    Status should be    200                                    ${paused}
+    ${req}=    Set Variable    /cluster/self/repository/active/add_active_repository
+    ${paused}=    Run and log and check request on session    ${req}    GET    200    session=backup_service
+    ...                                                       log_response=True
     Should be equal     ${paused.json()["state"]}              paused
     Dictionary should not contain key    ${paused.json()}      scheduled
     # Resume task
@@ -73,8 +75,9 @@ Pause and resume repository before next supposed task run
     # Give it a bit to schedule tasks
     Sleep    500ms
     # Retrieve the newly resumed repository
-    ${resumed}=         Get request    backup_service    /cluster/self/repository/active/add_active_repository
-    Status should be    200                                    ${resumed}
+    ${req}=    Set Variable    /cluster/self/repository/active/add_active_repository
+    ${resumed}=    Run and log and check request on session    ${req}    GET    200    session=backup_service
+    ...                                                        log_response=True
     Should be equal     ${resumed.json()["state"]}              active
     Should be equal     ${resumed.json()["scheduled"]["t1"]["next_run"]}    ${original.json()["scheduled"]["t1"]["next_run"]}
 
@@ -86,14 +89,15 @@ Archive active repository
     ...    cbbackupmgr repository, the repository is still there.
     Run and log and check request    /cluster/self/repository/active/add_active_repository/archive    POST    200
     ...                              {"id":"archived-id"}    headers=${BASIC_AUTH}
-    ${archived}=    Get request    backup_service    /cluster/self/repository/archived/archived-id
-    Status should be    200    ${archived}
-    ${original}=    Get request    backup_service    /cluster/self/repository/active/add_active_repository
-    Status should be    404    ${original}
+    ${req}=    Set Variable    /cluster/self/repository/archived/archived-id
+    ${archived}=    Run and log and check request on session    ${req}    GET    200    session=backup_service
+    ...                                                        log_response=True
+    ${req}=    Set Variable    /cluster/self/repository/active/add_active_repository
+    Run and log and check request on session    ${req}    GET    404    session=backup_service    log_response=True
     Run and log and check request    /cluster/self/repository/archived/archived-id    DELETE    200
     ...                              headers=${BASIC_AUTH}
-    ${not_found}=    Get request    backup_service    /cluster/self/repository/archived/archived-id
-    Status should be    404        ${not_found}
+    ${req}=    Set Variable    /cluster/self/repository/archived/archived-id
+    Run and log and check request on session    ${req}    GET    404    session=backup_service    log_response=True
     # Delete does not delete the data so ensure it still exists
     Directory should exist        ${archived.json()["archive"]}${/}${archived.json()["repo"]}
 

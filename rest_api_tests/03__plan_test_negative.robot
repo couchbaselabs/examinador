@@ -34,8 +34,9 @@ Try to add plan that already exists
     ...    modified.
     Run and log and check request    /plan/duplication    POST    200    {"tasks": ${DEFAULT_TASKS}}                          headers=${BASIC_AUTH}
     Run and log and check request    /plan/duplication    POST    400    {"services": ["data"], "tasks": ${DEFAULT_TASKS}}    headers=${BASIC_AUTH}
-    ${resp}=   GET request             backup_service            /plan/duplication
-    Status should be                   200                       ${resp}
+    ${req}=    Set Variable    /plan/duplication
+    ${resp}=    Run and log and check request on session    ${req}    GET    200    session=backup_service
+    ...                                                     log_response=True
     Dictionary like equals             ${resp.json()}            {"name":"duplication","services":null,"tasks":${DEFAULT_TASKS}}
 
 Try to delete plan that does not exist
@@ -92,5 +93,5 @@ Send invalid plan
     Run and log and check request    /plan/${name}    POST    400
     ...                              {"description":${description},"services":${services},"tasks":${tasks}}
     ...                              headers=${BASIC_AUTH}
-    ${resp}=           Get request         backup_service    /plan/${name}
-    Status should be   404                 ${resp}
+    ${req}=    Set Variable    /plan/${name}
+    Run and log and check request on session    ${req}    GET    404    session=backup_service    log_response=True
