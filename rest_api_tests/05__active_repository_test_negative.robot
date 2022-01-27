@@ -31,7 +31,7 @@ Try and delete active repository
     [Tags]    delete
     [Documentation]    Deleting an active repository is not allowed.
     Run and log and check request    /cluster/self/repository/active/negative_repository    POST    200
-    ...                              {"archive":"${TEST_DIR}", "plan":"empty"}    headers=${BASIC_AUTH}
+    ...                              {"archive":"${TEST_DIR}", "plan":"one-task"}    headers=${BASIC_AUTH}
     Run and log and check request    /cluster/self/repository/active/negative_repository    DELETE    400
     ...                              headers=${BASIC_AUTH}
     Run and log and check request    /cluster/self/repository/active/negative_repository    GET    200

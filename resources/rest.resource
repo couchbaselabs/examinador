@@ -3,6 +3,11 @@ Library    RequestsLibrary
 Library    OperatingSystem
 Library    ../libraries/rest_utils.py
 
+
+*** Variables ***
+${DEFAULT_TASKS}  [{"name":"task-1","task_type":"BACKUP","full_backup":true,"schedule":{"job_type":"BACKUP","frequency":3,"period":"DAYS"}}]
+
+
 *** Keywords ***
 Set basic auth
     [Arguments]        ${username}=Administrator    ${password}=asdasd
@@ -56,7 +61,7 @@ Create repository for triggering adhoc tasks
     ...    archive "${archive}".
     [Arguments]    ${plan}=trigger-task-plan    ${name}=trigger-task-repository    ${archive}=trigger_archive
     Create directory    ${TEST_DIR}${/}${archive}
-    Run and log and check request    /plan/${plan}    POST    200    {}    headers=${BASIC_AUTH}
+    Run and log and check request    /plan/${plan}    POST    200    {"tasks": ${DEFAULT_TASKS}}    headers=${BASIC_AUTH}
     Run and log and check request    /cluster/self/repository/active/${name}    POST    200
     ...                              {"archive":"${TEST_DIR}${/}${archive}", "plan":"${plan}"}    headers=${BASIC_AUTH}
 

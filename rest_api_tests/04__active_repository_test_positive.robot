@@ -105,7 +105,7 @@ Add bucket level repository
     ...   create a bucket 'default', if it is not already present in the system.
     Create Directory    ${TEMP_DIR}${/}bucket_repository
     Run and log and check request    /cluster/self/repository/active/bucket-repository    POST    200
-    ...                              {"plan":"empty", "archive":"${TEMP_DIR}${/}bucket_repository", "bucket_name":"default"}
+    ...                              {"plan":"one-task", "archive":"${TEMP_DIR}${/}bucket_repository", "bucket_name":"default"}
     ...                              headers=${BASIC_AUTH}
     Run and log and check request    /cluster/self/repository/active/bucket-repository    GET    200
     ...                              headers=${BASIC_AUTH}

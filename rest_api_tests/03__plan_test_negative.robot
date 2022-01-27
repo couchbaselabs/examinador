@@ -32,11 +32,11 @@ Try to add plan that already exists
     [Documentation]
     ...    Check that creating a plan with the same name is not allowed and that the original plan does not get
     ...    modified.
-    Run and log and check request    /plan/duplication    POST    200    {}    headers=${BASIC_AUTH}
-    Run and log and check request    /plan/duplication    POST    400    {"services": ["data"]}    headers=${BASIC_AUTH}
+    Run and log and check request    /plan/duplication    POST    200    {"tasks": ${DEFAULT_TASKS}}                          headers=${BASIC_AUTH}
+    Run and log and check request    /plan/duplication    POST    400    {"services": ["data"], "tasks": ${DEFAULT_TASKS}}    headers=${BASIC_AUTH}
     ${resp}=   GET request             backup_service            /plan/duplication
     Status should be                   200                       ${resp}
-    Dictionary like equals             ${resp.json()}            {"name":"duplication","services":null,"tasks":null}
+    Dictionary like equals             ${resp.json()}            {"name":"duplication","services":null,"tasks":${DEFAULT_TASKS}}
 
 Try to delete plan that does not exist
     [Tags]    delete
@@ -45,19 +45,20 @@ Try to delete plan that does not exist
 Try to add invalid plans
     [Tags]    post
     [Template]    Send invalid plan
-    name1    0     []                      []       # Description is an integer and not a string
-    name2    ""    ["full text search"]    []       # Service list is invalid
-    name3    ""    ["data"]                [0,1,2]  # Task are integers instead of JSON objects
-    name4    ""    []                      [{}]     # Empty task
-    name5    ""    "data,cbas"             []       # Service is a string instead of a list/array
+    name1    0     []                      ${DEFAULT_TASKS}  # Description is an integer and not a string
+    name2    ""    ["full text search"]    ${DEFAULT_TASKS}  # Service list is invalid
+    name3    ""    ["data"]                [0,1,2]           # Task are integers instead of JSON objects
+    name4    ""    []                      [{}]              # Empty task
+    name5    ""    []                      []                # No tasks
+    name6    ""    "data,cbas"             ${DEFAULT_TASKS}  # Service is a string instead of a list/array
     # Invalid task without schedule
-    name6    ""    []                      [{"name":"task-1","task_type":"BACKUP","full_backup":true}]
+    name7    ""    []                      [{"name":"task-1","task_type":"BACKUP","full_backup":true}]
     # Invalid frequencies
-    name7    ""    []                      [{"name":"task-1","task_type":"BACKUP","schedule":{"job_type":"BACKUP","frequency":0,"period":"HOURS"}}]
-    name7    ""    []                      [{"name":"task-1","task_type":"BACKUP","schedule":{"job_type":"BACKUP","frequency":10000,"period":"HOURS"}}]
+    name8    ""    []                      [{"name":"task-1","task_type":"BACKUP","schedule":{"job_type":"BACKUP","frequency":0,"period":"HOURS"}}]
+    name8    ""    []                      [{"name":"task-1","task_type":"BACKUP","schedule":{"job_type":"BACKUP","frequency":10000,"period":"HOURS"}}]
     # Invalid periods
-    name8    ""    []                      [{"name":"task-1","task_type":"BACKUP","schedule":{"job_type":"BACKUP","frequency":10,"period":"hour"}}]
-    name8    ""    []                      [{"name":"task-1","task_type":"BACKUP","schedule":{"job_type":"BACKUP","frequency":10,"period":"hour"}}]
+    name9    ""    []                      [{"name":"task-1","task_type":"BACKUP","schedule":{"job_type":"BACKUP","frequency":10,"period":"hour"}}]
+    name9    ""    []                      [{"name":"task-1","task_type":"BACKUP","schedule":{"job_type":"BACKUP","frequency":10,"period":"hour"}}]
 
 Try to add plan with to many tasks
     [Tags]       post
@@ -83,7 +84,7 @@ Try and delete a plan that is being used
 *** Keywords ***
 Add plan with invalid name
     [Arguments]    ${name}
-    Run and log and check request    /plan/${name}    POST    400    {}    headers=${BASIC_AUTH}
+    Run and log and check request    /plan/${name}    POST    400    {"tasks":${DEFAULT_TASKS}}    headers=${BASIC_AUTH}
 
 Send invalid plan
     [Arguments]        ${name}    ${description}=None    ${services}=None    ${tasks}=None
