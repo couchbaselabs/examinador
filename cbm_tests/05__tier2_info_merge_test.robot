@@ -30,15 +30,15 @@ Test info per depth
     Run backup                                        repo=info_depth
     ${result}=    Get info as user     repo=info_depth     depth=1
     Should contain        ${result}    Name
-    Should not contain    ${result}    Cluster UUID
+    Should not contain    ${result}    UUID
     Should not contain    ${result}    buck1
     ${result}=    Get info as user     repo=info_depth     depth=2
     Should contain        ${result}    Name
-    Should contain        ${result}    Cluster UUID
+    Should contain        ${result}    UUID
     Should not contain    ${result}    buck1
     ${result}=    Get info as user     repo=info_depth     depth=3
     Should contain        ${result}    Name
-    Should contain        ${result}    Cluster UUID
+    Should contain        ${result}    UUID
     Should contain        ${result}    buck1
 
 Test backups across multiple days merge
