@@ -92,7 +92,6 @@ Test eventing restore
     Run restore and wait until persisted    repo=restore_multi     items=0    disable-data=None
     ...                          disable-gsi-indexes=None
     ...                          disable-ft-indexes=None    disable-ft-alias=None    disable-analytics=None
-    Sleep    15
     ${result}=    Get current item number
     Should be equal as integers    ${result}    0
     ${all_eventing_func_correct_status}=    Confirm existence status of all eventing functions    should_exist=True
