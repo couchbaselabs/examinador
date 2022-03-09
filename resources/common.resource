@@ -40,11 +40,14 @@ Run and log request
     [Arguments]    ${request}    ${method}    ${payload}=${NONE}    ${headers}=${NONE}
     ...            ${log_response}=True
     [Documentation]    Send and log a REST request at the DEBUG level.
+    ${log_string}=    Set Variable    Sending HTTP ${method} request to ${request}
     IF    '${payload}' != '${NONE}'
-    Log To Console    Sending HTTP ${method} request to ${request} with payload ${payload} ...    DEBUG
-    ELSE
-    Log To Console    Sending HTTP ${method} request to ${request} ...    DEBUG
+    ${log_string}=    Catenate    ${log_string}    with payload ${payload}
     END
+    IF    '${headers}' != '${NONE}'
+    ${log_string}=    Catenate    ${log_string}    with headers ${headers}
+    END
+    Log To Console    ${log_string} ...    DEBUG
     Run Keyword    REST.${method}    ${request}    ${payload}    headers=${headers}
 
 Run and log and check request on session
@@ -63,11 +66,14 @@ Run and log request on session
     ...            ${log_response}=True
     [Documentation]    Send and log a REST request at the DEBUG level.
     ${method_kw}=    Catenate    ${method}    On Session
-    IF    '${payload}' != '${NONE}'
-    Log To Console    Sending HTTP ${method} request to ${host}${request} with payload ${payload} ...    DEBUG
-    ELSE
-    Log To Console    Sending HTTP ${method} request to ${host}${request} ...    DEBUG
+    ${log_string}=    Set Variable    Sending HTTP ${method} request to ${host}${request}
+    IF    "${params}" != '${NONE}'
+    ${log_string}=    Catenate    ${log_string}    with params ${params}
     END
+    IF    '${payload}' != '${NONE}'
+    ${log_string}=    Catenate    ${log_string}    with payload ${payload}
+    END
+    Log To Console    ${log_string} ...    DEBUG
     ${auth}=    Create List    ${user}    ${password}
     IF    '${session}' == '${NONE}'
     ${session}=    Set Variable    internal_session_name
