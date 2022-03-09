@@ -243,9 +243,15 @@ def sorted_json_string(dict_like: Union[Dict, str], remove_empty: List[str] = []
 
 def log_subprocess_run_results(completed_process):
     """Log information about a completed subprocess"""
-    logger.debug(f'Return code: {completed_process.returncode}')
-    logger.debug(f'Arguments: {completed_process.args}')
-    logger.debug(f'Output: {completed_process.stdout}')
+    log_to_log_file_and_console(f'Ran {" ".join(completed_process.args)} ...')
+    log_to_log_file_and_console(f'Return code: {completed_process.returncode}')
+    log_to_log_file_and_console(f'Stdout: \n{completed_process.stdout.decode("utf-8")}')
+
+
+def log_to_log_file_and_console(msg: str):
+    """Log a line about a completed subprocess to both the log file and console"""
+    logger.debug(msg)
+    logger.console(msg)
 
 
 def check_subprocess_status(completed_process):
