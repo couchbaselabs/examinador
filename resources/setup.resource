@@ -36,7 +36,7 @@ Start ${node_num} cluster run nodes
 
 
 Start cluster_run nodes and connect them
-    [Arguments]    ${node_num}=1    ${connect_nodes}=1    ${services}=n0:kv+backup    ${data_size}=256
+    [Arguments]    ${node_num}=1    ${connect_nodes}=1    ${services}=n0:kv+backup    ${data_size}=512
     ...            ${index_size}=256
     [Documentation]
     ...    Shortcut to start nodes and connect them in one keyword. This can be skip by setting the command line

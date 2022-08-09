@@ -55,10 +55,26 @@ class cbm_utils:
         """This function will configure a backup repository."""
         archive = self.archive if archive is None else archive
         other_args = sdk_utils.format_flags(kwargs)
-        complete = subprocess.run([join(self.BIN_PATH, 'cbbackupmgr'), 'config', '-a', archive, '-r', repo]
-                        + other_args, capture_output=True, shell=False, timeout=timeout_value)
+        complete = subprocess.run([join(self.BIN_PATH, 'cbbackupmgr'), 'config', '-a', archive, '-r', repo] +
+                                  self.exclude_n1ql_system_bucket(other_args), capture_output=True, shell=False,
+                                  timeout=timeout_value)
         utils.log_subprocess_run_results(complete)
         utils.check_subprocess_status(complete)
+
+
+    def exclude_n1ql_system_bucket(self, other_args):
+        """Ensures we ignore the 'N1QL_SYSTEM_BUCKET' bucket where possible"""
+        if "--include-data" in other_args:
+            return other_args
+
+        if "--exclude-data" not in other_args:
+            return other_args + ["--exclude-data", "N1QL_SYSTEM_BUCKET"]
+
+        idx = other_args.index("--exclude-data") + 1
+
+        other_args[idx] = f"N1QL_SYSTEM_BUCKET,{other_args[idx]}"
+
+        return other_args
 
 
     @keyword(types=[str, str, str, str, str, int])

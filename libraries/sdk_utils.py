@@ -146,7 +146,8 @@ def get_all_indexes_collection_aware(host: str = "http://localhost:9000", bucket
         user: str = "Administrator", password: str = "asdasd"):
     """Gets all indexes (collection aware)."""
     cluster, cb = connect_to_cluster(host, user, password, bucket) # pylint: disable=unused-variable
-    indexes = cluster.query("SELECT idx.* FROM system:indexes AS idx;")
+    indexes = cluster.query(
+        f"SELECT idx.* FROM system:indexes AS idx where bucket_id = '{bucket}' or keyspace_id = '{bucket}'")
 
     return indexes
 
