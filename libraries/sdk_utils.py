@@ -104,7 +104,7 @@ def load_fts_data(host: str = "http://localhost:9000", bucket: str = "default",
     for _ in range(120):
         time.sleep(1)
         for idx in fts_mgr.get_all_indexes():
-            if idx["name"] == "fts_index":
+            if idx["name"] == f"{bucket}._default.fts_index":
                 cluster.disconnect()
                 return
     cluster.disconnect()
