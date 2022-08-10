@@ -20,7 +20,6 @@ from couchbase_core.cluster import PasswordAuthenticator
 from robot.api.deco import keyword
 from robot.api import logger
 from robot.utils.asserts import assert_equal
-from robot.utils.asserts import fail
 
 @keyword(types=[str, dict, str, str, str, str])
 def sdk_replace(key: str, value: dict, host: str = "http://localhost:9000", bucket: str = "default",
@@ -181,7 +180,7 @@ def check_all_indexes_have_been_built_collection_aware(host: str = "http://local
             return
         if i != num_of_tries - 1:
             time.sleep(sleep_time)
-    fail(f"Imported indexes failed to be built in {num_of_tries * sleep_time} seconds")
+    raise AssertionError(f"Imported indexes failed to be built in {num_of_tries * sleep_time} seconds")
 
 
 @keyword(types=[str, str, str, str])
@@ -251,7 +250,7 @@ def wait_for_index_to_be_dropped(mgr, name: str, service: str, bucket: Optional[
         if check_index_does_not_exist(mgr, name, service, bucket):
             return
         time.sleep(1)
-    fail("Timeout: Index failed to be dropped after 60s")
+    raise AssertionError("Timeout: Index failed to be dropped after 60s")
 
 
 def check_index_does_not_exist(mgr, name: str, service: str, bucket: Optional[str] = None):
@@ -286,7 +285,7 @@ def get_all_indexes_with_retry(mgr, service: Optional[str] = None, #pylint: disa
             logger.debug(f"{e}: Failed to get indexes, will retry {10-i} more times")
             time.sleep(1)
 
-    fail("Failed to retrieve indexes")
+    raise AssertionError("Failed to retrieve indexes")
 
 
 @keyword(types=[str, str, str, str])
@@ -306,7 +305,7 @@ def drop_all_design_docs(host: str = "http://localhost:9000", bucket: str = "def
     for namespace in [DesignDocumentNamespace.PRODUCTION, DesignDocumentNamespace.DEVELOPMENT]:
         new_docs_num += len(get_all_design_docs_with_retry(view_mgr, namespace))
     if new_docs_num != 0:
-        fail("Not all design docs have been dropped")
+        raise AssertionError("Not all design docs have been dropped")
 
     cluster.disconnect()
 
@@ -321,7 +320,7 @@ def get_all_design_docs_with_retry(mgr, namespace): #pylint: disable=inconsisten
             logger.debug(f"{e}: Failed to get design docs, will retry {10-i} more times")
             time.sleep(1)
 
-    fail("Failed to retrieve design docs")
+    raise AssertionError("Failed to retrieve design docs")
 
 
 def wait_for_design_doc_to_be_dropped(mgr, name, namespace):
@@ -330,7 +329,7 @@ def wait_for_design_doc_to_be_dropped(mgr, name, namespace):
         if not design_doc_exists(mgr, name, namespace):
             return
         time.sleep(1)
-    fail("Timeout: Design doc failed to be dropped after 60s")
+    raise AssertionError("Timeout: Design doc failed to be dropped after 60s")
 
 
 def design_doc_exists(mgr, name, namespace):
@@ -358,7 +357,7 @@ def connect_to_cluster(host: str, user: str, password: str, bucket: str, #pylint
         if ready:
             return cluster, cb
         time.sleep(1)
-    fail("Failed to connect to cluster")
+    raise AssertionError("Failed to connect to cluster")
 
 
 @keyword(types=[str, str, str, str])
