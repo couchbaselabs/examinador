@@ -42,9 +42,9 @@ class cbm_utils:
         """This function runs a restore."""
         archive = self.archive if archive is None else archive
         other_args = sdk_utils.format_flags(kwargs)
-        complete = subprocess.run([join(self.BIN_PATH, 'cbbackupmgr'), 'restore', '-a', archive, '-r', repo, '-c',
-                        host, '-u', user, '-p', password, '--no-progress-bar'] + other_args, capture_output=True,
-                        shell=False, timeout=timeout_value)
+        complete = subprocess.run([join(self.BIN_PATH, 'cbbackupmgr'), 'restore', '-a', archive, '-r', repo, '-c', host,
+                                   '-u', user, '-p', password, '--no-progress-bar', '--purge'] + other_args,
+                                  capture_output=True, shell=False, timeout=timeout_value)
         utils.log_subprocess_run_results(complete)
         utils.check_subprocess_status(complete)
 
