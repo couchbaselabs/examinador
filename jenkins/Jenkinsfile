@@ -78,7 +78,7 @@ pipeline {
                     sh '''#!/bin/bash
                           python3 -m venv robot-env
                           source robot-env/bin/activate
-                          pip3 install -r requirements.txt
+                          pip3 install -r requirements.txt --no-use-pep517 
                           pip3 install pylint mypy==0.730
                     '''
 
