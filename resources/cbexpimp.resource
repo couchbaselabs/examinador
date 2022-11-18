@@ -42,7 +42,7 @@ Run docloader and wait until persisted
     Wait for items to be persisted to disk    ${previous_items}    ${items}    bucket=${bucket}
 
 Check sample import results
-    [Arguments]         ${host}=http://localhost:9000    ${bucket}=default
+    [Arguments]         ${host}=http://localhost:12000    ${bucket}=default
     ...                 ${user}=Administrator    ${password}=asdasd    ${items}=7303    ${indexes}=1
     ...                 ${expected_num_design_docs}=1    ${expected_num_views}=2
     ...                 ${timeout_value}=60    &{kwargs}

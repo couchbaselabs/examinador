@@ -2,39 +2,38 @@
 
 import time
 import json
-import subprocess
-from typing import Dict, List, Optional
+import traceback
+from typing import List, Optional
 
-from couchbase.cluster import Cluster, ClusterOptions, QueryOptions
-from couchbase.analytics import AnalyticsOptions, AnalyticsDataset, AnalyticsIndex, AnalyticsDataType
-from couchbase.search import SearchQuery, SearchOptions, PrefixQuery
-from couchbase.management.search import UpsertSearchIndexOptions, SearchIndex
+from couchbase.cluster import Cluster
+from couchbase.options import ClusterOptions, PingOptions
+from couchbase.management.logic.analytics_logic import AnalyticsDataType
+from couchbase.management.search import SearchIndex
 from couchbase.management.queries import QueryIndexManager, CreatePrimaryQueryIndexOptions
-from couchbase.management.analytics import AnalyticsIndexManager, CreateDatasetOptions
+from couchbase.management.analytics import CreateDatasetOptions
 from couchbase.management.views import DesignDocumentNamespace
-from couchbase.exceptions import NetworkException
-from couchbase.diagnostics import ServiceType, PingState # pylint: disable=syntax-error,no-name-in-module
-from couchbase.bucket import PingOptions
-from couchbase_core.cluster import PasswordAuthenticator
+from couchbase.exceptions import CouchbaseException
+from couchbase.diagnostics import ServiceType, PingState
+from couchbase.auth import PasswordAuthenticator
 
 from robot.api.deco import keyword
 from robot.api import logger
 from robot.utils.asserts import assert_equal
 
 @keyword(types=[str, dict, str, str, str, str])
-def sdk_replace(key: str, value: dict, host: str = "http://localhost:9000", bucket: str = "default",
+def sdk_replace(key: str, value: dict, host: str = "http://localhost:12000", bucket: str = "default",
         user: str = "Administrator", password: str = "asdasd"):
     """This function uses the Couchbase SDK to replace a value with a new given value for the document of the
     given key."""
     cluster, cb = connect_to_cluster(host, user, password, bucket)
-    result = cb.replace(key, value)
-    cluster.disconnect()
-    if result.rc != 0:
-        raise AssertionError(result.rc, result.args, result.stdout)
+    result = cb.default_collection().replace(key, value)
+    cluster.close()
+    if not result.success:
+        raise AssertionError(result.success, result.args, result.stdout)
 
 
 @keyword(types=[str, str, str, str])
-def drop_gsi_indexes(host: str = "http://localhost:9000", bucket: str = "default",
+def drop_gsi_indexes(host: str = "http://localhost:12000", bucket: str = "default",
         user: str = "Administrator", password: str = "asdasd"):
     """Drops any GSI in the cluster."""
     cluster, cb = connect_to_cluster(host, user, password, bucket) # pylint: disable=unused-variable
@@ -43,22 +42,22 @@ def drop_gsi_indexes(host: str = "http://localhost:9000", bucket: str = "default
         if idx.name == "#primary":
             index_mgr.drop_primary_index(bucket)
             wait_for_index_to_be_dropped(index_mgr, "#primary", service="gsi", bucket=bucket)
-    cluster.disconnect()
+    cluster.close()
 
 
 @keyword(types=[int, str, str, str, str, str, str])
-def load_docs_sdk(items: int = 2048, key_pref: str = "pymc", group: str = "group", host: str = "http://localhost:9000",
+def load_docs_sdk(items: int = 2048, key_pref: str = "pymc", group: str = "group", host: str = "http://localhost:12000",
         bucket: str = "default", user: str = "Administrator", password: str = "asdasd"):
     """Creates a query index and waits for it to be built."""
     cluster, cb = connect_to_cluster(host, user, password, bucket)
     for i in range(items):
         doc = {"group": group, "id": i}
-        cb.upsert(key_pref+str(i), doc)
-    cluster.disconnect()
+        cb.default_collection().upsert(key_pref+str(i), doc)
+    cluster.close()
 
 
 @keyword(types=[QueryIndexManager, str, str, str, str])
-def load_index_data(mgr: Optional[QueryIndexManager] = None, host: str = "http://localhost:9000",
+def load_index_data(mgr: Optional[QueryIndexManager] = None, host: str = "http://localhost:12000",
         bucket: str = "default", user: str = "Administrator", password: str = "asdasd"):
     """Creates a query index and waits for it to be built."""
     cluster, cb = connect_to_cluster(host, user, password, bucket) # pylint: disable=unused-variable
@@ -68,14 +67,14 @@ def load_index_data(mgr: Optional[QueryIndexManager] = None, host: str = "http:/
         time.sleep(1)
         for idx in index_mgr.get_all_indexes(bucket):
             if idx.name == "#primary" and idx.state == "online":
-                cluster.disconnect()
+                cluster.close()
                 return
-    cluster.disconnect()
+    cluster.close()
     raise AssertionError("Index failed to build in 120 seconds")
 
 
 @keyword(types=[str, str, str, str, str, str, str])
-def load_analytics_data(host: str = "http://localhost:9000", bucket: str = "default",
+def load_analytics_data(host: str = "http://localhost:12000", bucket: str = "default",
         user: str = "Administrator", password: str = "asdasd", dataset: str = "analytics_data",
         name: str = "analytics_index", field: str = "name"):
     """Creates an analytics dataset and index and waits for them to be built."""
@@ -86,15 +85,15 @@ def load_analytics_data(host: str = "http://localhost:9000", bucket: str = "defa
     for _ in range(120):
         time.sleep(1)
         for idx in analytics_mgr.get_all_indexes():
-            if idx["IndexName"] == "analytics_index":
-                cluster.disconnect()
+            if idx.name == "analytics_index":
+                cluster.close()
                 return
-    cluster.disconnect()
+    cluster.close()
     raise AssertionError("Analytics index failed to build in 120 seconds")
 
 
 @keyword(types=[str, str, str, str])
-def load_fts_data(host: str = "http://localhost:9000", bucket: str = "default",
+def load_fts_data(host: str = "http://localhost:12000", bucket: str = "default",
         user: str = "Administrator", password: str = "asdasd"):
     """Creates a full-text search index and waits for it to be built."""
     cluster, cb = connect_to_cluster(host, user, password, bucket) # pylint: disable=unused-variable
@@ -104,15 +103,15 @@ def load_fts_data(host: str = "http://localhost:9000", bucket: str = "default",
     for _ in range(120):
         time.sleep(1)
         for idx in fts_mgr.get_all_indexes():
-            if idx["name"] == f"{bucket}._default.fts_index":
-                cluster.disconnect()
+            if idx.name == "fts_index":
+                cluster.close()
                 return
-    cluster.disconnect()
+    cluster.close()
     raise AssertionError("FTS index failed to build in 120 seconds")
 
 
 @keyword(types=[str, str, str, str, str])
-def check_indexes(host: str = "http://localhost:9000", bucket: str = "default",
+def check_indexes(host: str = "http://localhost:12000", bucket: str = "default",
         user: str = "Administrator", password: str = "asdasd", service: str = "gsi"):
     """Uses the Couchbase SDK to get all indexes and checks that those indexes are all using the
     correct service."""
@@ -125,7 +124,7 @@ def check_indexes(host: str = "http://localhost:9000", bucket: str = "default",
     search_index_not_exist = check_index_does_not_exist(fts_mgr,"fts_index", service="fts")
     analytics_index_not_exist = check_index_does_not_exist(analytics_mgr,"analytics_index", service="analytics")
 
-    cluster.disconnect()
+    cluster.close()
 
     if not index_not_exist and service != "gsi":
         raise AssertionError("Index from wrong service restored: gsi")
@@ -141,7 +140,7 @@ def check_indexes(host: str = "http://localhost:9000", bucket: str = "default",
         raise AssertionError("Analytics index not restored")
 
 
-def get_all_indexes_collection_aware(host: str = "http://localhost:9000", bucket: str = "default",
+def get_all_indexes_collection_aware(host: str = "http://localhost:12000", bucket: str = "default",
         user: str = "Administrator", password: str = "asdasd"):
     """Gets all indexes (collection aware)."""
     cluster, cb = connect_to_cluster(host, user, password, bucket) # pylint: disable=unused-variable
@@ -152,7 +151,7 @@ def get_all_indexes_collection_aware(host: str = "http://localhost:9000", bucket
 
 
 @keyword(types=[str, str, str, str])
-def get_number_of_indexes_collection_aware(host: str = "http://localhost:9000", bucket: str = "default",
+def get_number_of_indexes_collection_aware(host: str = "http://localhost:12000", bucket: str = "default",
         user: str = "Administrator", password: str = "asdasd"):
     """This function will use the Couchbase SDK to get all of the indexes (collection aware)."""
     num_of_indexes = len(list(get_all_indexes_collection_aware(host, bucket, user, password)))
@@ -161,7 +160,7 @@ def get_number_of_indexes_collection_aware(host: str = "http://localhost:9000", 
 
 
 @keyword(types=[str, str, str, str])
-def check_all_indexes_have_been_built_collection_aware(host: str = "http://localhost:9000", bucket: str = "default",
+def check_all_indexes_have_been_built_collection_aware(host: str = "http://localhost:12000", bucket: str = "default",
         user: str = "Administrator", password: str = "asdasd"):
     """Checks that all of the indexes have been built (collection aware)."""
     num_of_tries = 24
@@ -184,7 +183,7 @@ def check_all_indexes_have_been_built_collection_aware(host: str = "http://local
 
 
 @keyword(types=[str, str, str, str])
-def drop_all_indexes(host: str = "http://localhost:9000", bucket: str = "default",
+def drop_all_indexes(host: str = "http://localhost:12000", bucket: str = "default",
         user: str = "Administrator", password: str = "asdasd"):
     """Drops all types of index that exist in the cluster."""
     cluster, cb = connect_to_cluster(host, user, password, bucket) # pylint: disable=unused-variable
@@ -198,44 +197,44 @@ def drop_all_indexes(host: str = "http://localhost:9000", bucket: str = "default
             wait_for_index_to_be_dropped(index_mgr, "#primary", service="gsi", bucket=bucket)
 
     for idx in get_all_indexes_with_retry(fts_mgr):
-        if idx["name"] == "fts_index":
+        if idx.name== "fts_index":
             fts_mgr.drop_index("fts_index")
             wait_for_index_to_be_dropped(fts_mgr,"fts_index", service="fts")
 
     for idx in get_all_indexes_with_retry(analytics_mgr):
-        if idx["IndexName"] == "analytics_index":
+        if idx.name == "analytics_index":
             analytics_mgr.drop_index("analytics_index","analytics_data")
             analytics_mgr.drop_dataset("analytics_data")
             wait_for_index_to_be_dropped(analytics_mgr,"analytics_index", service="analytics")
 
-    cluster.disconnect()
+    cluster.close()
 
 
 def drop_index_collection_aware(cluster: Cluster, name: str, bucket: str = "default", scope: str = "_default",
         collection: str = "_default"):
     """Drops the specified index (collection aware)."""
     result = cluster.query(f'DROP INDEX {name} ON {bucket}.{scope}.{collection};')
-    logger.debug("Query status:" + str(result.metadata().status()))
+    logger.debug("Query status:" + str(result.metadata()))
 
 
 @keyword(types=[str, str, str, str])
-def drop_all_indexes_collection_aware(host: str = "http://localhost:9000", bucket: str = "default",
+def drop_all_indexes_collection_aware(host: str = "http://localhost:12000", bucket: str = "default",
         user: str = "Administrator", password: str = "asdasd"):
     """Drops all indexes for a specified bucket (collection aware)."""
     indexes = get_all_indexes_collection_aware(host, bucket, user, password)
     cluster, cb = connect_to_cluster(host, user, password, bucket) # pylint: disable=unused-variable
-
     for idx_dict in indexes:
         name = idx_dict["name"]
         keyspace = idx_dict["keyspace_id"]
         if keyspace != bucket:
-            drop_index_collection_aware(cluster, name, bucket=bucket, scope=idx_dict["scope_id"], collection=keyspace)
+            drop_index_collection_aware(cluster, name, bucket=bucket,
+                                        scope=idx_dict["scope_id"], collection=keyspace)
         else:
             drop_index_collection_aware(cluster, name, bucket=bucket)
 
-    cluster.disconnect()
+    cluster.close()
 
-    for _ in range(30):
+    for _ in range(120):
         remaining_idx_num = get_number_of_indexes_collection_aware(host, bucket, user, password)
         if remaining_idx_num == 0:
             break
@@ -262,12 +261,12 @@ def check_index_does_not_exist(mgr, name: str, service: str, bucket: Optional[st
 
     elif service == "fts":
         for idx in get_all_indexes_with_retry(mgr):
-            if idx["name"] == name:
+            if idx.name == name:
                 return False
 
     elif service == "analytics":
         for idx in get_all_indexes_with_retry(mgr):
-            if idx["IndexName"] == name:
+            if idx.name == name:
                 return False
 
     return True
@@ -281,7 +280,7 @@ def get_all_indexes_with_retry(mgr, service: Optional[str] = None, #pylint: disa
             if service == "gsi":
                 return mgr.get_all_indexes(bucket)
             return mgr.get_all_indexes()
-        except NetworkException as e:
+        except CouchbaseException as e:
             logger.debug(f"{e}: Failed to get indexes, will retry {10-i} more times")
             time.sleep(1)
 
@@ -289,7 +288,7 @@ def get_all_indexes_with_retry(mgr, service: Optional[str] = None, #pylint: disa
 
 
 @keyword(types=[str, str, str, str])
-def drop_all_design_docs(host: str = "http://localhost:9000", bucket: str = "default",
+def drop_all_design_docs(host: str = "http://localhost:12000", bucket: str = "default",
         user: str = "Administrator", password: str = "asdasd"):
     """Drops all design docs that exist in a bucket."""
     cluster, cb = connect_to_cluster(host, user, password, bucket)
@@ -307,7 +306,7 @@ def drop_all_design_docs(host: str = "http://localhost:9000", bucket: str = "def
     if new_docs_num != 0:
         raise AssertionError("Not all design docs have been dropped")
 
-    cluster.disconnect()
+    cluster.close()
 
 
 def get_all_design_docs_with_retry(mgr, namespace): #pylint: disable=inconsistent-return-statements
@@ -316,7 +315,7 @@ def get_all_design_docs_with_retry(mgr, namespace): #pylint: disable=inconsisten
         try:
             docs = mgr.get_all_design_documents(namespace)
             return docs
-        except NetworkException as e:
+        except CouchbaseException as e:
             logger.debug(f"{e}: Failed to get design docs, will retry {10-i} more times")
             time.sleep(1)
 
@@ -361,7 +360,7 @@ def connect_to_cluster(host: str, user: str, password: str, bucket: str, #pylint
 
 
 @keyword(types=[str, str, str, str])
-def get_doc_info(host: str = "http://localhost:9000", bucket: str = "default",
+def get_doc_info(host: str = "http://localhost:12000", bucket: str = "default",
         user: str = "Administrator", password: str = "asdasd"):
     """This function will use the Couchbase SDK to get the contents of the bucket."""
     cluster, cb = connect_to_cluster(host, user, password, bucket) # pylint: disable=unused-variable
@@ -374,7 +373,8 @@ def get_doc_info(host: str = "http://localhost:9000", bucket: str = "default",
 
     mgr.drop_primary_index(bucket)
     wait_for_index_to_be_dropped(mgr, '#primary', service="gsi", bucket=bucket)
-    cluster.disconnect()
+    cluster.close()
+
     return doc_list
 
 
@@ -445,7 +445,13 @@ def get_index(name: str = "fts_index", field_name: str = "group", field_type: st
       "numReplicas": 0,
       "indexPartitions": 6
       }
-    return SearchIndex(name,"fulltext-index","default","",params,"",{},"couchbase",plan_params)
+
+    return SearchIndex(name=name,
+                       idx_type="fulltext-index",
+                       source_type="couchbase",
+                       source_name="default",
+                       params=params,
+                       plan_params=plan_params)
 
 @keyword(types=[str, str, str])
 def create_eventing_file_legacy(source_bucket: str = "default", meta_bucket: str = "meta",

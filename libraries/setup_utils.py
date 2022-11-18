@@ -65,7 +65,7 @@ def connect_nodes(cwd: str, node_num: int, services: str, data_size: int = 512, 
                                    str(data_size), '-I', str(index_size), '-r', '0', '-M', 'memory_optimized'],
                                    capture_output=True, timeout=120)
         if complete.returncode != 0:
-            logger.warn(f'Cluster connect failed, rc {complete.returncode}: {complete.stdout}')
+            logger.warn(f'Cluster connect failed, rc {complete.returncode}: {str(complete.stdout)}')
             time.sleep(5 * (i + 1))
         else:
             connected = True
@@ -104,7 +104,7 @@ def confirm_backup_service_running(host: str, log_path: str, user: str = 'Admini
     worked = False
     try:
         logger.info(f'Confiming the backup service is running in host: {host}')
-        res = requests.get(f'{host}/api/v1/config', auth=(user, password), timeout=5)
+        res = requests.get(f'{host}/api/v1/config', auth=(user, password), timeout=60)
         worked = res.status_code == 200
     except Exception as connection_error:
         logger.warn(f'Connection error occured: {connection_error}')

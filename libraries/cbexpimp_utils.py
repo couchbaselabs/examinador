@@ -6,14 +6,12 @@ import subprocess
 import random
 import string
 from enum import Enum, auto
-from subprocess import Popen
 from os.path import join
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 import sdk_utils
 import utils
 
-from robot.api import logger
 from robot.api.deco import keyword
 from robot.api.deco import library
 from robot.utils.asserts import assert_equal
@@ -104,7 +102,7 @@ class cbexpimp_utils:
 
 
     @keyword(types=[str, str, str, str, int, int])
-    def check_views(self, host: str = "http://localhost:9000", bucket: str = "default", user: str = "Administrator",
+    def check_views(self, host: str = "http://localhost:12000", bucket: str = "default", user: str = "Administrator",
             password: str = "asdasd", expected_num_design_docs: int = 1, expected_num_views: int = 2):
         """This function checks that all views were imported correctly."""
         cluster, cb = sdk_utils.connect_to_cluster(host, user, password, bucket)
@@ -112,7 +110,7 @@ class cbexpimp_utils:
 
         design_docs = view_mgr.get_all_design_documents(sdk_utils.DesignDocumentNamespace.PRODUCTION) \
                       + view_mgr.get_all_design_documents(sdk_utils.DesignDocumentNamespace.DEVELOPMENT)
-        cluster.disconnect()
+        cluster.close()
 
         num_design_docs = len(design_docs)
         assert_equal(num_design_docs, expected_num_design_docs, "Views contents changed: unexpected number of design \

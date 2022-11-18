@@ -4,18 +4,12 @@ import json
 import time
 import os
 import subprocess
-from subprocess import Popen
 from os.path import join
 from typing import Dict, List, Optional
 from datetime import datetime, timedelta
 
 import sdk_utils
 import utils
-
-from couchbase.cluster import Cluster
-from couchbase.cluster import QueryOptions
-from couchbase.management.queries import QueryIndexManager, CreatePrimaryQueryIndexOptions
-from couchbase_core.cluster import PasswordAuthenticator
 
 from robot.api.deco import keyword
 from robot.api import logger
@@ -101,7 +95,7 @@ class cbm_utils:
         with subprocess.Popen([join(self.BIN_PATH, 'cbbackupmgr'), 'backup', '-a', archive, '-r', repo, '-c',
             host, '-u', user, '-p', password, '--no-progress-bar'] + other_args) as complete:
 
-            logger.debug(f'rc: {complete.returncode}, args: {complete.args}')
+            logger.debug(f'rc: {complete.returncode}, args: {str(complete.args)}')
             time.sleep(1)
             complete.kill()
 
