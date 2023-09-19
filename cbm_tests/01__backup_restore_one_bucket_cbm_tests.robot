@@ -121,12 +121,16 @@ Test Force Full Backup
     ${bucket_index}=         Get bucket index    ${result}
     Should Be Equal                ${result}[backups][${number_of_backups-1}][buckets][${bucket_index}][name]
     ...                            default
-    Should Be Equal as integers    ${result}[backups][${number_of_backups-1}][buckets][${bucket_index}][mutations]
-    ...                            6144
     Should Be Equal as integers    ${result}[backups][${number_of_backups-1}][buckets][${bucket_index}][tombstones]
     ...                            0
-    Should Be Equal as integers    ${result}[backups][${number_of_backups-1}][buckets][${bucket_index}][items]
+    # The scope with uid 0 is the default scope
+    Should Be Equal as integers    ${result}[backups][${number_of_backups-1}][buckets][${bucket_index}][scopes][0][mutations]
     ...                            6144
+    # The scope with uid 8 is the system scope
+    Should Be Equal as integers    ${result}[backups][${number_of_backups-1}][buckets][${bucket_index}][scopes][8][mutations]
+    ...                            3
+    Should Be Equal as integers    ${result}[backups][${number_of_backups-1}][buckets][${bucket_index}][items]
+    ...                            6147
     ${bucket_uuid}=    Get bucket uuid
     ${dir}=    catenate    SEPARATOR=
     ...    ${ARCHIVE}${/}simple${/}${result}[backups][${number_of_backups-1}][date]
