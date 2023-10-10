@@ -167,6 +167,11 @@ class cbm_utils:
         json_with_xattr_doc_count = 0
 
         for doc in data:
+            # Skip any documents not in the default collection so we don't count, for example, system scope docs. The
+            # collection_id is not always specified, if it isn't then assume the default collection.
+            if doc.get("collection_id", 0) != 0:
+                continue
+
             if doc["deleted"] != "false" and doc["deleted"] is not False:
                 raise AssertionError('Document contents changed: document deleted')
             if doc["metadata"]["datatype"] == 3:
