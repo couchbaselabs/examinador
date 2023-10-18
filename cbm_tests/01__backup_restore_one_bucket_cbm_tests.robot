@@ -52,6 +52,21 @@ Test Restore Backup
     ${result}=    Get doc info
     Check restored cbworkloadgen docs contents    ${result}    2048    1024
 
+Test Backup Restore of Users
+    [Tags]    P0    Backup  Restore  Users
+    [Documentation]    Tests backup of a bucket is restored including the users
+    Add user
+    Configure backup                        repo=simple-with-users
+    Run backup                              repo=simple-with-users
+    Flush bucket REST
+    Delete user
+    Run restore and wait until persisted    repo=simple-with-users
+    ${userInfo} =  Get user info
+    ${userName} =  Evaluate  $userInfo.get("id")
+    Should Be Equal  ${userName}  test-user
+    ${roleCheckReturnCode} =  Check user role
+    Should Be Equal as integers  ${roleCheckReturnCode}  0
+
 Test bucket restored to other bucket
     [Tags]    P0    Restore
     [Documentation]    Tests backup of one backup can be mapped to another bucket when restored with --map-data flag.

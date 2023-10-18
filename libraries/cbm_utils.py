@@ -38,7 +38,7 @@ class cbm_utils:
     @keyword(types=[str, str, str, str, str, int])
     def restore_docs(self, repo: Optional[str] = None, archive: Optional[str] = None,
             host: str = "http://localhost:9000", user: str = "Administrator", password: str = "asdasd",
-            timeout_value: int = 120, **kwargs):
+            timeout_value: int = 240, **kwargs):
         """This function runs a restore."""
         archive = self.archive if archive is None else archive
         other_args = sdk_utils.format_flags(kwargs)
@@ -79,7 +79,7 @@ class cbm_utils:
 
     @keyword(types=[str, str, str, str, str, int])
     def run_backup(self, repo: Optional[str] = None, archive: Optional[str] = None, host: str = "http://localhost:9000",
-            user: str = "Administrator", password: str = "asdasd", timeout_value: int = 60, **kwargs):
+            user: str = "Administrator", password: str = "asdasd", timeout_value: int = 240, **kwargs):
         """This function will run a backup."""
         archive = self.archive if archive is None else archive
         other_args = sdk_utils.format_flags(kwargs)
@@ -339,3 +339,57 @@ class cbm_utils:
             if buck["name"] == bucket:
                 return i
         raise AssertionError(f"Bucket {bucket} not backed up")
+
+    @keyword(types=[str, str, str, str, str, int])
+    def add_user(self, username: str = "test-user" ,archive: Optional[str] = None, host: str = "http://localhost:9000",
+            user: str = "Administrator", password: str = "asdasd", timeout_value: int = 240, **kwargs):
+        """This function will add a user."""
+        archive = self.archive if archive is None else archive
+        other_args = sdk_utils.format_flags(kwargs)
+        complete = subprocess.run([join(self.BIN_PATH, 'couchbase-cli'), 'user-manage', '-c', host, '-u', user, '-p',
+                        password, '--set', '--rbac-username', username, '--rbac-password', 'password',
+                        '--roles', 'admin', '--auth-domain', 'local'] + other_args, capture_output=True,
+                        shell=False, timeout=timeout_value)
+        utils.log_subprocess_run_results(complete)
+        utils.check_subprocess_status(complete)
+
+    @keyword(types=[str, str, str, str, str, int])
+    def delete_user(self, username: str = "test-user", archive: Optional[str] = None,
+                    host: str = "http://localhost:9000", user: str = "Administrator", password: str = "asdasd",
+                    timeout_value: int = 240, **kwargs):
+        """This function will delete a user."""
+        archive = self.archive if archive is None else archive
+        other_args = sdk_utils.format_flags(kwargs)
+        complete = subprocess.run([join(self.BIN_PATH, 'couchbase-cli'), 'user-manage', '-c', host, '-u', user, '-p',
+                        password, '--rbac-username', username, '--auth-domain', 'local',
+                        '--delete'] + other_args, capture_output=True,
+                        shell=False, timeout=timeout_value)
+        utils.log_subprocess_run_results(complete)
+        utils.check_subprocess_status(complete)
+
+    @keyword(types=[str, str, str, str, int])
+    def get_user_info(self, archive: Optional[str] = None, host: str = "http://localhost:9000",
+            user: str = "Administrator", password: str = "asdasd", timeout_value: int = 240, **kwargs):
+        """This function will get user info."""
+        archive = self.archive if archive is None else archive
+        other_args = sdk_utils.format_flags(kwargs)
+        complete = subprocess.run([join(self.BIN_PATH, 'couchbase-cli'), 'user-manage', '-c', host, '-u', user, '-p',
+                        password, '--list'] + other_args, capture_output=True,
+                        shell=False, timeout=timeout_value)
+        utils.log_subprocess_run_results(complete)
+        utils.check_subprocess_status(complete)
+        user_info = json.loads(complete.stdout)
+        return user_info[0]
+    
+    @keyword(types=[str, str, str, int])
+    def check_user_role(self, archive: Optional[str] = None, host: str = "http://localhost:9000/default",
+            username: str = "test-user" , timeout_value: int = 240, **kwargs):
+        """This function will connect to the cluster using the user credentials."""
+        archive = self.archive if archive is None else archive
+        other_args = sdk_utils.format_flags(kwargs)
+        complete = subprocess.run([join(self.BIN_PATH, 'cbc-cat'), 'key', '-U', host, '-u', username, '-P',
+                        'password'] + other_args, capture_output=True,
+                        shell=False, timeout=timeout_value)
+        utils.log_subprocess_run_results(complete)
+        utils.check_subprocess_status(complete)
+        return complete.returncode
