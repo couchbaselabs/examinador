@@ -380,7 +380,7 @@ class cbm_utils:
         utils.check_subprocess_status(complete)
         user_info = json.loads(complete.stdout)
         return user_info[0]
-    
+
     @keyword(types=[str, str, str, int])
     def check_user_role(self, archive: Optional[str] = None, host: str = "http://localhost:9000/default",
             username: str = "test-user" , timeout_value: int = 240, **kwargs):

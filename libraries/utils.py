@@ -81,7 +81,7 @@ def archive_and_delete_repo(host: str, repo: str, **kwargs):
     logger.debug(f'Archived repo {repo} with new id {new_id}')
     # delete repo
     res = requests.delete(f'{host}/api/v1/cluster/self/repository/archived/{new_id}', auth=(user, password),
-                          params={'remove_repository': True})
+                          params={'remove_repository': True}, timeout=timeout)
     if res.status_code != 200:
         raise requests.HTTPError(f'Could not delete repository got status {res.status_code}: {res.text}')
 

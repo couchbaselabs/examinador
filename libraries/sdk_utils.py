@@ -13,7 +13,7 @@ from couchbase.management.queries import QueryIndexManager, CreatePrimaryQueryIn
 from couchbase.management.analytics import AnalyticsIndexManager, CreateDatasetOptions
 from couchbase.management.views import DesignDocumentNamespace
 from couchbase.exceptions import NetworkException
-from couchbase.diagnostics import ServiceType, PingState
+from couchbase.diagnostics import ServiceType, PingState # pylint: disable=syntax-error,no-name-in-module
 from couchbase.bucket import PingOptions
 from couchbase_core.cluster import PasswordAuthenticator
 

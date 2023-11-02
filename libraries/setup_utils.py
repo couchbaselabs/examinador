@@ -104,7 +104,7 @@ def confirm_backup_service_running(host: str, log_path: str, user: str = 'Admini
     worked = False
     try:
         logger.info(f'Confiming the backup service is running in host: {host}')
-        res = requests.get(f'{host}/api/v1/config', auth=(user, password))
+        res = requests.get(f'{host}/api/v1/config', auth=(user, password), timeout=5)
         worked = res.status_code == 200
     except Exception as connection_error:
         logger.warn(f'Connection error occured: {connection_error}')
@@ -149,6 +149,8 @@ def get_last_lines_of_log(log_path: str, context: int):
         # As file is read completely, if there is still data in buffer, then its first line.
         if len(buffer) > 0:
             list_of_lines.append(buffer.decode()[::-1])
+
+    return None
 
 
 def log_end_of_backup_service_logs(log_path: str, context: int):
