@@ -54,7 +54,7 @@ pipeline {
                 timeout(time: 10, unit: "MINUTES") {
                     // Install linter
                     timeout(time: 10, unit: "MINUTES") {
-                        sh "pip3 install --user urllib3 pylint requests mypy==0.730"
+                        sh "pip3 install --user urllib3 pylint requests mypy"
                     }
 
                     // Initialise the build directory
@@ -79,8 +79,8 @@ pipeline {
                           python3 -m venv robot-env
                           source robot-env/bin/activate
                           pip3 install wheel
-                          pip3 install -r requirements.txt --no-use-pep517 
-                          pip3 install pylint mypy==0.730
+                          pip3 install -r requirements.txt --no-use-pep517
+                          pip3 install pylint mypy
                     '''
 
                     //Install chromedriver

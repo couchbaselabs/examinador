@@ -76,14 +76,16 @@ def archive_and_delete_repo(host: str, repo: str, **kwargs):
     res = requests.post(f'{host}/api/v1/cluster/self/repository/active/{repo}/archive', auth=(user, password),
                         timeout=timeout, json={'id': new_id})
     if res.status_code != 200:
-        raise requests.HTTPError(f'Could not archive repository {repo} got status {res.status_code}: {res.text}')
+        raise requests.HTTPError(
+            f'Could not archive repository {repo} got status {res.status_code}: {res.text}', response=res)
 
     logger.debug(f'Archived repo {repo} with new id {new_id}')
     # delete repo
     res = requests.delete(f'{host}/api/v1/cluster/self/repository/archived/{new_id}', auth=(user, password),
                           params={'remove_repository': True}, timeout=timeout)
     if res.status_code != 200:
-        raise requests.HTTPError(f'Could not delete repository got status {res.status_code}: {res.text}')
+        raise requests.HTTPError(
+            f'Could not delete repository got status {res.status_code}: {res.text}', response=res)
 
 
 @keyword(types=[int, str, str])
@@ -130,7 +132,7 @@ def wait_until_task_is_finished(host: str, task_name: str, repo: str, state: str
         res = requests.get(f'{host}/api/v1/cluster/self/repository/{state}/{repo}', auth=(user, password),
                            timeout=timeout)
         if res.status_code != 200:
-            raise requests.HTTPError(f'Unexpected error code: {res.status_code} {res.json()}')
+            raise requests.HTTPError(f'Unexpected error code: {res.status_code} {res.json()}', response=res)
 
         repository = res.json()
         logger.debug(f'/api/v1/cluster/self/repository/{state}/{repo} response: {repository}')

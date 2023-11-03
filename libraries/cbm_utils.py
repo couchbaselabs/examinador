@@ -36,10 +36,10 @@ class cbm_utils:
         """This function runs a restore."""
         archive = self.archive if archive is None else archive
         other_args = sdk_utils.format_flags(kwargs)
-        users = ['--enable-users'] if users else []
+        enable_users = ['--enable-users'] if users else []
         complete = subprocess.run([join(self.BIN_PATH, 'cbbackupmgr'), 'restore', '-a', archive, '-r', repo, '-c', host,
-                                   '-u', user, '-p', password, '--no-progress-bar', '--purge'] + users + other_args,
-                                  capture_output=True, shell=False, timeout=timeout_value)
+                                   '-u', user, '-p', password, '--no-progress-bar', '--purge'] + enable_users +
+                                   other_args, capture_output=True, shell=False, timeout=timeout_value)
         utils.log_subprocess_run_results(complete)
         utils.check_subprocess_status(complete)
 
@@ -50,10 +50,10 @@ class cbm_utils:
         """This function will configure a backup repository."""
         archive = self.archive if archive is None else archive
         other_args = sdk_utils.format_flags(kwargs)
-        users = ['--enable-users'] if users else []
-        complete = subprocess.run([join(self.BIN_PATH, 'cbbackupmgr'), 'config', '-a', archive, '-r', repo] + users +
-                                  self.exclude_n1ql_system_bucket(other_args), capture_output=True, shell=False,
-                                  timeout=timeout_value)
+        enable_users = ['--enable-users'] if users else []
+        complete = subprocess.run([join(self.BIN_PATH, 'cbbackupmgr'), 'config', '-a', archive, '-r', repo]
+                                  + enable_users + self.exclude_n1ql_system_bucket(other_args),
+                                  capture_output=True, shell=False, timeout=timeout_value)
         utils.log_subprocess_run_results(complete)
         utils.check_subprocess_status(complete)
 

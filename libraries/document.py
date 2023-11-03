@@ -1,12 +1,12 @@
 """This file contains the Document class definition."""
 
-from typing import Dict
+from typing import Dict, Optional
 from robot.utils.asserts import assert_not_none
 
 class Document: # pylint: disable=invalid-name
     """Class of objects that represent documents of different types that can be stored in a Couchbase cluster."""
-    def __init__(self, key: str = None, data: Dict = {}, metadata: Dict = {}, data_type: int = None,
-            collection_id: int = None):
+    def __init__(self, key: Optional[str] = None, data: Dict = {}, metadata: Dict = {},
+            data_type: Optional[int] = None, collection_id: Optional[int] = None):
         self.key = key
         self.data = data
         self.metadata = metadata

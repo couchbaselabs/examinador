@@ -4,7 +4,7 @@ import json
 import subprocess
 import re
 
-from typing import List
+from typing import List, Optional, cast
 from os.path import join
 from binascii import unhexlify
 
@@ -70,7 +70,7 @@ class common_utils:
             assert_not_none(document.metadata,
                 f"Metadata dictionary key is missing for a document with the key '{document.key}'")
 
-            document.data_type = document.metadata.get('datatype')
+            document.data_type = cast(int, document.metadata.get('datatype'))
             assert_not_none(document.data_type,
                 f"Data type dictionary key is missing in metadata for a document with the key '{document.key}'")
 
@@ -166,7 +166,8 @@ class common_utils:
 
     @staticmethod
     @keyword(types=[List[Document], List[Document], List[str], bool])
-    def validate_docs(docs: List[Document], validation_docs: List[Document], metadata_keys_to_ignore: List[str] = None,
+    def validate_docs(docs: List[Document], validation_docs: List[Document],
+                      metadata_keys_to_ignore: Optional[List[str]] = None,
             only_validate_data: bool = False):
         """Validate all provided documents by comparing them to the specified validation documents.
         """
