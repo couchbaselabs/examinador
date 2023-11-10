@@ -50,12 +50,13 @@ class cbm_utils:
 
 
     @keyword(types=[str, str, int])
-    def configure_backup(self, repo: Optional[str] = None, archive: Optional[str] = None, timeout_value: int = 30,
-                **kwargs):
+    def configure_backup(self, repo: Optional[str] = None, archive: Optional[str] = None, users: bool = False,
+                 timeout_value: int = 30, **kwargs):
         """This function will configure a backup repository."""
         archive = self.archive if archive is None else archive
         other_args = sdk_utils.format_flags(kwargs)
-        complete = subprocess.run([join(self.BIN_PATH, 'cbbackupmgr'), 'config', '-a', archive, '-r', repo] +
+        users = ['--enable-users'] if users else []
+        complete = subprocess.run([join(self.BIN_PATH, 'cbbackupmgr'), 'config', '-a', archive, '-r', repo] + users +
                                   self.exclude_n1ql_system_bucket(other_args), capture_output=True, shell=False,
                                   timeout=timeout_value)
         utils.log_subprocess_run_results(complete)
