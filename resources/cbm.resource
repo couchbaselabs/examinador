@@ -62,9 +62,10 @@ Merge multiple backups
 Run restore and wait until persisted
     [Arguments]         ${repo}    ${archive}=None    ${bucket}=default   ${host}=http://localhost:9000
     ...                 ${user}=Administrator    ${password}=asdasd    ${timeout_value}=240    ${items}=2048
+    ...                 ${users}=False
     ...                 &{kwargs}
     [Documentation]     This function will run restore and wait for docs to be persisted to disk.
     ${previous_items}=    Get item count    bucket=${bucket}
     Restore docs    repo=${repo}    host=${host}    user=${user}    password=${password}
-    ...             timeout_value=${timeout_value}    &{kwargs}
+    ...             timeout_value=${timeout_value}    users=${users}    &{kwargs}
     Wait for items to be persisted to disk    ${previous_items}    ${items}    bucket=${bucket}

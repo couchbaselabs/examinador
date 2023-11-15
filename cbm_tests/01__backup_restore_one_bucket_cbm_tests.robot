@@ -56,11 +56,11 @@ Test Backup Restore of Users
     [Tags]    P0    Backup  Restore  Users
     [Documentation]    Tests backup of a bucket is restored including the users
     Add user
-    Configure backup                        repo=simple-with-users
+    Configure backup                        repo=simple-with-users      users=True
     Run backup                              repo=simple-with-users
     Flush bucket REST
     Delete user
-    Run restore and wait until persisted    repo=simple-with-users
+    Run restore and wait until persisted    repo=simple-with-users      users=True
     ${userInfo} =  Get user info
     ${userName} =  Evaluate  $userInfo.get("id")
     Should Be Equal  ${userName}  test-user

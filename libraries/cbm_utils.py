@@ -38,12 +38,13 @@ class cbm_utils:
     @keyword(types=[str, str, str, str, str, int])
     def restore_docs(self, repo: Optional[str] = None, archive: Optional[str] = None,
             host: str = "http://localhost:9000", user: str = "Administrator", password: str = "asdasd",
-            timeout_value: int = 240, **kwargs):
+            timeout_value: int = 240, users: bool = False, **kwargs):
         """This function runs a restore."""
         archive = self.archive if archive is None else archive
         other_args = sdk_utils.format_flags(kwargs)
+        users = ['--enable-users'] if users else []
         complete = subprocess.run([join(self.BIN_PATH, 'cbbackupmgr'), 'restore', '-a', archive, '-r', repo, '-c', host,
-                                   '-u', user, '-p', password, '--no-progress-bar', '--purge'] + other_args,
+                                   '-u', user, '-p', password, '--no-progress-bar', '--purge'] + users + other_args,
                                   capture_output=True, shell=False, timeout=timeout_value)
         utils.log_subprocess_run_results(complete)
         utils.check_subprocess_status(complete)
