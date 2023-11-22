@@ -7,6 +7,7 @@ Library            Collections
 Library            ../libraries/cbm_utils.py    ${BIN_PATH}    ${ARCHIVE}
 Library            ../libraries/sdk_utils.py
 Library            ../libraries/utils.py
+Library            ../libraries/common_utils.py    ${SOURCE}
 Resource           ../resources/couchbase.resource
 Resource           ../resources/cbm.resource
 
@@ -183,3 +184,20 @@ Test auto-create bucket
     Run restore and wait until persisted            repo=simple     bucket=new_bucket    auto-create-buckets=None    items=4096
     ${result}=    Get doc info    bucket=new_bucket
     Check restored cbworkloadgen docs contents    ${result}    4096    1024
+
+Test disable data restore
+    [Tags]    P1    Restore
+    [Documentation]    This tests that when a backup is restored with the --disable-data flag, no
+    ...                documents should be restored but the manifest should be.
+    Create CB bucket if it does not exist cli             bucket=noDataBucket
+    Create CB scope if it does not exist cli              bucket=noDataBucket  scope=scope
+    Create collection if it does not exist cli            bucket=noDataBucket  scope=scope    collection=collection
+    Load documents into bucket using cbc                  bucket=noDataBucket  key=s1c1    scope=scope    collection=collection    group=a
+    Configure backup    repo=no_data
+    Run backup          repo=no_data
+    Flush bucket REST   bucket=noDataBucket
+    Run restore and wait until persisted                  repo=no_data      disable-data=None   items=0
+    @{after_docs}=      Get doc info                      bucket=noDataBucket
+    Length should be    ${after_docs}    0
+    ${result}=          Get scopes info                    bucket=noDataBucket  scope=scope
+    Should Be True      """${result['scopes'][0]['collections'][0]['name']}""" == """collection"""
