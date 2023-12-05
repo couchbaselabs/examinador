@@ -10,6 +10,7 @@ Resource           ../resources/cbm.resource
 
 Suite setup        Run keywords    Delete bucket cli
 ...                AND    Delete bucket cli    bucket=new_bucket
+...                AND    Delete bucket cli    bucket=noDataBucket
 Suite Teardown     Collect backup logs and remove archive
 
 ***Variables***
