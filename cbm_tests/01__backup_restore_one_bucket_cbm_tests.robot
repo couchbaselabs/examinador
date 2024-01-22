@@ -185,6 +185,29 @@ Test auto-create bucket
     ${result}=    Get doc info    bucket=new_bucket
     Check restored cbworkloadgen docs contents    ${result}    4096    1024
 
+Test disable bucket config
+    [Tags]    P1    Restore    Info
+    [Documentation]    This tests that info and restore work correctly when --disable-bucket-config
+    ...                is used (MB-60393).
+    Remove Directory    ${ARCHIVE}    recursive=True
+    Configure backup    repo=flush_enabled    disable-bucket-config=None
+    Enable flush
+    Run backup    repo=flush_enabled
+    Disable flush
+    ${result}=                     Get info as json    repo=flush_enabled
+    ${number_of_backups}=          Get Length    ${result}[backups]
+    Should Be Equal as integers    ${number_of_backups}
+    ...                            1
+    ${bucket_index}=               Get bucket index    ${result}
+    Should Be Equal                ${result}[backups][0][buckets][${bucket_index}][name]
+    ...                            default
+    Should Be Equal as integers    ${result}[backups][0][buckets][${bucket_index}][mutations]
+    ...                            5
+    Should Be Equal as integers    ${result}[backups][0][buckets][${bucket_index}][tombstones]
+    ...                            0
+    Restore docs    repo=flush_enabled    enable-bucket-config=None
+    Check flush is disabled
+
 Test disable data restore
     [Tags]    P1    Restore
     [Documentation]    This tests that when a backup is restored with the --disable-data flag, no

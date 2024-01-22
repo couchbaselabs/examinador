@@ -119,6 +119,13 @@ Set ramQuota
     Run and log and check request on session    ${req}    POST    200    payload=${pd}    host=${host}    user=${user}
     ...                                         password=${password}
 
+Disable flush
+    [Arguments]    ${bucket}=default    ${host}=http://localhost:9000    ${user}=Administrator    ${password}=asdasd
+    [Documentation]    Enable flush for a bucket.
+    ${command}=    Create List    ${BIN_PATH}${/}couchbase-cli    bucket-edit    -c    ${host}    -u    ${user}
+    ...            -p    ${password}    --bucket    ${bucket}    --enable-flush    0
+    Run and log and check process    ${command}
+
 Enable flush
     [Arguments]    ${bucket}=default    ${host}=http://localhost:9000    ${user}=Administrator    ${password}=asdasd
     [Documentation]    Enable flush for a bucket.

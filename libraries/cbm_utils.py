@@ -389,3 +389,24 @@ class cbm_utils:
         utils.log_subprocess_run_results(complete)
         utils.check_subprocess_status(complete)
         return complete.returncode
+    
+    @keyword(types=[str, str, str, str, str, int])
+    def check_flush_is_disabled(self, archive: Optional[str] = None, host: str = "http://localhost:9000",
+            user: str = "Administrator", password: str = "asdasd", bucket: str = "default", timeout_value: int = 240,
+            **kwargs):
+        """This function will check if flush is disabled for the given bucket."""
+        archive = self.archive if archive is None else archive
+        other_args = sdk_utils.format_flags(kwargs)
+        complete = subprocess.run([join(self.BIN_PATH, 'couchbase-cli'), 'bucket-list', '-c', host, '-u', user, '-p',
+                        password, '-o', 'json'] + other_args, capture_output=True,
+                        shell=False, timeout=timeout_value)
+        utils.log_subprocess_run_results(complete)
+        utils.check_subprocess_status(complete)
+        buckets = json.loads(complete.stdout)
+        for curBucket in buckets:
+            if curBucket["name"] == bucket:
+                if "flush" not in curBucket["controllers"]:
+                    return
+                else:
+                    raise AssertionError(f"Flush not disabled in bucket \"{curBucket['name']}\"")
+        raise AssertionError(f"Bucket {bucket} not found")
