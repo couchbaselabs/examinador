@@ -72,3 +72,17 @@ Trigger backup
     ${resp}=    Run and log and check request on session    ${req}    POST    200    payload=${pd}     user=${user}
     ...         password=${password}    session=backup_service    log_response=True
     Return from keyword    ${resp.json()["task_name"]}
+
+Create plan
+    [Arguments]    ${plan_name}    ${plan}
+    ${req}=    Set Variable    /plan/${plan_name}
+    Run and log and check request on session    ${req}    POST    200    payload=${plan}     session=backup_service
+    ...                                         log_response=True
+
+
+Create Backup Service repo that uses plan
+    [Arguments]    ${plan_name}
+    ${req}=    Set Variable    /cluster/self/repository/active/${plan_name}
+    ${pd}=    Set Variable    {"plan":"${plan_name}", "archive":"${TEST_DIR}${/}${plan_name}"}
+    Run and log and check request on session    ${req}    POST    200    payload=${pd}     session=backup_service
+    ...                                         log_response=True

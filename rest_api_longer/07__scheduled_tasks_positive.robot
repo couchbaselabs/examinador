@@ -25,35 +25,13 @@ ${ADHOC_REPO}    scheduled-repository
 
 
 *** Test Cases ***
-Schedule backups every 5 minutes
+Schedule backups and merges every minute
     [tags]    backup    minutes
-    [Documentation]    Creates a repository that schedules backups every 5 minutes it will wait until the task is
-    ...    triggered and verify that it run properly.
-    [Setup]       Create plan and repo with minute frequency    5-min-backup    every-5
-    [Teardown]    archive and delete repo    ${BACKUP_NODE}     every-5
-    Sleep               5s     # Give time for the task to get scheduled
-    ${req}=    Set Variable    /cluster/self/repository/active/every-5
-    ${resp}=    Run and log and check request on session    ${req}    GET    200    session=backup_service
-    ...                                                     log_response=True
-    Dictionary should contain key      ${resp.json()["scheduled"]}    5-min-backup
-    Is approx from now    ${resp.json()["scheduled"]["5-min-backup"]["next_run"]}    5m
-    Sleep     6m
-    Wait until task is finished    ${BACKUP_NODE}    5-min-backup     every-5    active    running_tasks
-    ${history}=    Get task history    every-5
-    Confirm task is last and successfull    ${history}   5-min-backup
-    ${info}=            Get repository info              every-5
-    Length should be    ${info["backups"]}               1
-    Should be equal     ${info["backups"][0]["type"]}    FULL
-
-
-*** Keywords ***
-Create plan and repo with minute frequency
-    [Arguments]    ${task_name}    ${plan_name}    ${frequency}=5    ${task_type}=BACKUP
-    ${req}=    Set Variable    /plan/${plan_name}
-    ${pd}=    Set Variable    {"tasks":[{"name":"${task_name}","task_type":"${task_type}","schedule":{"frequency":${frequency},"period":"MINUTES","job_type":"${task_type}"}}]}
-    Run and log and check request on session    ${req}    POST    200    payload=${pd}     session=backup_service
-    ...                                         log_response=True
-    ${req}=    Set Variable    /cluster/self/repository/active/${plan_name}
-    ${pd}=    Set Variable    {"plan":"${plan_name}", "archive":"${TEST_DIR}${/}${plan_name}"}
-    Run and log and check request on session    ${req}    POST    200    payload=${pd}     session=backup_service
-    ...                                         log_response=True
+    [Documentation]    Creates a repository that schedules backups and merges every minute, waits 4 minutes, and then
+    ...    checks to see if a merged backup exists in the repo.   
+    [Teardown]    archive and delete repo    ${BACKUP_NODE}     every-min-backup-merge
+    Create plan   every-min-backup-merge    {"tasks":[{"name":"backup_min","task_type":"BACKUP","schedule":{"frequency":1,"period":"MINUTES","job_type":"BACKUP"}},{"name":"merge_min","task_type":"MERGE","schedule":{"frequency":1,"period":"MINUTES","job_type":"MERGE"},"merge_options":{"offset_start":0,"offset_end":1}}]}
+    Create Backup Service repo that uses plan    every-min-backup-merge
+    Sleep     4m
+    ${info}=            Get repository info              every-min-backup-merge
+    Should be equal     ${info["backups"][0]["type"]}    MERGE - FULL                                   log_response=True
