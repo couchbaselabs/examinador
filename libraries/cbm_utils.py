@@ -389,7 +389,7 @@ class cbm_utils:
         utils.log_subprocess_run_results(complete)
         utils.check_subprocess_status(complete)
         return complete.returncode
-    
+
     @keyword(types=[str, str, str, str, str, int])
     def check_flush_is_disabled(self, archive: Optional[str] = None, host: str = "http://localhost:9000",
             user: str = "Administrator", password: str = "asdasd", bucket: str = "default", timeout_value: int = 240,
@@ -407,6 +407,5 @@ class cbm_utils:
             if curBucket["name"] == bucket:
                 if "flush" not in curBucket["controllers"]:
                     return
-                else:
-                    raise AssertionError(f"Flush not disabled in bucket \"{curBucket['name']}\"")
+                raise AssertionError(f"Flush not disabled in bucket \"{curBucket['name']}\"")
         raise AssertionError(f"Bucket {bucket} not found")

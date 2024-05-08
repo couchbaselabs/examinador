@@ -1,6 +1,7 @@
 *** Settings ***
 Library     RequestsLibrary
 Library     Process
+Library     ../libraries/setup_utils.py
 Resource    ../resources/common.resource
 
 *** Variables ***
@@ -22,6 +23,7 @@ Create CB bucket if it does not exist cli
     ...                           -p    ${password}    --bucket    ${bucket}    --bucket-ramsize    ${ramQuota}
     ...                           --bucket-replica    0    --bucket-type    couchbase    --enable-flush    1    --wait
     Run and log and check process    ${command}
+    check_query_metadata_transitioned    host=http://localhost    port=9499
     Sleep    5
 
 Set index memory quota
