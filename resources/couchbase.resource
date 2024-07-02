@@ -2,6 +2,7 @@
 Library     RequestsLibrary
 Library     Process
 Library     ../libraries/setup_utils.py
+Library     ../libraries/common_utils.py    ${SOURCE}
 Resource    ../resources/common.resource
 
 *** Variables ***
@@ -140,12 +141,14 @@ Flush bucket REST
     [Documentation]    Flush all documents from a bucket.
     ${items}=    Get current item number    ${bucket}
     Return from keyword if    ${items} == 0
+    ${original_uuids}=    Get vbucket uuids          ${bucket}       ${user}         ${password}
     ${req}=    Set Variable    /pools/default/buckets/${bucket}/controller/doFlush
     Run and log and check request on session    ${req}    POST    200    host=${host}    user=${user}
     ...                                         password=${password}
     FOR    ${i}    IN RANGE    10
-        ${items}=    Get current item number    ${bucket}
-        Return from keyword if    ${items} == 0
+        ${uuids}=    Get vbucket uuids  ${bucket}       ${user}         ${password}
+        ${res}=      All vbucket uuids different  ${original_uuids}      ${uuids}
+        Return from keyword if    ${res}
         exponential sleep    ${i}
     END
     Fail    Timeout: Bucket failed to be flushed

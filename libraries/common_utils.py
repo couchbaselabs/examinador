@@ -4,7 +4,7 @@ import json
 import subprocess
 import re
 
-from typing import List, Optional, cast
+from typing import Dict, List, Optional, cast
 from os.path import join
 from binascii import unhexlify
 
@@ -203,6 +203,32 @@ class common_utils:
         """Sort a list of documents based on their collection ids and keys."""
         docs.sort(key=lambda x: (x.collection_id, x.key))
 
+
+    @keyword(types=[str, str, str])
+    def get_vbucket_uuids(self, bucket: str, username: str, password: str):
+        """Uses cbstats to create a list of vBucket UUIDs."""
+        process_results = subprocess.run([join(self.BIN_PATH, 'cbstats'), '-u', username, '-p', password, '-b', bucket, '-j',
+            'localhost:11999', 'vbucket-details'], capture_output=True, shell=False)
+        check_subprocess_status(process_results)
+        vbstats = json.loads(process_results.stdout)
+
+        uuids = []
+        for i in range(1024):
+            uuids.append(vbstats[f'vb_{i}:uuid'])
+        return uuids
+
+    @keyword(types=[List[int], List[int]])
+    def all_vbucket_uuids_different(self, a: List[int], b: List[int]):
+        """
+        a and b are assumed to be list of vBucket UUIDs. Returns true if every item in the list is different to its pair
+        """
+        if len(a) != len(b):
+            return False
+
+        for x, y in zip(a, b):
+            if x == y:
+                return False
+        return True
 
     @staticmethod
     def _assert_docs_equal(valid_doc: Document, doc: Document, attrs_to_validate):
