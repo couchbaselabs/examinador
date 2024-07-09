@@ -6,6 +6,7 @@ import traceback
 from typing import List, Optional
 
 from couchbase.cluster import Cluster
+from couchbase.exceptions import InternalServerFailureException
 from couchbase.options import ClusterOptions, PingOptions
 from couchbase.management.logic.analytics_logic import AnalyticsDataType
 from couchbase.management.search import SearchIndex
@@ -62,7 +63,13 @@ def load_index_data(mgr: Optional[QueryIndexManager] = None, host: str = "http:/
     """Creates a query index and waits for it to be built."""
     cluster, cb = connect_to_cluster(host, user, password, bucket) # pylint: disable=unused-variable
     index_mgr = cluster.query_indexes() if mgr is None else mgr
-    index_mgr.create_primary_index(bucket, CreatePrimaryQueryIndexOptions(ignore_if_exists=True))
+    for _ in range(60):
+        try:
+            index_mgr.create_primary_index(bucket, CreatePrimaryQueryIndexOptions(ignore_if_exists=True))
+            break
+        except InternalServerFailureException as e:
+            time.sleep(1)
+
     for _ in range(120):
         time.sleep(1)
         for idx in index_mgr.get_all_indexes(bucket):
