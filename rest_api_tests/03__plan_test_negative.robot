@@ -63,7 +63,7 @@ Try to add invalid plans
 
 Try to add plan with to many tasks
     [Tags]       post
-    ${tasks}=    Generate random task template    number=15
+    ${tasks}=    Generate random task template    number=25
     Send invalid plan    to-many-tasks    ""    []    ${tasks}
 
 Try and delete a plan that is being used
