@@ -146,8 +146,9 @@ Flush bucket REST
     Run and log and check request on session    ${req}    POST    200    host=${host}    user=${user}
     ...                                         password=${password}
     FOR    ${i}    IN RANGE    10
-        ${uuids}=    Get vbucket uuids  ${bucket}       ${user}         ${password}
-        ${res}=      All vbucket uuids different  ${original_uuids}      ${uuids}
+        ${curr_items}=    Get current item number    ${bucket}
+        ${uuids}=         Get vbucket uuids  ${bucket}       ${user}         ${password}
+        ${res}=           All vbucket uuids different  ${original_uuids}      ${uuids}
         Return from keyword if    ${res}
         exponential sleep    ${i}
     END
@@ -294,6 +295,7 @@ Get service ports
 Wait for items to be persisted to disk
     [Arguments]    ${previous_items}    ${items}    ${bucket}=default
     [Documentation]    Checks the expected number of items have been persisted to disk.
+    ${items}=    Get current item number    ${bucket}
     FOR    ${i}   IN RANGE    10
         ${result}=    Get item count    bucket=${bucket}
         ${expected_result}=    Evaluate    ${previous_items}+${items}
