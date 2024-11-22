@@ -23,7 +23,7 @@ from utils import check_subprocess_status
 ROBOT_AUTO_KEYWORDS = False
 
 NONDATA_DOC_CONTENT_META = '0x83'
-DEFAULT_NUM_OF_VBUCKETS = 1024
+DEFAULT_NUM_OF_VBUCKETS = 128
 
 
 @library
@@ -213,7 +213,7 @@ class common_utils:
         vbstats = json.loads(process_results.stdout)
 
         uuids = []
-        for i in range(1024):
+        for i in range(DEFAULT_NUM_OF_VBUCKETS):
             uuids.append(vbstats[f'vb_{i}:uuid'])
         return uuids
 
