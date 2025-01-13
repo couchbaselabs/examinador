@@ -4,10 +4,11 @@ import time
 import json
 import traceback
 from typing import List, Optional
+from datetime import timedelta
 
 from couchbase.cluster import Cluster
 from couchbase.exceptions import InternalServerFailureException
-from couchbase.options import ClusterOptions, PingOptions
+from couchbase.options import ClusterOptions, PingOptions, ClusterTimeoutOptions
 from couchbase.management.logic.analytics_logic import AnalyticsDataType
 from couchbase.management.search import SearchIndex
 from couchbase.management.queries import QueryIndexManager, CreatePrimaryQueryIndexOptions
@@ -349,7 +350,10 @@ def design_doc_exists(mgr, name, namespace):
 def connect_to_cluster(host: str, user: str, password: str, bucket: str, #pylint: disable=inconsistent-return-statements
         services: List[ServiceType] =  [ServiceType.Query]):
     """Creates a connection to a cluster and checks its connected to the given services before returning."""
-    cluster = Cluster(host, ClusterOptions(PasswordAuthenticator(user, password)))
+    cluster = Cluster(host, ClusterOptions(
+        PasswordAuthenticator(user, password),
+        timeout_options=ClusterTimeoutOptions(management_timeout=timedelta(seconds=90),
+                                              connect_timeout=timedelta(seconds=15))))
     cb = cluster.bucket(bucket)
     for _ in range(100):
         result = cb.ping(PingOptions(service_types=services))
