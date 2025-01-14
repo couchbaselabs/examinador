@@ -7,7 +7,7 @@ from typing import List, Optional
 from datetime import timedelta
 
 from couchbase.cluster import Cluster
-from couchbase.exceptions import InternalServerFailureException
+from couchbase.exceptions import InternalServerFailureException, AmbiguousTimeoutException
 from couchbase.options import ClusterOptions, PingOptions, ClusterTimeoutOptions
 from couchbase.management.logic.analytics_logic import AnalyticsDataType
 from couchbase.management.search import SearchIndex
@@ -68,7 +68,7 @@ def load_index_data(mgr: Optional[QueryIndexManager] = None, host: str = "http:/
         try:
             index_mgr.create_primary_index(bucket, CreatePrimaryQueryIndexOptions(ignore_if_exists=True))
             break
-        except InternalServerFailureException as e:
+        except (InternalServerFailureException, AmbiguousTimeoutException):
             time.sleep(1)
 
     for _ in range(120):
