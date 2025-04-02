@@ -73,6 +73,8 @@ def load_index_data(mgr: Optional[QueryIndexManager] = None, host: str = "http:/
 
     for _ in range(120):
         time.sleep(1)
+        indexes = index_mgr.get_all_indexes(bucket)
+        logger.debug(f'Get all indexes: {json.dumps(indexes)}')
         for idx in index_mgr.get_all_indexes(bucket):
             if idx.name == "#primary" and idx.state == "online":
                 cluster.close()
