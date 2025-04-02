@@ -5,6 +5,7 @@ import json
 import traceback
 from typing import List, Optional
 from datetime import timedelta
+from utils import log_to_log_file_and_console
 
 from couchbase.cluster import Cluster
 from couchbase.exceptions import InternalServerFailureException, AmbiguousTimeoutException
@@ -73,9 +74,8 @@ def load_index_data(mgr: Optional[QueryIndexManager] = None, host: str = "http:/
 
     for _ in range(120):
         time.sleep(1)
-        indexes = index_mgr.get_all_indexes(bucket)
-        logger.debug(f'Get all indexes: {json.dumps(indexes)}')
         for idx in index_mgr.get_all_indexes(bucket):
+            log_to_log_file_and_console(f'Index "{idx.name}" - {idx.state}')
             if idx.name == "#primary" and idx.state == "online":
                 cluster.close()
                 return
