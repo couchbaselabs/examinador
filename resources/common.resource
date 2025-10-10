@@ -21,11 +21,11 @@ Run and log and check process
     Return from keyword    ${result}
 
 Run and log process
-    [Arguments]    ${command}    ${log_stdout}=True    ${shell}=False    ${stdout}=STDOUT    ${stderr}=STDERR
+    [Arguments]    ${command}    ${log_stdout}=True    ${shell}=False    ${stdout}=STDOUT    ${stderr}=STDERR   ${timeout}=15min
     [Documentation]    Run and log the start and the results of the process at the DEBUG level.
     ${command_str}=    Catenate    @{command}
     Log To Console     Running ${command_str} ...    DEBUG
-    ${result}=    Run process    @{command}    shell=${shell}    stdout=${stdout}    stderr=${stderr}
+    ${result}=    Run process    @{command}    shell=${shell}    stdout=${stdout}    stderr=${stderr}   timeout=${timeout}  on_timeout=kill
     Run Keyword If    ${log_stdout}    Log To Console    ${result.stdout}    DEBUG
     Return from keyword    ${result}
 
