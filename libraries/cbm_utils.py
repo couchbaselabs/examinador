@@ -116,7 +116,7 @@ class cbm_utils:
         return str(complete.stdout)
 
 
-    @keyword(types=[str, str, str])
+    @keyword(types=[str, str, int])
     def run_remove(self, repo: Optional[str] = None, archive: Optional[str] = None, timeout_value: int = 120, **kwargs):
         """This function runs remove on a backup."""
         archive = self.archive if archive is None else archive
@@ -285,7 +285,7 @@ class cbm_utils:
         result_list = []
         result= data.split('\n')
         for json_doc in result:
-            if json_doc is not None and json_doc != ' ':
+            if json_doc is not None and json_doc != ' ' and json_doc != '':
                 json_doc = json_doc.replace("false","\"false\"")
                 dict_doc = json.loads(json_doc)
                 result_list.append(dict_doc)
@@ -409,3 +409,73 @@ class cbm_utils:
                     return
                 raise AssertionError(f"Flush not disabled in bucket \"{curBucket['name']}\"")
         raise AssertionError(f"Bucket {bucket} not found")
+
+    @keyword(types=[str, str, str, str, str, str, str, str, str, int])
+    def get_bucket_uuid_from_plan(self, backup_name: str, bucket_name: str = "default",
+            cloud_bucket: str = "s3://aws-buck", archive_name: str = "archive", repo: str = "cloud_repo",
+            obj_region: str = "us-east-1", obj_access_key_id: str = "test", obj_secret_access_key: str = "test",
+            obj_endpoint: str = "http://localhost:4566", timeout_value: int = 120) -> str:
+        """Retrieves the bucket UUID from the plan.json file in a cloud backup directory.
+
+        Args:
+            backup_name: The name/date of the backup.
+            bucket_name: The name of the bucket to get the UUID for.
+            cloud_bucket: The S3 bucket URL.
+            archive_name: The archive name.
+            repo: The repository name.
+            local_dir: The local staging directory.
+            obj_region: The object storage region.
+            obj_access_key_id: The access key ID.
+            obj_secret_access_key: The secret access key.
+            obj_endpoint: The object storage endpoint.
+            timeout_value: Command timeout in seconds.
+
+        Returns:
+            The UUID of the specified bucket.
+
+        Raises:
+            AssertionError: If the bucket is not found in the plan.json or has no UUID.
+        """
+        plan_s3_path = f"{cloud_bucket}/{archive_name}/{repo}/{backup_name}/plan.json"
+
+        env = os.environ.copy()
+        env['AWS_ACCESS_KEY_ID'] = obj_access_key_id
+        env['AWS_SECRET_ACCESS_KEY'] = obj_secret_access_key
+        env['AWS_DEFAULT_REGION'] = obj_region
+
+        complete = subprocess.run([
+            'aws', 's3', 'cp', plan_s3_path, '-',
+            '--endpoint-url', obj_endpoint
+        ], capture_output=True, shell=False, timeout=timeout_value, env=env)
+
+        utils.log_subprocess_run_results(complete)
+        utils.check_subprocess_status(complete)
+
+        plan_data = json.loads(complete.stdout)
+
+        for bucket in plan_data.get("cluster", {}).get("buckets", []):
+            if bucket.get("name") == bucket_name:
+                config = bucket.get("config", {})
+                if config.get("sink_uuid"):
+                    return config["sink_uuid"]
+
+                data = bucket.get("data", {})
+                range_section = data.get("range", {})
+                if range_section.get("uuid"):
+                    return range_section["uuid"]
+
+                restrictions = data.get("restrictions", {})
+                if restrictions.get("sink_uuid"):
+                    return restrictions["sink_uuid"]
+
+                manifest = data.get("manifest", {})
+                if manifest.get("sink_uuid"):
+                    return manifest["sink_uuid"]
+
+                key_value = data.get("key_value", {})
+                if key_value.get("sink_uuid"):
+                    return key_value["sink_uuid"]
+
+                raise AssertionError(f"Bucket '{bucket_name}' found but has no sink_uuid in plan.json")
+
+        raise AssertionError(f"Bucket '{bucket_name}' not found in plan.json")

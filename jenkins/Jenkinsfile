@@ -152,7 +152,6 @@ pipeline {
                     sh '''#!/bin/bash
                           source robot-env/bin/activate
                           ulimit -n 9000
-                          localstack start > /dev/null 2>&1 &
                           robot-env/bin/robot --variable SOURCE:${SOURCE} --variable WORKSPACE:${WORKSPACE} --variable DELETE_LOGS:True --outputdir ${WORKSPACE}/reports --exclude in_progress --exclude wait_for_bug_fix --exclude UI --consolewidth 120 -L DEBUG *_tests rest_api_longer
                     '''
                 }

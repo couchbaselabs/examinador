@@ -248,6 +248,7 @@ def log_subprocess_run_results(completed_process):
     log_to_log_file_and_console(f'Ran {" ".join(completed_process.args)} ...')
     log_to_log_file_and_console(f'Return code: {completed_process.returncode}')
     log_to_log_file_and_console(f'Stdout: \n{completed_process.stdout.decode("utf-8")}')
+    log_to_log_file_and_console(f'Stderr: \n{completed_process.stderr.decode("utf-8")}')
 
 
 def log_to_log_file_and_console(msg: str):

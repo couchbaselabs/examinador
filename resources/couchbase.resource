@@ -24,8 +24,7 @@ Create CB bucket if it does not exist cli
     ...                           -p    ${password}    --bucket    ${bucket}    --bucket-ramsize    ${ramQuota}
     ...                           --bucket-replica    0    --bucket-type    couchbase    --enable-flush    1    --wait
     Run and log and check process    ${command}
-    check_query_metadata_transitioned    host=http://localhost    port=9499
-    Sleep    5
+    Check query metadata transitioned    host=http://localhost    port=9499
 
 Set index memory quota
     [Arguments]    ${host}=localhost:9000    ${user}=Administrator    ${password}=asdasd    ${ramQuota}=400

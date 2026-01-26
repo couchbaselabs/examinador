@@ -39,7 +39,7 @@ def sdk_replace(key: str, value: dict, host: str = "http://localhost:12000", buc
 def drop_gsi_indexes(host: str = "http://localhost:12000", bucket: str = "default",
         user: str = "Administrator", password: str = "asdasd"):
     """Drops any GSI in the cluster."""
-    cluster, cb = connect_to_cluster(host, user, password, bucket) # pylint: disable=unused-variable
+    cluster, _ = connect_to_cluster(host, user, password) # pylint: disable=unused-variable
     index_mgr = cluster.query_indexes()
     for idx in get_all_indexes_with_retry(index_mgr, service="gsi", bucket=bucket):
         if idx.name == "#primary":
@@ -349,13 +349,16 @@ def design_doc_exists(mgr, name, namespace):
     return False
 
 
-def connect_to_cluster(host: str, user: str, password: str, bucket: str, #pylint: disable=inconsistent-return-statements
+def connect_to_cluster(host: str, user: str, password: str, bucket: Optional[str] = None, #pylint: disable=inconsistent-return-statements
         services: List[ServiceType] =  [ServiceType.Query]):
     """Creates a connection to a cluster and checks its connected to the given services before returning."""
     cluster = Cluster(host, ClusterOptions(
         PasswordAuthenticator(user, password),
         timeout_options=ClusterTimeoutOptions(management_timeout=timedelta(seconds=90),
                                               connect_timeout=timedelta(seconds=15))))
+    if bucket is None:
+        return cluster, None
+
     cb = cluster.bucket(bucket)
     for _ in range(100):
         result = cb.ping(PingOptions(service_types=services))
