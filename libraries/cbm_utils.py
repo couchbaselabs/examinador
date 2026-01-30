@@ -6,7 +6,7 @@ import os
 import subprocess
 from os.path import join
 from typing import Dict, List, Optional
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 import sdk_utils
 import utils
@@ -14,6 +14,7 @@ import utils
 from robot.api.deco import keyword
 from robot.api import logger
 from robot.api.deco import library
+from dateutil.parser import parse
 
 ROBOT_AUTO_KEYWORDS = False
 
@@ -123,6 +124,23 @@ class cbm_utils:
         other_args = sdk_utils.format_flags(kwargs)
         complete = subprocess.run([join(self.BIN_PATH, 'cbbackupmgr'), 'remove', '-a', archive, '-r', repo]
                         + other_args, capture_output=True, shell=False, timeout=timeout_value)
+        utils.log_subprocess_run_results(complete)
+        utils.check_subprocess_status(complete)
+
+
+    @keyword(types=[str, int, str, str, str, str, str, str, int])
+    def run_worm(self, repo: str = "cloud_repo", period: int = 100, archive: Optional[str] = None,
+            obj_staging_dir: str = "/tmp/staging/archive", obj_region: str = "us-east-1",
+            obj_access_key_id: str = "test", obj_secret_access_key: str = "test",
+            obj_endpoint: str = "http://localhost:4566", timeout_value: int = 120, **kwargs):
+        """This function runs worm on a backup repository to enable WORM protection."""
+        archive = self.archive if archive is None else archive
+        other_args = sdk_utils.format_flags(kwargs)
+        complete = subprocess.run([join(self.BIN_PATH, 'cbbackupmgr'), 'worm', '-a', archive, '-r', repo,
+                        '--period', str(period), '--obj-staging-dir', obj_staging_dir,
+                        '--obj-region', obj_region, '--obj-access-key-id', obj_access_key_id,
+                        '--obj-secret-access-key', obj_secret_access_key, '--obj-endpoint', obj_endpoint,
+                        '--s3-force-path-style'] + other_args, capture_output=True, shell=False, timeout=timeout_value)
         utils.log_subprocess_run_results(complete)
         utils.check_subprocess_status(complete)
 
@@ -479,3 +497,321 @@ class cbm_utils:
                 raise AssertionError(f"Bucket '{bucket_name}' found but has no sink_uuid in plan.json")
 
         raise AssertionError(f"Bucket '{bucket_name}' not found in plan.json")
+
+    @keyword(types=[str, str, str, str, str, int])
+    def enable_bucket_object_lock(self, bucket: str = "aws-buck", obj_region: str = "us-east-1",
+            obj_access_key_id: str = "test", obj_secret_access_key: str = "test",
+            obj_endpoint: str = "http://localhost:4566", timeout_value: int = 120):
+        """Enables object versioning and object lock on an S3 bucket.
+
+        This function first enables versioning on the bucket, then enables object lock configuration.
+        Both are required for WORM (Write Once Read Many) backups.
+
+        Args:
+            bucket: The S3 bucket name.
+            obj_region: The AWS region.
+            obj_access_key_id: The AWS access key ID.
+            obj_secret_access_key: The AWS secret access key.
+            obj_endpoint: The S3 endpoint URL (for localstack or other S3-compatible storage).
+            timeout_value: Command timeout in seconds.
+
+        Raises:
+            subprocess.CalledProcessError: If either command fails.
+        """
+        env = os.environ.copy()
+        env['AWS_ACCESS_KEY_ID'] = obj_access_key_id
+        env['AWS_SECRET_ACCESS_KEY'] = obj_secret_access_key
+        env['AWS_DEFAULT_REGION'] = obj_region
+
+        # Enable bucket versioning
+        versioning_cmd = [
+            'aws', 's3api', 'put-bucket-versioning',
+            '--bucket', bucket,
+            '--versioning-configuration', 'Status=Enabled',
+            '--endpoint-url', obj_endpoint
+        ]
+
+        complete = subprocess.run(versioning_cmd, capture_output=True, shell=False, timeout=timeout_value, env=env)
+        utils.log_subprocess_run_results(complete)
+        utils.check_subprocess_status(complete)
+        logger.info(f"Enabled versioning on bucket '{bucket}'")
+
+        # Enable object lock configuration
+        object_lock_cmd = [
+            'aws', 's3api', 'put-object-lock-configuration',
+            '--bucket', bucket,
+            '--object-lock-configuration', '{"ObjectLockEnabled": "Enabled"}',
+            '--endpoint-url', obj_endpoint
+        ]
+
+        complete = subprocess.run(object_lock_cmd, capture_output=True, shell=False, timeout=timeout_value, env=env)
+        utils.log_subprocess_run_results(complete)
+        utils.check_subprocess_status(complete)
+        logger.info(f"Enabled object lock on bucket '{bucket}'")
+
+    @keyword(types=[str, str, str, str, str, str, str, int])
+    def verify_object_lock_retention(self, prefix: str, min_retention_date: str, bucket: str = "aws-buck",
+            obj_region: str = "us-east-1", obj_access_key_id: str = "test", obj_secret_access_key: str = "test",
+            obj_endpoint: str = "http://localhost:4566", timeout_value: int = 120):
+        """Verifies that all objects in an S3 directory have object lock retention that expires after a specified date.
+
+        This function lists all objects in the specified S3 bucket/prefix, retrieves all versions of each object,
+        and verifies that the first (oldest) version of each object has an object lock retention date that is
+        after the specified minimum retention date.
+
+        Args:
+            prefix: The S3 prefix (directory path) to list objects from.
+            min_retention_date: The minimum expected retention date in ISO format (e.g., "2024-01-01T00:00:00Z").
+                                Object lock must expire after this date.
+            bucket: The S3 bucket name.
+            obj_region: The AWS region.
+            obj_access_key_id: The AWS access key ID.
+            obj_secret_access_key: The AWS secret access key.
+            obj_endpoint: The S3 endpoint URL (for localstack or other S3-compatible storage).
+            timeout_value: Command timeout in seconds.
+
+        Raises:
+            AssertionError: If any object's first version does not have object lock retention that expires
+                            after the specified date.
+        """
+        env = os.environ.copy()
+        env['AWS_ACCESS_KEY_ID'] = obj_access_key_id
+        env['AWS_SECRET_ACCESS_KEY'] = obj_secret_access_key
+        env['AWS_DEFAULT_REGION'] = obj_region
+
+        # Parse the minimum retention date
+        min_date = parse(min_retention_date)
+        if min_date.tzinfo is None:
+            min_date = min_date.replace(tzinfo=timezone.utc)
+
+        # List all object versions in the prefix
+        list_versions_cmd = [
+            'aws', 's3api', 'list-object-versions',
+            '--bucket', bucket,
+            '--prefix', prefix,
+            '--endpoint-url', obj_endpoint
+        ]
+
+        complete = subprocess.run(list_versions_cmd, capture_output=True, shell=False, timeout=timeout_value, env=env)
+        utils.log_subprocess_run_results(complete)
+        utils.check_subprocess_status(complete)
+
+        versions_data = json.loads(complete.stdout)
+        versions = versions_data.get('Versions', [])
+
+        if not versions:
+            raise AssertionError(f"No objects found in s3://{bucket}/{prefix}")
+
+        # Group versions by object key
+        objects_versions: Dict[str, List[Dict]] = {}
+        for version in versions:
+            key = version['Key']
+            if key not in objects_versions:
+                objects_versions[key] = []
+            objects_versions[key].append(version)
+
+        # Sort versions by LastModified date to find the first (oldest) version
+        for key in objects_versions:
+            objects_versions[key].sort(key=lambda v: parse(v['LastModified']))
+
+        # Verify object lock retention for the first version of each object
+        verified_count = 0
+        for key, key_versions in objects_versions.items():
+            first_version = key_versions[0]
+            version_id = first_version.get('VersionId')
+
+            # Get object retention
+            get_retention_cmd = [
+                'aws', 's3api', 'get-object-retention',
+                '--bucket', bucket,
+                '--key', key,
+                '--endpoint-url', obj_endpoint
+            ]
+
+            if version_id and version_id != 'null':
+                get_retention_cmd.extend(['--version-id', version_id])
+
+            retention_result = subprocess.run(
+                get_retention_cmd, capture_output=True, shell=False, timeout=timeout_value, env=env
+            )
+
+            if retention_result.returncode != 0:
+                logger.debug(f"No object lock retention for key '{key}', version '{version_id}': "
+                             f"{retention_result.stderr.decode('utf-8')}")
+                raise AssertionError(f"Object '{key}' (version: {version_id}) does not have object lock retention")
+
+            retention_data = json.loads(retention_result.stdout)
+            retention = retention_data.get('Retention', {})
+            retain_until_date_str = retention.get('RetainUntilDate')
+
+            if not retain_until_date_str:
+                raise AssertionError(f"Object '{key}' (version: {version_id}) has no RetainUntilDate")
+
+            retain_until_date = parse(retain_until_date_str)
+            if retain_until_date.tzinfo is None:
+                retain_until_date = retain_until_date.replace(tzinfo=timezone.utc)
+
+            if retain_until_date <= min_date:
+                raise AssertionError(
+                    f"Object '{key}' (version: {version_id}) retention expires at {retain_until_date}, "
+                    f"which is not after {min_date}"
+                )
+
+            logger.debug(f"Verified object lock for '{key}': retention until {retain_until_date}")
+            verified_count += 1
+
+        logger.info(f"Successfully verified object lock retention for {verified_count} objects in s3://{bucket}/{prefix}")
+
+    @keyword(types=[str, str, str, str, str, str, int])
+    def delete_current_version_of_cloud_objects(self, prefix: str, bucket: str = "aws-buck",
+            obj_region: str = "us-east-1", obj_access_key_id: str = "test", obj_secret_access_key: str = "test",
+            obj_endpoint: str = "http://localhost:4566", timeout_value: int = 120):
+        """Deletes the current (latest) version of all objects in an S3 prefix.
+
+        This function lists all objects in the specified S3 bucket/prefix and deletes
+        the current version of each object in a single bulk request. For versioned buckets
+        with WORM protection, this will create delete markers but the previous versions
+        should remain accessible.
+
+        Args:
+            prefix: The S3 prefix (directory path) to delete objects from.
+            bucket: The S3 bucket name.
+            obj_region: The AWS region.
+            obj_access_key_id: The AWS access key ID.
+            obj_secret_access_key: The AWS secret access key.
+            obj_endpoint: The S3 endpoint URL (for localstack or other S3-compatible storage).
+            timeout_value: Command timeout in seconds.
+
+        Returns:
+            The number of objects deleted.
+
+        Raises:
+            AssertionError: If no objects are found or deletion fails.
+        """
+        env = os.environ.copy()
+        env['AWS_ACCESS_KEY_ID'] = obj_access_key_id
+        env['AWS_SECRET_ACCESS_KEY'] = obj_secret_access_key
+        env['AWS_DEFAULT_REGION'] = obj_region
+
+        # List all objects in the prefix
+        list_cmd = [
+            'aws', 's3api', 'list-objects-v2',
+            '--bucket', bucket,
+            '--prefix', prefix,
+            '--endpoint-url', obj_endpoint
+        ]
+
+        complete = subprocess.run(list_cmd, capture_output=True, shell=False, timeout=timeout_value, env=env)
+        utils.log_subprocess_run_results(complete)
+        utils.check_subprocess_status(complete)
+
+        objects_data = json.loads(complete.stdout)
+        contents = objects_data.get('Contents', [])
+
+        if not contents:
+            raise AssertionError(f"No objects found in s3://{bucket}/{prefix}")
+
+        # Build the delete request with all object keys
+        objects_to_delete = [{"Key": obj['Key']} for obj in contents]
+        delete_request = json.dumps({"Objects": objects_to_delete, "Quiet": False})
+
+        # Delete all objects in a single request
+        delete_cmd = [
+            'aws', 's3api', 'delete-objects',
+            '--bucket', bucket,
+            '--delete', delete_request,
+            '--endpoint-url', obj_endpoint
+        ]
+
+        delete_result = subprocess.run(
+            delete_cmd, capture_output=True, shell=False, timeout=timeout_value, env=env
+        )
+
+        utils.log_subprocess_run_results(delete_result)
+
+        deleted_count = len(objects_to_delete)
+        if delete_result.returncode == 0:
+            result_data = json.loads(delete_result.stdout) if delete_result.stdout else {}
+            deleted_count = len(result_data.get('Deleted', []))
+            errors = result_data.get('Errors', [])
+            if errors:
+                logger.debug(f"Some objects could not be deleted: {errors}")
+
+        logger.info(f"Deleted {deleted_count} of {len(contents)} objects in s3://{bucket}/{prefix}")
+        return deleted_count
+
+    @keyword(types=[str, str, str, str, str, str, int])
+    def overwrite_cloud_objects_with_random_data(self, prefix: str, bucket: str = "aws-buck",
+            obj_region: str = "us-east-1", obj_access_key_id: str = "test", obj_secret_access_key: str = "test",
+            obj_endpoint: str = "http://localhost:4566", timeout_value: int = 120):
+        """Overwrites all objects in an S3 prefix with random data.
+
+        This function lists all objects in the specified S3 bucket/prefix and overwrites
+        each object with random bytes of the same size.
+
+        Args:
+            prefix: The S3 prefix (directory path) containing objects to overwrite.
+            bucket: The S3 bucket name.
+            obj_region: The AWS region.
+            obj_access_key_id: The AWS access key ID.
+            obj_secret_access_key: The AWS secret access key.
+            obj_endpoint: The S3 endpoint URL (for localstack or other S3-compatible storage).
+            timeout_value: Command timeout in seconds.
+
+        Raises:
+            AssertionError: If no objects are found or overwrite fails.
+        """
+        import tempfile
+        import secrets
+
+        env = os.environ.copy()
+        env['AWS_ACCESS_KEY_ID'] = obj_access_key_id
+        env['AWS_SECRET_ACCESS_KEY'] = obj_secret_access_key
+        env['AWS_DEFAULT_REGION'] = obj_region
+
+        list_cmd = [
+            'aws', 's3api', 'list-objects-v2',
+            '--bucket', bucket,
+            '--prefix', prefix,
+            '--endpoint-url', obj_endpoint
+        ]
+
+        complete = subprocess.run(list_cmd, capture_output=True, shell=False, timeout=timeout_value, env=env)
+        utils.log_subprocess_run_results(complete)
+        utils.check_subprocess_status(complete)
+
+        objects_data = json.loads(complete.stdout)
+        contents = objects_data.get('Contents', [])
+
+        if not contents:
+            raise AssertionError(f"No objects found in s3://{bucket}/{prefix}")
+
+        for obj in contents:
+            key = obj['Key']
+            size = obj.get('Size', 1024)
+
+            random_data = secrets.token_bytes(max(size, 1))
+
+            with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
+                tmp_file.write(random_data)
+                tmp_file_path = tmp_file.name
+
+            try:
+                put_cmd = [
+                    'aws', 's3api', 'put-object',
+                    '--bucket', bucket,
+                    '--key', key,
+                    '--body', tmp_file_path,
+                    '--endpoint-url', obj_endpoint
+                ]
+
+                put_result = subprocess.run(
+                    put_cmd, capture_output=True, shell=False, timeout=timeout_value, env=env
+                )
+
+                utils.log_subprocess_run_results(put_result)
+                utils.check_subprocess_status(put_result)
+            finally:
+                os.unlink(tmp_file_path)
+
+        logger.info(f"All objects in s3://{bucket}/{prefix} have been overwritten")

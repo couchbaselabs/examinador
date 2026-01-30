@@ -35,7 +35,7 @@ Set index memory quota
 
 Delete bucket cli
     [Arguments]    ${bucket}=default    ${host}=http://localhost:9000    ${user}=Administrator    ${password}=asdasd
-    [Documentation]    Delete a bucket using the bucket-delete couchbase-cli command.
+    [Documentation]    Delete a bucket using the bucket-delete couchbase-cli command. Waits for bucket to be deleted.
     ${req}=    Set Variable    /pools/default/buckets/${bucket}
     ${resp}=    Run and log request on session    ${req}    GET    host=${host}    user=${user}    password=${password}
     ...         log_response=False
@@ -43,6 +43,13 @@ Delete bucket cli
     ${command}=    Create List    ${BIN_PATH}${/}couchbase-cli    bucket-delete    -c    ${host}    -u    ${user}
     ...            -p    ${password}    --bucket    ${bucket}
     Run and log and check process    ${command}
+    FOR    ${i}    IN RANGE    120
+        ${resp}=    Run and log request on session    ${req}    GET    host=${host}    user=${user}    password=${password}
+        ...         log_response=False
+        Return from keyword if    ${resp.status_code} != 200
+        Sleep    ${i}
+    END
+    Fail    Timeout: Bucket ${bucket} failed to be deleted
 
 Create CB scope if it does not exist
     [Arguments]    ${bucket}=default    ${host}=http://localhost:9000    ${user}=Administrator    ${password}=asdasd
