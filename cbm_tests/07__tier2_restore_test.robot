@@ -21,8 +21,8 @@ ${ARCHIVE}         ${TEMP_DIR}${/}data${/}backups
 ***Test Cases***
 Test force updates restore
     [Tags]    P0    Restore
-    [Documentation]    This tests that when data is alterd after a backup is taken, when that backup is restored with
-    ...                the --force-updates flag the unalterd data from the backup replaces the alterd data.
+    [Documentation]    This tests that when data is altered after a backup is taken, when that backup is restored with
+    ...                the --force-updates flag the unaltered data from the backup replaces the altered data.
     Create CB bucket if it does not exist cli
     Load documents into bucket using cbc bucket level
     Configure backup    repo=force_updates
@@ -39,8 +39,8 @@ Test force updates restore
 
 Test conflict resolution restore
     [Tags]    P0    Restore
-    [Documentation]    This tests that when data is alterd after a backup is taken, when that backup is restored the
-    ...                alterd data is not replaced with the unalterd data from the backup.
+    [Documentation]    This tests that when data is altered after a backup is taken, when that backup is restored the
+    ...                altered data is not replaced with the unaltered data from the backup.
     Flush bucket REST
     Load documents into bucket using cbc bucket level
     Configure backup    repo=conflict_resolution

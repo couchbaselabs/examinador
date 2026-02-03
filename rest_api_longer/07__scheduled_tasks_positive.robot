@@ -28,7 +28,7 @@ ${ADHOC_REPO}    scheduled-repository
 Schedule backups and merges every minute
     [tags]    backup    minutes
     [Documentation]    Creates a repository that schedules backups and merges every minute, waits 4 minutes, and then
-    ...    checks to see if a merged backup exists in the repo.   
+    ...    checks to see if a merged backup exists in the repo.
     [Teardown]    archive and delete repo    ${BACKUP_NODE}     every-min-backup-merge
     Create plan   every-min-backup-merge    {"tasks":[{"name":"backup_min","task_type":"BACKUP","schedule":{"frequency":1,"period":"MINUTES","job_type":"BACKUP"}},{"name":"merge_min","task_type":"MERGE","schedule":{"frequency":1,"period":"MINUTES","job_type":"MERGE"},"merge_options":{"offset_start":0,"offset_end":1}}]}
     Create Backup Service repo that uses plan    every-min-backup-merge

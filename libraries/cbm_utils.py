@@ -177,7 +177,7 @@ class cbm_utils:
                 if not doc["key"].endswith(str(doc["value"]["index"])):
                     raise AssertionError("Document contents changed: index doesn't match key")
                 if doc["value"]["body"] != "0"*size:
-                    raise AssertionError("Document contents changed: body has been alterd")
+                    raise AssertionError("Document contents changed: body has been altered")
             elif doc["metadata"]["datatype"] == 7:
                 json_with_xattr_doc_count += 1
                 if "extended_attributes" not in doc:
@@ -185,19 +185,19 @@ class cbm_utils:
                 if not doc["key"].endswith(str(doc["value"]["index"])):
                     raise AssertionError("Document contents changed: index doesn't match key")
                 if doc["value"]["body"] != "0"*size:
-                    raise AssertionError("Document contents changed: body has been alterd")
+                    raise AssertionError("Document contents changed: body has been altered")
             elif doc["metadata"]["datatype"] == 2:
                 binary_doc_count += 1
                 if "extended_attributes" in doc:
                     raise AssertionError("Document contents changed: contains extended attributes")
                 if doc["value"] != "30"*size:
-                    raise AssertionError("Document contents changed: body has been alterd")
+                    raise AssertionError("Document contents changed: body has been altered")
             elif doc["metadata"]["datatype"] == 6:
                 binary_with_xattr_doc_count += 1
                 if "extended_attributes" not in doc:
                     raise AssertionError("Document contents changed: does not contain extended attributes")
                 if doc["value"] != "30"*size:
-                    raise AssertionError("Document contents changed: body has been alterd")
+                    raise AssertionError("Document contents changed: body has been altered")
             else:
                 raise AssertionError('Document contents changed: incorrect datatype')
 
@@ -244,7 +244,7 @@ class cbm_utils:
 
     @keyword(types=[List[Dict], int, int])
     def check_restored_cbworkloadgen_docs_contents(self, data: List[Dict], expected_length: int, size: int) :
-        """The function checks the documents cotents and validates them.
+        """The function checks the documents contents and validates them.
 
         Checks that the cbtransfer output of cbworkloadgen generated documents contains; the expected number of
         documents, that the index matches the key and the body is made up of a certain number of 0s.
@@ -261,12 +261,12 @@ class cbm_utils:
             if not doc["name"].endswith(str(doc["index"])):
                 raise AssertionError("Document contents changed: index doesn't match key")
             if doc["body"] != "0"*size:
-                raise AssertionError("Document contents changed: body has been alterd")
+                raise AssertionError("Document contents changed: body has been altered")
 
 
     @keyword(types=[List[Dict], int, str])
     def check_restored_cbc_docs_contents(self, data: List[Dict], expected_length: int, group: str) :
-        """The function checks the documents cotents and validates them.
+        """The function checks the documents contents and validates them.
 
         Checks that the cbtransfer output of cbc-create generated documents contains; the expected number of
         documents and the group field is the expected value.
