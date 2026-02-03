@@ -101,6 +101,21 @@ class cbm_utils:
             complete.kill()
 
 
+    @keyword(types=[str, str, str, str, str, int])
+    def run_and_terminate_restore(self, repo: Optional[str] = None, archive: Optional[str] = None,
+            host: str = "http://localhost:9000", user: str = "Administrator", password: str = "asdasd",
+            sleep_time: int = 1, **kwargs):
+        """This function will run a restore and terminate it mid-process for testing resume functionality."""
+        archive = self.archive if archive is None else archive
+        other_args = sdk_utils.format_flags(kwargs)
+        with subprocess.Popen([join(self.BIN_PATH, 'cbbackupmgr'), 'restore', '-a', archive, '-r', repo, '-c',
+            host, '-u', user, '-p', password, '--no-progress-bar', '--purge'] + other_args) as complete:
+
+            logger.debug(f'rc: {complete.returncode}, args: {str(complete.args)}')
+            time.sleep(sleep_time)
+            complete.kill()
+
+
     @keyword(types=[str, str, str, int, str])
     def run_examine(self, repo: Optional[str] = None, key: Optional[str] = None, archive: Optional[str] = None,
             timeout_value: int = 120, collection_string: str = "default", **kwargs):

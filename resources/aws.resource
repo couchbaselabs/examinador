@@ -175,3 +175,28 @@ Run cloud restore and wait until persisted
     ...                obj-staging-dir=${local_dir}${/}${archive_name}    obj-region=${obj_region}
     ...                obj-access-key-id=${obj_access_key_id}    obj-secret-access-key=${obj_secret_access_key}
     ...                obj-endpoint=${obj_endpoint}    s3-force-path-style=${s3_force_path_style}    &{kwargs}
+
+Run cloud restore
+    [Arguments]        ${cloud_bucket}=s3://aws-buck    ${archive_name}=archive    ${repo}=cloud_repo
+    ...                ${local_dir}=${TEMP_DIR}${/}staging    ${obj_region}=us-east-1
+    ...                ${obj_access_key_id}=test    ${obj_secret_access_key}=test
+    ...                ${obj_endpoint}=http://localhost:4566    ${s3_force_path_style}=None
+    ...                ${include_data}=${EMPTY}    &{kwargs}
+    [Documentation]    Run cloud restore without waiting for items to be persisted.
+    Restore docs    archive=${cloud_bucket}${/}${archive_name}    repo=${repo}
+    ...             obj-staging-dir=${local_dir}${/}${archive_name}    obj-region=${obj_region}
+    ...             obj-access-key-id=${obj_access_key_id}    obj-secret-access-key=${obj_secret_access_key}
+    ...             obj-endpoint=${obj_endpoint}    s3-force-path-style=${s3_force_path_style}    &{kwargs}
+
+Run and terminate cloud restore
+    [Arguments]        ${cloud_bucket}=s3://aws-buck    ${archive_name}=archive    ${repo}=cloud_repo
+    ...                ${local_dir}=${TEMP_DIR}${/}staging    ${obj_region}=us-east-1
+    ...                ${obj_access_key_id}=test    ${obj_secret_access_key}=test
+    ...                ${obj_endpoint}=http://localhost:4566    ${s3_force_path_style}=None
+    ...                ${sleep_time}=1    &{kwargs}
+    [Documentation]    Run and terminate a cloud restore (for resume testing).
+    Run and terminate restore    archive=${cloud_bucket}${/}${archive_name}    repo=${repo}
+    ...                obj-staging-dir=${local_dir}${/}${archive_name}    obj-region=${obj_region}
+    ...                obj-access-key-id=${obj_access_key_id}    obj-secret-access-key=${obj_secret_access_key}
+    ...                obj-endpoint=${obj_endpoint}    s3-force-path-style=${s3_force_path_style}
+    ...                sleep_time=${sleep_time}    &{kwargs}

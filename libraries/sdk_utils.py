@@ -394,6 +394,25 @@ def get_doc_info(host: str = "http://localhost:12000", bucket: str = "default",
     return doc_list
 
 
+@keyword(types=[str, str, str, str, str])
+def count_docs_by_key_prefix(prefix: str, host: str = "http://localhost:12000", bucket: str = "default",
+        user: str = "Administrator", password: str = "asdasd"):
+    """Count documents in the bucket whose keys start with the given prefix using N1QL."""
+    cluster, cb = connect_to_cluster(host, user, password, bucket) # pylint: disable=unused-variable
+
+    # Use META().id to get document keys and filter by prefix
+    query = f"SELECT COUNT(*) AS cnt FROM `{bucket}` WHERE META().id LIKE '{prefix}%'"
+    result = cluster.query(query)
+
+    count = 0
+    for row in result:
+        count = row['cnt']
+
+    cluster.close()
+
+    return count
+
+
 def format_flags(kwargs):
     """Format extra flags into a list."""
     other_args = []

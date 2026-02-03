@@ -307,7 +307,7 @@ Wait for items to be persisted to disk
         ${expected_result}=    Evaluate    ${previous_items}+${items}
         Return from keyword if    ${result}==${expected_result}
         Run keyword if    ${result}>=${expected_result}
-        ...               Log    Cannot confirm correct number of docs persisted to disk    WARN
+        ...               Log    Waiting for all docs to be persisted to disk
         Exponential sleep    ${i}
         Return from keyword if    ${result}>=${expected_result}
     END
