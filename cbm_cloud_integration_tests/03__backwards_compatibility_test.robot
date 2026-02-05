@@ -6,7 +6,9 @@ Force tags         S3    BackwardsCompatibility
 Library            OperatingSystem
 Library            Collections
 Library            Process
-Library            ../libraries/cbm_utils.py    ${BIN_PATH}    ${CLOUD_ARCHIVE}
+Library            ../libraries/cbm_utils.py    ${BIN_PATH}    ${CLOUD_ARCHIVE}    obj_region=${REGION}
+...                obj_access_key_id=${ACCESS_KEY_ID}    obj_secret_access_key=${SECRET_ACCESS_KEY}
+...                obj_endpoint=${CLOUD_ENDPOINT}
 Library            ../libraries/sdk_utils.py
 Library            ../libraries/cloud_backwards_compatibility.py
 Resource           ../resources/couchbase.resource
@@ -14,11 +16,11 @@ Resource           ../resources/cbm.resource
 Resource           ../resources/aws.resource
 
 Suite setup        Run keywords
-...                    Start localstack    AND
-...                    Wait for localstack to start    AND
+...                    Start minio    AND
+...                    Wait for minio to start    AND
 ...                    Download legacy archives from S3
 Suite Teardown     Run keywords
-...                    Stop localstack    AND
+...                    Stop minio    AND
 ...                    Cleanup all test buckets    AND
 ...                    Remove Directory    ${TEMP_DIR}${/}staging    recursive=True    AND
 ...                    Remove Directory    ${LOCAL_LEGACY_ARCHIVES}    recursive=True
@@ -27,8 +29,8 @@ Suite Teardown     Run keywords
 ***Variables***
 ${BIN_PATH}                   ${SOURCE}${/}install${/}bin
 ${CLOUD_ENDPOINT}             http://localhost:4566
-${ACCESS_KEY_ID}              test
-${SECRET_ACCESS_KEY}          test
+${ACCESS_KEY_ID}              test1234
+${SECRET_ACCESS_KEY}          test1234
 ${REGION}                     us-east-1
 ${CLOUD_BUCKET}               s3://aws-buck
 ${LOCAL_DIR}                  ${TEMP_DIR}${/}staging
@@ -73,7 +75,7 @@ Cleanup all test buckets
 Setup test for version
     [Arguments]    ${version}
     [Documentation]    Setup a test for a specific legacy version.
-    ...                Cleans up previous state and uploads the version's archive to localstack.
+    ...                Cleans up previous state and uploads the version's archive to minio.
     ...                Deletes all buckets (including default) and creates only the buckets needed for this version.
     Cleanup all test buckets
     Remove AWS S3 bucket
@@ -83,11 +85,11 @@ Setup test for version
         Create CB bucket if it does not exist cli    bucket=${bucket}    ramQuota=100
     END
     Create AWS S3 bucket if it does not exist cli
-    Upload legacy archive to localstack    ${version}
+    Upload legacy archive to minio    ${version}
 
-Upload legacy archive to localstack
+Upload legacy archive to minio
     [Arguments]    ${version}
-    [Documentation]    Upload the legacy archive for the specified version to localstack.
+    [Documentation]    Upload the legacy archive for the specified version to minio.
     ${command}=    Create List    aws    s3    sync
     ...            ${LOCAL_LEGACY_ARCHIVES}${/}${version}
     ...            ${CLOUD_BUCKET}${/}${ARCHIVE_NAME}

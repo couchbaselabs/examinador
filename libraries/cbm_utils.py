@@ -25,9 +25,15 @@ class cbm_utils:
     ROBOT_LIBRARY_SCOPE = 'SUITE'
 
 
-    def __init__(self, bin_path: str, archive: str):
+    def __init__(self, bin_path: str, archive: str, obj_region: str = "us-east-1",
+                 obj_access_key_id: str = "test", obj_secret_access_key: str = "test",
+                 obj_endpoint: str = "http://localhost:4566"):
         self.BIN_PATH = bin_path
         self.archive = archive
+        self.obj_region = obj_region
+        self.obj_access_key_id = obj_access_key_id
+        self.obj_secret_access_key = obj_secret_access_key
+        self.obj_endpoint = obj_endpoint
 
 
     @keyword(types=[str, str, str, str, str, int])
@@ -145,11 +151,15 @@ class cbm_utils:
 
     @keyword(types=[str, int, str, str, str, str, str, str, int])
     def run_worm(self, repo: str = "cloud_repo", period: int = 100, archive: Optional[str] = None,
-            obj_staging_dir: str = "/tmp/staging/archive", obj_region: str = "us-east-1",
-            obj_access_key_id: str = "test", obj_secret_access_key: str = "test",
-            obj_endpoint: str = "http://localhost:4566", timeout_value: int = 120, **kwargs):
+            obj_staging_dir: str = "/tmp/staging/archive", obj_region: Optional[str] = None,
+            obj_access_key_id: Optional[str] = None, obj_secret_access_key: Optional[str] = None,
+            obj_endpoint: Optional[str] = None, timeout_value: int = 120, **kwargs):
         """This function runs worm on a backup repository to enable WORM protection."""
         archive = self.archive if archive is None else archive
+        obj_region = self.obj_region if obj_region is None else obj_region
+        obj_access_key_id = self.obj_access_key_id if obj_access_key_id is None else obj_access_key_id
+        obj_secret_access_key = self.obj_secret_access_key if obj_secret_access_key is None else obj_secret_access_key
+        obj_endpoint = self.obj_endpoint if obj_endpoint is None else obj_endpoint
         other_args = sdk_utils.format_flags(kwargs)
         complete = subprocess.run([join(self.BIN_PATH, 'cbbackupmgr'), 'worm', '-a', archive, '-r', repo,
                         '--period', str(period), '--obj-staging-dir', obj_staging_dir,
@@ -446,8 +456,9 @@ class cbm_utils:
     @keyword(types=[str, str, str, str, str, str, str, str, str, int])
     def get_bucket_uuid_from_plan(self, backup_name: str, bucket_name: str = "default",
             cloud_bucket: str = "s3://aws-buck", archive_name: str = "archive", repo: str = "cloud_repo",
-            obj_region: str = "us-east-1", obj_access_key_id: str = "test", obj_secret_access_key: str = "test",
-            obj_endpoint: str = "http://localhost:4566", timeout_value: int = 120) -> str:
+            obj_region: Optional[str] = None, obj_access_key_id: Optional[str] = None,
+            obj_secret_access_key: Optional[str] = None, obj_endpoint: Optional[str] = None,
+            timeout_value: int = 120) -> str:
         """Retrieves the bucket UUID from the plan.json file in a cloud backup directory.
 
         Args:
@@ -469,6 +480,10 @@ class cbm_utils:
         Raises:
             AssertionError: If the bucket is not found in the plan.json or has no UUID.
         """
+        obj_region = self.obj_region if obj_region is None else obj_region
+        obj_access_key_id = self.obj_access_key_id if obj_access_key_id is None else obj_access_key_id
+        obj_secret_access_key = self.obj_secret_access_key if obj_secret_access_key is None else obj_secret_access_key
+        obj_endpoint = self.obj_endpoint if obj_endpoint is None else obj_endpoint
         plan_s3_path = f"{cloud_bucket}/{archive_name}/{repo}/{backup_name}/plan.json"
 
         env = os.environ.copy()
@@ -514,9 +529,9 @@ class cbm_utils:
         raise AssertionError(f"Bucket '{bucket_name}' not found in plan.json")
 
     @keyword(types=[str, str, str, str, str, int])
-    def enable_bucket_object_lock(self, bucket: str = "aws-buck", obj_region: str = "us-east-1",
-            obj_access_key_id: str = "test", obj_secret_access_key: str = "test",
-            obj_endpoint: str = "http://localhost:4566", timeout_value: int = 120):
+    def enable_bucket_object_lock(self, bucket: str = "aws-buck", obj_region: Optional[str] = None,
+            obj_access_key_id: Optional[str] = None, obj_secret_access_key: Optional[str] = None,
+            obj_endpoint: Optional[str] = None, timeout_value: int = 120):
         """Enables object versioning and object lock on an S3 bucket.
 
         This function first enables versioning on the bucket, then enables object lock configuration.
@@ -527,12 +542,16 @@ class cbm_utils:
             obj_region: The AWS region.
             obj_access_key_id: The AWS access key ID.
             obj_secret_access_key: The AWS secret access key.
-            obj_endpoint: The S3 endpoint URL (for localstack or other S3-compatible storage).
+            obj_endpoint: The S3 endpoint URL (for minio or other S3-compatible storage).
             timeout_value: Command timeout in seconds.
 
         Raises:
             subprocess.CalledProcessError: If either command fails.
         """
+        obj_region = self.obj_region if obj_region is None else obj_region
+        obj_access_key_id = self.obj_access_key_id if obj_access_key_id is None else obj_access_key_id
+        obj_secret_access_key = self.obj_secret_access_key if obj_secret_access_key is None else obj_secret_access_key
+        obj_endpoint = self.obj_endpoint if obj_endpoint is None else obj_endpoint
         env = os.environ.copy()
         env['AWS_ACCESS_KEY_ID'] = obj_access_key_id
         env['AWS_SECRET_ACCESS_KEY'] = obj_secret_access_key
@@ -566,8 +585,9 @@ class cbm_utils:
 
     @keyword(types=[str, str, str, str, str, str, str, int])
     def verify_object_lock_retention(self, prefix: str, min_retention_date: str, bucket: str = "aws-buck",
-            obj_region: str = "us-east-1", obj_access_key_id: str = "test", obj_secret_access_key: str = "test",
-            obj_endpoint: str = "http://localhost:4566", timeout_value: int = 120):
+            obj_region: Optional[str] = None, obj_access_key_id: Optional[str] = None,
+            obj_secret_access_key: Optional[str] = None, obj_endpoint: Optional[str] = None,
+            timeout_value: int = 120):
         """Verifies that all objects in an S3 directory have object lock retention that expires after a specified date.
 
         This function lists all objects in the specified S3 bucket/prefix, retrieves all versions of each object,
@@ -582,13 +602,17 @@ class cbm_utils:
             obj_region: The AWS region.
             obj_access_key_id: The AWS access key ID.
             obj_secret_access_key: The AWS secret access key.
-            obj_endpoint: The S3 endpoint URL (for localstack or other S3-compatible storage).
+            obj_endpoint: The S3 endpoint URL (for minio or other S3-compatible storage).
             timeout_value: Command timeout in seconds.
 
         Raises:
             AssertionError: If any object's first version does not have object lock retention that expires
                             after the specified date.
         """
+        obj_region = self.obj_region if obj_region is None else obj_region
+        obj_access_key_id = self.obj_access_key_id if obj_access_key_id is None else obj_access_key_id
+        obj_secret_access_key = self.obj_secret_access_key if obj_secret_access_key is None else obj_secret_access_key
+        obj_endpoint = self.obj_endpoint if obj_endpoint is None else obj_endpoint
         env = os.environ.copy()
         env['AWS_ACCESS_KEY_ID'] = obj_access_key_id
         env['AWS_SECRET_ACCESS_KEY'] = obj_secret_access_key
@@ -679,8 +703,9 @@ class cbm_utils:
 
     @keyword(types=[str, str, str, str, str, str, int])
     def delete_current_version_of_cloud_objects(self, prefix: str, bucket: str = "aws-buck",
-            obj_region: str = "us-east-1", obj_access_key_id: str = "test", obj_secret_access_key: str = "test",
-            obj_endpoint: str = "http://localhost:4566", timeout_value: int = 120):
+            obj_region: Optional[str] = None, obj_access_key_id: Optional[str] = None,
+            obj_secret_access_key: Optional[str] = None, obj_endpoint: Optional[str] = None,
+            timeout_value: int = 120):
         """Deletes the current (latest) version of all objects in an S3 prefix.
 
         This function lists all objects in the specified S3 bucket/prefix and deletes
@@ -694,7 +719,7 @@ class cbm_utils:
             obj_region: The AWS region.
             obj_access_key_id: The AWS access key ID.
             obj_secret_access_key: The AWS secret access key.
-            obj_endpoint: The S3 endpoint URL (for localstack or other S3-compatible storage).
+            obj_endpoint: The S3 endpoint URL (for minio or other S3-compatible storage).
             timeout_value: Command timeout in seconds.
 
         Returns:
@@ -703,6 +728,10 @@ class cbm_utils:
         Raises:
             AssertionError: If no objects are found or deletion fails.
         """
+        obj_region = self.obj_region if obj_region is None else obj_region
+        obj_access_key_id = self.obj_access_key_id if obj_access_key_id is None else obj_access_key_id
+        obj_secret_access_key = self.obj_secret_access_key if obj_secret_access_key is None else obj_secret_access_key
+        obj_endpoint = self.obj_endpoint if obj_endpoint is None else obj_endpoint
         env = os.environ.copy()
         env['AWS_ACCESS_KEY_ID'] = obj_access_key_id
         env['AWS_SECRET_ACCESS_KEY'] = obj_secret_access_key
@@ -757,8 +786,9 @@ class cbm_utils:
 
     @keyword(types=[str, str, str, str, str, str, int])
     def overwrite_cloud_objects_with_random_data(self, prefix: str, bucket: str = "aws-buck",
-            obj_region: str = "us-east-1", obj_access_key_id: str = "test", obj_secret_access_key: str = "test",
-            obj_endpoint: str = "http://localhost:4566", timeout_value: int = 120):
+            obj_region: Optional[str] = None, obj_access_key_id: Optional[str] = None,
+            obj_secret_access_key: Optional[str] = None, obj_endpoint: Optional[str] = None,
+            timeout_value: int = 120):
         """Overwrites all objects in an S3 prefix with random data.
 
         This function lists all objects in the specified S3 bucket/prefix and overwrites
@@ -770,7 +800,7 @@ class cbm_utils:
             obj_region: The AWS region.
             obj_access_key_id: The AWS access key ID.
             obj_secret_access_key: The AWS secret access key.
-            obj_endpoint: The S3 endpoint URL (for localstack or other S3-compatible storage).
+            obj_endpoint: The S3 endpoint URL (for minio or other S3-compatible storage).
             timeout_value: Command timeout in seconds.
 
         Raises:
@@ -779,6 +809,10 @@ class cbm_utils:
         import tempfile
         import secrets
 
+        obj_region = self.obj_region if obj_region is None else obj_region
+        obj_access_key_id = self.obj_access_key_id if obj_access_key_id is None else obj_access_key_id
+        obj_secret_access_key = self.obj_secret_access_key if obj_secret_access_key is None else obj_secret_access_key
+        obj_endpoint = self.obj_endpoint if obj_endpoint is None else obj_endpoint
         env = os.environ.copy()
         env['AWS_ACCESS_KEY_ID'] = obj_access_key_id
         env['AWS_SECRET_ACCESS_KEY'] = obj_secret_access_key

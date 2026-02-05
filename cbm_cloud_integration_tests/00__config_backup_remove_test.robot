@@ -2,17 +2,19 @@
 Documentation      Test that basic backup to cloud operations can be performed.
 Force tags         S3
 Library            OperatingSystem
-Library            ../libraries/cbm_utils.py    ${BIN_PATH}    ${CLOUD_ARCHIVE}
+Library            ../libraries/cbm_utils.py    ${BIN_PATH}    ${CLOUD_ARCHIVE}    obj_region=${REGION}
+...                obj_access_key_id=${ACCESS_KEY_ID}    obj_secret_access_key=${SECRET_ACCESS_KEY}
+...                obj_endpoint=${CLOUD_ENDPOINT}
 Library            ../libraries/sdk_utils.py
 Resource           ../resources/couchbase.resource
 Resource           ../resources/cbm.resource
 Resource           ../resources/aws.resource
 
 Suite setup        Run keywords
-...                    Start localstack    AND
-...                    Wait for localstack to start
+...                    Start minio    AND
+...                    Wait for minio to start
 Suite Teardown     Run keywords
-...                    Stop localstack    AND
+...                    Stop minio    AND
 ...                    Delete bucket cli    AND
 ...                    Remove Directory    ${TEMP_DIR}${/}staging    recursive=True    AND
 ...                    Remove Directory    ${TEMP_DIR}${/}data/backups    recursive=True
@@ -29,8 +31,8 @@ Test Setup         Run Keywords
 ***Variables***
 ${BIN_PATH}              ${SOURCE}${/}install${/}bin
 ${CLOUD_ENDPOINT}        http://localhost:4566
-${ACCESS_KEY_ID}         test
-${SECRET_ACCESS_KEY}     test
+${ACCESS_KEY_ID}         test1234
+${SECRET_ACCESS_KEY}     test1234
 ${REGION}                us-east-1
 ${CLOUD_BUCKET}          s3://aws-buck
 ${LOCAL_DIR}             ${TEMP_DIR}${/}staging
