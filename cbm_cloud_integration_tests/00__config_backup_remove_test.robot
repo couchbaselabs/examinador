@@ -15,12 +15,12 @@ Suite setup        Run keywords
 ...                    Wait for minio to start
 Suite Teardown     Run keywords
 ...                    Stop minio    AND
-...                    Delete bucket cli    AND
+...                    Delete all buckets cli    AND
 ...                    Remove Directory    ${TEMP_DIR}${/}staging    recursive=True    AND
 ...                    Remove Directory    ${TEMP_DIR}${/}data/backups    recursive=True
 
 Test Setup         Run Keywords
-...                    Delete bucket cli    AND
+...                    Delete all buckets cli   AND
 ...                    Remove AWS S3 bucket    AND
 ...                    Remove Directory    ${TEMP_DIR}${/}staging    recursive=True    AND
 ...                    Remove Directory    ${TEMP_DIR}${/}data/backups    recursive=True    AND
@@ -182,6 +182,3 @@ Test resume backup after staging directory deleted with multiple buckets
     Should Be Equal as integers    ${result2}[backups][0][buckets][${default_idx}][mutations]    2048
     Should Be Equal as integers    ${result2}[backups][0][buckets][${bucket1_idx}][mutations]    1024
     Should Be Equal as integers    ${result2}[backups][0][buckets][${bucket2_idx}][mutations]    512
-
-    Delete bucket cli    bucket=bucket1
-    Delete bucket cli    bucket=bucket2

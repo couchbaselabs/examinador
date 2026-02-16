@@ -21,7 +21,7 @@ Suite setup        Run keywords
 ...                    Download legacy archives from S3
 Suite Teardown     Run keywords
 ...                    Stop minio    AND
-...                    Cleanup all test buckets    AND
+...                    Delete all buckets cli    AND
 ...                    Remove Directory    ${TEMP_DIR}${/}staging    recursive=True    AND
 ...                    Remove Directory    ${LOCAL_LEGACY_ARCHIVES}    recursive=True
 
@@ -61,23 +61,12 @@ Download legacy archives from S3
     Run and log and check process    ${extract_cmd}    shell=True
     Remove File    ${local_tar_path}
 
-Cleanup all test buckets
-    [Documentation]    Delete all Couchbase buckets including default and any buckets defined in TEST_VERSIONS.
-    Delete bucket cli
-    ${versions}=    Get test versions
-    FOR    ${version}    IN    @{versions}
-        ${buckets}=    Get all buckets for version    ${version}
-        FOR    ${bucket}    IN    @{buckets}
-            Delete bucket cli    bucket=${bucket}
-        END
-    END
-
 Setup test for version
     [Arguments]    ${version}
     [Documentation]    Setup a test for a specific legacy version.
     ...                Cleans up previous state and uploads the version's archive to minio.
     ...                Deletes all buckets (including default) and creates only the buckets needed for this version.
-    Cleanup all test buckets
+    Delete all buckets cli
     Remove AWS S3 bucket
     Remove Directory    ${TEMP_DIR}${/}staging    recursive=True
     ${buckets}=    Get all buckets for version    ${version}

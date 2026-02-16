@@ -51,6 +51,17 @@ Delete bucket cli
     END
     Fail    Timeout: Bucket ${bucket} failed to be deleted
 
+Delete all buckets cli
+    [Arguments]    ${host}=http://localhost:9000    ${user}=Administrator    ${password}=asdasd
+    [Documentation]    Delete all existing buckets.
+    ${req}=    Set Variable    /pools/default/buckets
+    ${resp}=    Run and log request on session    ${req}    GET    host=${host}    user=${user}    password=${password}
+    ...         log_response=False
+    Return from keyword if    ${resp.status_code} != 200
+    FOR    ${bucket}    IN    @{resp.json()}
+        Delete bucket cli    bucket=${bucket}[name]    host=${host}    user=${user}    password=${password}
+    END
+
 Create CB scope if it does not exist
     [Arguments]    ${bucket}=default    ${host}=http://localhost:9000    ${user}=Administrator    ${password}=asdasd
     ...            ${scope}=default

@@ -14,7 +14,7 @@ Resource           ../resources/aws.resource
 Test Setup         Run Keywords
 ...                    Start minio    AND
 ...                    Wait for minio to start    AND
-...                    Delete bucket cli    AND
+...                    Delete all buckets cli    AND
 ...                    Remove AWS S3 bucket    AND
 ...                    Remove Directory    ${TEMP_DIR}${/}staging    recursive=True    AND
 ...                    Remove Directory    ${TEMP_DIR}${/}data/backups    recursive=True    AND
@@ -23,7 +23,7 @@ Test Setup         Run Keywords
 
 Test Teardown     Run keywords
 ...                    Stop minio    AND
-...                    Delete bucket cli    AND
+...                    Delete all buckets cli    AND
 ...                    Remove Directory    ${TEMP_DIR}${/}staging    recursive=True    AND
 ...                    Remove Directory    ${TEMP_DIR}${/}data/backups    recursive=True
 

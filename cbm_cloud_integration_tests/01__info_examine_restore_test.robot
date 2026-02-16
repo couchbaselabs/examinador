@@ -19,11 +19,11 @@ Suite setup        Run keywords
 ...                    Setup all cloud repos and backups
 Suite Teardown     Run keywords
 ...                    Stop minio    AND
-...                    Delete bucket cli    AND
+...                    Delete all buckets cli    AND
 ...                    Remove Directory    ${TEMP_DIR}${/}staging    recursive=True
 
 Test Setup         Run Keywords
-...                    Delete bucket cli    AND
+...                    Delete all buckets cli    AND
 ...                    Remove Directory    ${TEMP_DIR}${/}staging    recursive=True    AND
 ...                    Create CB bucket if it does not exist cli
 
