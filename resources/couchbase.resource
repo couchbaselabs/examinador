@@ -40,6 +40,7 @@ Delete bucket cli
     ${resp}=    Run and log request on session    ${req}    GET    host=${host}    user=${user}    password=${password}
     ...         log_response=False
     Return from keyword if    ${resp.status_code} != 200
+    Drop primary index    bucket=${bucket}    user=${user}    password=${password}
     ${command}=    Create List    ${BIN_PATH}${/}couchbase-cli    bucket-delete    -c    ${host}    -u    ${user}
     ...            -p    ${password}    --bucket    ${bucket}
     Run and log and check process    ${command}
@@ -170,18 +171,6 @@ Flush bucket REST
         exponential sleep    ${i}
     END
     Fail    Timeout: Bucket failed to be flushed
-
-Delete bucket if it does exist cli
-    [Arguments]    ${bucket}=default    ${host}=http://localhost:9000    ${user}=Administrator    ${password}=asdasd
-    [Documentation]    Delete a bucket.
-    ${req}=    Set Variable    /pools/default/buckets/${bucket}
-    ${resp}=    Run and log request on session    ${req}    GET    host=${host}    user=${user}    password=${password}
-    ...         log_response=False
-    Return from keyword if    ${resp.status_code} != 200
-    ${command}=    Create List    ${BIN_PATH}${/}couchbase-cli    bucket-delete    -c    ${host}    -u    ${user}    -p
-    ...                           ${password}    --bucket    ${bucket}
-    Run and log and check process    ${command}
-    Sleep    5
 
 Load documents into bucket using cbm
     [Arguments]    ${items}=1000    ${bucket}=default    ${host}=http://localhost:9000    ${user}=Administrator

@@ -191,6 +191,19 @@ def check_all_indexes_have_been_built_collection_aware(host: str = "http://local
             time.sleep(sleep_time)
     raise AssertionError(f"Imported indexes failed to be built in {num_of_tries * sleep_time} seconds")
 
+@keyword(types=[str, str, str, str])
+def drop_primary_index(host: str = "http://localhost:12000", bucket: str = "default",
+        user: str = "Administrator", password: str = "asdasd"):
+    """Drops the primary index for the specified bucket"""
+    cluster, _ = connect_to_cluster(host, user, password)
+    index_mgr = cluster.query_indexes()
+
+    for idx in get_all_indexes_with_retry(index_mgr, service="gsi", bucket=bucket):
+        if idx.name == "#primary":
+            index_mgr.drop_primary_index(bucket)
+            wait_for_index_to_be_dropped(index_mgr, "#primary", service="gsi", bucket=bucket)
+
+    cluster.close()
 
 @keyword(types=[str, str, str, str])
 def drop_all_indexes(host: str = "http://localhost:12000", bucket: str = "default",

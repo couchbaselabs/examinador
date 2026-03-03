@@ -30,14 +30,14 @@ Test sample import using docloader without existing bucket
     [Tags]             Docloader    Sample
     [Documentation]    This tests that sample data can be loaded into a Couchbase cluster using docloader (currently
     ...                deprecated) without the required bucket existing in a cluster (currently deprecated).
-    Delete bucket if it does exist cli
+    Delete bucket cli
     Run docloader    ${SAMPLE_DIR}${/}beer-sample.zip
     Check sample import results
 
 Test REST API install
     [Tags]             REST API    Sample    Beer
     [Documentation]    This tests if a sample bucket can be installed using a REST API endpoint.
-    Delete bucket if it does exist cli
+    Delete bucket cli
     ${payload}    Set Variable    ["beer-sample"]
     Install sample buckets    ${payload}
     Sleep    10

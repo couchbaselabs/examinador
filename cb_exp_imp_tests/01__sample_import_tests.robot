@@ -29,7 +29,7 @@ Test sample import beer-sample dataset without existing bucket
     [Tags]             Import    Sample    Beer
     [Documentation]    This tests that beer-sample data can be loaded into a Couchbase cluster using cbimport without
     ...                the required bucket existing in a cluster.
-    Delete bucket if it does exist cli
+    Delete bucket cli
     Run import JSON    ${SAMPLE_DIR}${/}beer-sample.zip    format_in=sample
     Check sample import results    items=7303    indexes=1    expected_num_design_docs=1   expected_num_views=2
 
@@ -47,7 +47,7 @@ Test sample import gamesim-sample dataset without existing bucket
     [Tags]             Import    Sample    Gamesim
     [Documentation]    This tests that gamesim-sample data can be loaded into a Couchbase cluster using cbimport without
     ...                the required bucket existing in a cluster.
-    Delete bucket if it does exist cli
+    Delete bucket cli
     Run import JSON    ${SAMPLE_DIR}${/}gamesim-sample.zip    format_in=sample
     Check sample import results    items=586    indexes=1    expected_num_design_docs=1    expected_num_views=2
 
@@ -65,6 +65,6 @@ Test sample import travel-sample dataset without existing bucket
     [Tags]             Import    Sample    Travel
     [Documentation]    This tests that travel-sample data can be loaded into a Couchbase cluster using cbimport without
     ...                the required bucket existing in a cluster.
-    Delete bucket if it does exist cli
+    Delete bucket cli
     Run import JSON    ${SAMPLE_DIR}${/}travel-sample.zip    format_in=sample
     Check sample import results    items=63288    indexes=23    expected_num_design_docs=0    expected_num_views=0
