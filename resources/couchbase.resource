@@ -1,6 +1,7 @@
 *** Settings ***
 Library     RequestsLibrary
 Library     Process
+Library     ../libraries/sdk_utils.py
 Library     ../libraries/setup_utils.py
 Library     ../libraries/common_utils.py    ${SOURCE}
 Resource    ../resources/common.resource
