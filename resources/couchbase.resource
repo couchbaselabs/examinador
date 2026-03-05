@@ -37,6 +37,7 @@ Set index memory quota
 Delete bucket cli
     [Arguments]    ${bucket}=default    ${host}=http://localhost:9000    ${user}=Administrator    ${password}=asdasd
     [Documentation]    Delete a bucket using the bucket-delete couchbase-cli command. Waits for bucket to be deleted.
+    ${kv_host}=    Set Variable    http://localhost:12000
     ${req}=    Set Variable    /pools/default/buckets/${bucket}
     ${resp}=    Run and log request on session    ${req}    GET    host=${host}    user=${user}    password=${password}
     ...         log_response=False
@@ -45,6 +46,13 @@ Delete bucket cli
     ${command}=    Create List    ${BIN_PATH}${/}couchbase-cli    bucket-delete    -c    ${host}    -u    ${user}
     ...            -p    ${password}    --bucket    ${bucket}
     Run and log and check process    ${command}
+    Wait for bucket to be deleted    bucket=${bucket}    host=${host}    user=${user}    password=${password}
+    Wait for gsi indexes to be dropped for bucket    bucket=${bucket}    user=${user}    password=${password}
+
+Wait for bucket to be deleted
+    [Arguments]    ${bucket}=default    ${host}=http://localhost:9000    ${user}=Administrator    ${password}=asdasd
+    [Documentation]    Delete a bucket using the bucket-delete couchbase-cli command. Waits for bucket to be deleted.
+    ${req}=    Set Variable    /pools/default/buckets/${bucket}
     FOR    ${i}    IN RANGE    120
         ${resp}=    Run and log request on session    ${req}    GET    host=${host}    user=${user}    password=${password}
         ...         log_response=False

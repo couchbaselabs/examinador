@@ -3,6 +3,8 @@
 import time
 import json
 import traceback
+import requests
+from requests.auth import HTTPBasicAuth
 from typing import List, Optional
 from datetime import timedelta
 from utils import log_to_log_file_and_console
@@ -434,6 +436,53 @@ def format_flags(kwargs):
         if kwargs.get(flag) != 'None':
             other_args.append(kwargs.get(flag))
     return other_args
+
+
+@keyword(types=[str, str, str, str, int])
+def wait_for_gsi_indexes_to_be_dropped_for_bucket(bucket: str = "default",
+        host: str = "http://localhost:9102", user: str = "Administrator", password: str = "asdasd",
+        timeout: int = 60):
+    logger.info(f"Waiting for GSI indexes to be dropped for bucket '{bucket}'...")
+
+    indexer_endpoint = f"{host}/getIndexStatus"
+
+    logger.info(f"Querying indexer endpoint: {indexer_endpoint}")
+
+    for attempt in range(timeout):
+        logger.info(f"Attempt {attempt + 1}/{timeout}: Checking GSI index status...")
+        response = requests.get(indexer_endpoint, auth=HTTPBasicAuth(user, password), timeout=5)
+        logger.info(f"Response status code: {response.status_code}")
+
+        if response.status_code == 200:
+            index_status = response.json()
+            logger.info(f"Response: {index_status}")
+
+            indexes = index_status.get("status", [])
+
+            if not indexes:
+                logger.info("No indexes found - bucket deletion confirmed")
+                return
+
+            bucket_indexes_found = False
+            for index in indexes:
+                index_name = index.get("name", "")
+                bucket_name = index.get("bucket", "")
+                logger.info(f"Found index: {index_name}, bucket: {bucket_name}")
+
+                if bucket_name == bucket:
+                    logger.info(f"Index '{index_name}' still exists for bucket '{bucket}'")
+                    bucket_indexes_found = True
+
+            if not bucket_indexes_found:
+                logger.info(f"No indexes remaining for bucket '{bucket}'")
+                return
+
+            logger.info(f"Bucket '{bucket}' still has GSI indexes - waiting...")
+
+        time.sleep(1)
+
+    raise AssertionError(f"Timeout: Failed to confirm bucket '{bucket}' deletion propagated to GSI service "
+                          f"within {timeout} seconds")
 
 
 @keyword(types=[str, str, str])
