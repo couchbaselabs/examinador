@@ -394,16 +394,12 @@ def connect_to_cluster(host: str, user: str, password: str, bucket: Optional[str
 def get_doc_info(host: str = "http://localhost:12000", bucket: str = "default",
         user: str = "Administrator", password: str = "asdasd"):
     """This function will use the Couchbase SDK to get the contents of the bucket."""
-    cluster, cb = connect_to_cluster(host, user, password, bucket) # pylint: disable=unused-variable
-    mgr = cluster.query_indexes()
-    load_index_data(mgr, bucket=bucket)
+    cluster, _ = connect_to_cluster(host, user, password)
 
     result = cluster.query(f"SELECT * FROM {bucket};")
 
     doc_list = [row[bucket] for row in result]
 
-    mgr.drop_primary_index(bucket)
-    wait_for_index_to_be_dropped(mgr, '#primary', service="gsi", bucket=bucket)
     cluster.close()
 
     return doc_list
