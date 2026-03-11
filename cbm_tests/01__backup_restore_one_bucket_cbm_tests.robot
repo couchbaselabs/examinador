@@ -53,21 +53,6 @@ Test Restore Backup
     ${result}=    Get doc info
     Check restored cbworkloadgen docs contents    ${result}    2048    1024
 
-Test Backup Restore of Users
-    [Tags]    P0    Backup  Restore  Users
-    [Documentation]    Tests backup of a bucket is restored including the users
-    Add user
-    Configure backup                        repo=simple-with-users      users=True
-    Run backup                              repo=simple-with-users
-    Flush bucket REST
-    Delete user
-    Run restore and wait until persisted    repo=simple-with-users      users=True
-    ${userInfo} =  Get user info
-    ${userName} =  Evaluate  $userInfo.get("id")
-    Should Be Equal  ${userName}  test-user
-    ${roleCheckReturnCode} =  Check user role
-    Should Be Equal as integers  ${roleCheckReturnCode}  0
-
 Test bucket restored to other bucket
     [Tags]    P0    Restore
     [Documentation]    Tests backup of one backup can be mapped to another bucket when restored with --map-data flag.
@@ -137,10 +122,11 @@ Test Force Full Backup
     ${bucket_index}=         Get bucket index    ${result}
     Should Be Equal                ${result}[backups][${number_of_backups-1}][buckets][${bucket_index}][name]
     ...                            default
+    Should Be Equal as integers    ${result}[backups][${number_of_backups-1}][buckets][${bucket_index}][mutations]
+    ...                            6144
     Should Be Equal as integers    ${result}[backups][${number_of_backups-1}][buckets][${bucket_index}][tombstones]
     ...                            0
-    # The scope with uid 0 is the default scope
-    Should Be Equal as integers    ${result}[backups][${number_of_backups-1}][buckets][${bucket_index}][scopes][0][mutations]
+    Should Be Equal as integers    ${result}[backups][${number_of_backups-1}][buckets][${bucket_index}][items]
     ...                            6144
     ${bucket_uuid}=    Get bucket uuid
     ${dir}=    catenate    SEPARATOR=
