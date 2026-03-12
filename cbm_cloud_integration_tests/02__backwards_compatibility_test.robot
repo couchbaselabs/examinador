@@ -47,7 +47,7 @@ ${TARBALL_NAME}               all-versions.tar.gz
 ***Keywords***
 Download legacy archives from S3
     [Documentation]    Download all legacy backup archives from the remote S3 bucket.
-    ...                Downloads an archive containing all version directories (v6.6, v7.0, v7.2, v7.6, v8.0)
+    ...                Downloads an archive containing all version directories (v6.6, v7.0, v7.2)
     ...                and extracts it to the local legacy archives directory.
     ...                This is run once at suite setup to avoid downloading for each test.
     Create Directory    ${LOCAL_LEGACY_ARCHIVES}
