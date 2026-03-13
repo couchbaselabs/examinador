@@ -40,7 +40,7 @@ Test Simple backup
     ${bucket_uuid}=    Get bucket uuid
     ${dir}=    catenate    SEPARATOR=
     ...    ${ARCHIVE}${/}simple${/}${result}[backups][${number_of_backups-1}][date]
-    ...    ${/}default-${bucket_uuid}${/}data
+    ...    ${/}${bucket_uuid}${/}data
     ${data}=    Get cbriftdump data     dir=${dir}
     Verify cbworkloadgen documents    ${data}    expected_len_json=2048    size=1024
 
@@ -98,7 +98,7 @@ Test Incremental backup
     ${bucket_uuid}=    Get bucket uuid
     ${dir}=    catenate    SEPARATOR=
     ...    ${ARCHIVE}${/}simple${/}${result}[backups][${number_of_backups-1}][date]
-    ...    ${/}default-${bucket_uuid}${/}data
+    ...    ${/}${bucket_uuid}${/}data
     ${data}=    Get cbriftdump data     dir=${dir}
     Verify cbworkloadgen documents    ${data}    expected_len_json=2048    size=1024
     Check key not included in backup     ${data}    pymc
@@ -145,7 +145,7 @@ Test Force Full Backup
     ${bucket_uuid}=    Get bucket uuid
     ${dir}=    catenate    SEPARATOR=
     ...    ${ARCHIVE}${/}simple${/}${result}[backups][${number_of_backups-1}][date]
-    ...    ${/}default-${bucket_uuid}${/}data
+    ...    ${/}${bucket_uuid}${/}data
     ${data}=    Get cbriftdump data     dir=${dir}
     Verify cbworkloadgen documents    ${data}    expected_len_json=6144    size=1024
 

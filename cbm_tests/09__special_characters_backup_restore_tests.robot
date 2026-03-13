@@ -35,7 +35,7 @@ Test backup with values in other language
     ${bucket_uuid}=    Get bucket uuid
     ${dir}=    catenate    SEPARATOR=
     ...    ${ARCHIVE}${/}other_lang_value_repo${/}${result}[backups][-1][date]
-    ...    ${/}default-${bucket_uuid}${/}data
+    ...    ${/}${bucket_uuid}${/}data
     ${data}=    Get cbriftdump data     dir=${dir}
     Length should be    ${data}                        2048
     Should be equal     ${data}[1][value][group]       이것은_필드입니다
@@ -56,7 +56,7 @@ Test Restore value in other language
     Should be equal     ${result}[111][group]     이것은_필드입니다
     Should be equal     ${result}[1111][group]    이것은_필드입니다
 
-Test backup of bucket with specical characters
+Test backup of bucket with special characters
     [Tags]    Backup
     [Documentation]    This tests that a backup can be performed with a bucket named with non-latin characters and then
     ...                checks the the number of documents are correct and the documents have the correct body and
@@ -74,6 +74,6 @@ Test backup of bucket with specical characters
     ${bucket_uuid}=    Get bucket uuid    bucket=buck%with-chars.
     ${dir}=    catenate    SEPARATOR=
     ...    ${ARCHIVE}${/}other_lang_bucket_repo${/}${result}[backups][-1][date]
-    ...    ${/}buck%with-chars.-${bucket_uuid}${/}data
+    ...    ${/}${bucket_uuid}${/}data
     ${data}=    Get cbriftdump data     dir=${dir}
     Verify cbworkloadgen documents    ${data}    expected_len_json=2048    size=1024

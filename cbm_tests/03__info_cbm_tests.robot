@@ -49,11 +49,11 @@ Test advanced info per repo
     ${bucket_uuid}=    Get bucket uuid    bucket=buck1
     ${dir}=    catenate    SEPARATOR=
     ...    ${ARCHIVE}${/}simple${/}${result}[backups][0][date]
-    ...    ${/}buck1-${bucket_uuid}${/}data
+    ...    ${/}${bucket_uuid}${/}data
     ${data}=    Get cbriftdump data     dir=${dir}
     Verify cbworkloadgen documents    ${data}    expected_len_json=2048    size=1024
     ${dir}=    catenate    SEPARATOR=
     ...    ${ARCHIVE}${/}simple${/}${result}[backups][1][date]
-    ...    ${/}buck1-${bucket_uuid}${/}data
+    ...    ${/}${bucket_uuid}${/}data
     ${data}=    Get cbriftdump data     dir=${dir}
     Verify cbworkloadgen documents    ${data}    expected_len_json=2048    size=1024

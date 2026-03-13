@@ -56,7 +56,7 @@ Get cloud cbriftdump data
     ...                obj_region=${obj_region}    obj_access_key_id=${obj_access_key_id}
     ...                obj_secret_access_key=${obj_secret_access_key}    obj_endpoint=${obj_endpoint}
     ${command}=    Create List    ${BIN_PATH}${/}cbriftdump    -d
-    ...            ${cloud_bucket}${/}${archive_name}${/}${repo}${/}${backup_name}${/}${bucket_name}-${bucket_uuid}${/}data    --json
+    ...            ${cloud_bucket}${/}${archive_name}${/}${repo}${/}${backup_name}${/}${bucket_uuid}${/}data    --json
     ...            --obj-region    ${obj_region}    --obj-staging-dir    ${local_dir}${/}staging_rift
     ...            --obj-access-key-id    ${obj_access_key_id}    --obj-secret-access-key    ${obj_secret_access_key}
     ...            --obj-endpoint    ${obj_endpoint}    --s3-force-path-style

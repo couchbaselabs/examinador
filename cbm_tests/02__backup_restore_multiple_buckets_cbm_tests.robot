@@ -35,7 +35,7 @@ Test include bucket backup
     ${bucket_uuid}=    Get bucket uuid    bucket=buck2
     ${dir}=    catenate    SEPARATOR=
     ...    ${ARCHIVE}${/}include_buck2${/}${result}[backups][${number_of_backups-1}][date]
-    ...    ${/}buck2-${bucket_uuid}${/}data
+    ...    ${/}${bucket_uuid}${/}data
     ${data}=    Get cbriftdump data     dir=${dir}
     Verify cbworkloadgen documents    ${data}    expected_len_json=2048    size=1024
 
@@ -57,7 +57,7 @@ Test exclude bucket backup
     Should be equal        ${result}[backups][${number_of_backups-1}][buckets][0][name]    buck1
     ${dir}=    catenate    SEPARATOR=
     ...    ${ARCHIVE}${/}exclude_buck2${/}${result}[backups][${number_of_backups-1}][date]
-    ...    ${/}buck1-${bucket_uuid}${/}data
+    ...    ${/}${bucket_uuid}${/}data
     ${data}=    Get cbriftdump data     dir=${dir}
     Verify cbworkloadgen documents    ${data}    expected_len_json=2048    size=1024
 
