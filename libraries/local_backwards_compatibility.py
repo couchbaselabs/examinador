@@ -1,13 +1,13 @@
-"""This file contains functions that define keywords needed for the cbbackupmgr cloud backwards compatibility tests"""
+"""This file contains functions that define keywords needed for the cbbackupmgr local backwards compatibility tests"""
 
 from robot.api.deco import keyword
 import backwards_compatibility as bc
 
 ROBOT_AUTO_KEYWORDS = False
 
-# Test configuration for cloud backwards compatibility tests
+# Test configuration for local backwards compatibility tests
 TEST_VERSIONS = {
-    "v6.6": {
+    "v6.5.2": {
         "test_repo": [
             {
                 "type": "FULL",
@@ -21,6 +21,11 @@ TEST_VERSIONS = {
                         "mutations": 100,
                         "total_items": 100,
                         "key_prefix": "b2full",
+                    },
+                    "bucket3": {
+                        "mutations": 100,
+                        "total_items": 100,
+                        "key_prefix": "b3full",
                     }
                 }
             },
@@ -36,77 +41,27 @@ TEST_VERSIONS = {
                         "mutations": 100,
                         "total_items": 200,
                         "key_prefix": "b2inc",
+                    },
+                    "bucket3": {
+                        "mutations": 2000,
+                        "total_items": 2100,
+                        "key_prefix": "b3inc",
                     }
                 }
             },
-        ]
-    },
-    "v7.0": {
-        "test_repo": [
+        ],
+        "test_repo_2": [
             {
                 "type": "FULL",
+                "complete": False,
                 "buckets": {
                     "bucket1": {
-                        "mutations": 2000,
-                        "total_items": 2000,
-                        "key_prefix": "b1full",
-                    },
-                    "bucket2": {
-                        "mutations": 100,
-                        "total_items": 100,
-                        "key_prefix": "b2full",
+                        "mutations": 500,
+                        "total_items": 500,
+                        "key_prefix": "r2b1full",
                     }
                 }
-            },
-            {
-                "type": "INCR",
-                "buckets": {
-                    "bucket1": {
-                        "mutations": 0,
-                        "total_items": 2000,
-                        "key_prefix": "b1inc",
-                    },
-                    "bucket2": {
-                        "mutations": 100,
-                        "total_items": 200,
-                        "key_prefix": "b2inc",
-                    }
-                }
-            },
-        ]
-    },
-    "v7.2": {
-        "test_repo": [
-            {
-                "type": "FULL",
-                "buckets": {
-                    "bucket1": {
-                        "mutations": 2000,
-                        "total_items": 2000,
-                        "key_prefix": "b1full",
-                    },
-                    "bucket2": {
-                        "mutations": 100,
-                        "total_items": 100,
-                        "key_prefix": "b2full",
-                    }
-                }
-            },
-            {
-                "type": "INCR",
-                "buckets": {
-                    "bucket1": {
-                        "mutations": 0,
-                        "total_items": 2000,
-                        "key_prefix": "b1inc",
-                    },
-                    "bucket2": {
-                        "mutations": 100,
-                        "total_items": 200,
-                        "key_prefix": "b2inc",
-                    }
-                }
-            },
+            }
         ]
     }
 }
@@ -176,5 +131,3 @@ def get_examine_key_for_version(version: str, repo: str):
 def get_examine_bucket_for_version(version: str, repo: str):
     """Return the bucket name to use for examine tests (first bucket in first backup)."""
     return bc.get_examine_bucket_for_version(TEST_VERSIONS, version, repo)
-
-
