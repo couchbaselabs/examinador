@@ -2,11 +2,10 @@
 
 import time
 import json
-import traceback
-import requests
-from requests.auth import HTTPBasicAuth
 from typing import List, Optional
 from datetime import timedelta
+import requests
+from requests.auth import HTTPBasicAuth
 from utils import log_to_log_file_and_console
 
 from couchbase.cluster import Cluster
@@ -442,6 +441,7 @@ def format_flags(kwargs):
 def wait_for_gsi_indexes_to_be_dropped_for_bucket(bucket: str = "default",
         host: str = "http://localhost:9102", user: str = "Administrator", password: str = "asdasd",
         timeout: int = 60):
+    """Waits for all GSI indexes to be dropped."""
     logger.info(f"Waiting for GSI indexes to be dropped for bucket '{bucket}'...")
 
     indexer_endpoint = f"{host}/getIndexStatus"

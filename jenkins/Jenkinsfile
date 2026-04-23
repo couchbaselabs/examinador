@@ -15,11 +15,13 @@ import hudson.model.Run
 import jenkins.model.CauseOfInterruption.UserInterruption
 
 pipeline {
-    agent { label "linux&&master&&large" }
+    agent { label "linux&&neo&&large&&!aarch64" }
 
     environment {
         SOURCE = "${WORKSPACE}/source"
         EXAMINADOR = "${WORKSPACE}/examinador"
+
+        GO_TARBALL_URL = "https://go.dev/dl/go1.25.3.linux-amd64.tar.gz"
     }
 
     stages {
@@ -33,7 +35,7 @@ pipeline {
                             gerritProjects: [
                                 [
                                     compareType: "PLAIN", disableStrictForbiddenFileVerification: false, pattern: "examinador",
-                                    branches: [[ compareType: "PLAIN", pattern: "master" ]]
+                                    branches: [[ compareType: "PLAIN", pattern: "neo" ]]
                                 ],
                             ],
                             triggerOnEvents: [
@@ -44,52 +46,39 @@ pipeline {
                         )
                     ])])
                 }
-
-                slackSend(
-                    channel: "#tooling-cv",
-                    color: "good",
-                    message: "Build for '<${GERRIT_CHANGE_URL}|${GERRIT_CHANGE_SUBJECT}>' by '${GERRIT_CHANGE_OWNER_NAME}' started (${env.BUILD_URL})"
-                )
-
-                timeout(time: 10, unit: "MINUTES") {
-                    // Install linter
-                    timeout(time: 10, unit: "MINUTES") {
-                        sh "pip3 install --user urllib3 pylint requests mypy"
-                    }
-
-                    // Initialise the build directory
-                    dir("${WORKSPACE}") {
-                        sh "git clone git@github.com:couchbaselabs/examinador.git"
-                    }
-
-                    // Fetch the commit we are testing
-                    dir("${EXAMINADOR}") {
-                        sh "git fetch ssh://buildbot@review.couchbase.org:29418/examinador ${GERRIT_REFSPEC}"
-                        sh "git checkout FETCH_HEAD"
-                    }
-                }
             }
         }
 
         stage("Setup Examinador") {
+            environment {
+                GOROOT = "${WORKSPACE}/go"
+                GOBIN = "${GOROOT}/bin"
+                PATH="${PATH}:${GOBIN}"
+            }
+
             steps {
+                dir("${WORKSPACE}") {
+                    sh "wget -q -O- ${GO_TARBALL_URL} | tar xz"
+                    sh "go version"
+                    sh "go install github.com/minio/minio@latest"
+                    sh "minio --version"
+                    sh "git clone git@github.com:couchbaselabs/examinador.git"
+                }
+
                 dir("${EXAMINADOR}") {
                     // Use python virtual environment to make life easier
                     sh '''#!/bin/bash
-                          python3 -m venv robot-env
-                          source robot-env/bin/activate
-                          pip3 install wheel
-                          pip3 install -r requirements.txt --no-use-pep517
-                          pip3 install pylint mypy
+                        git fetch ssh://buildbot@review.couchbase.org:29418/examinador ${GERRIT_REFSPEC}
+                        git checkout FETCH_HEAD
+                        python3 -m venv robot-env
+                        source robot-env/bin/activate
+                        pip3 install urllib3 pylint requests mypy
+                        pip3 install wheel
+                        pip3 install cmake scikit-build==0.15.0
+                        pip3 install couchbase==3.2.7 --no-build-isolation
+                        pip3 install -r requirements.txt
                     '''
-
-                    //Install chromedriver
-                    sh '''#!/bin/bash
-                          source robot-env/bin/activate
-                          pip3 install webdrivermanager
-                          webdrivermanager chrome --linkpath ${EXAMINADOR}/robot-env/bin
-                    '''
-                  }
+                }
             }
         }
 
@@ -126,9 +115,9 @@ pipeline {
 
         stage("Get CB") {
             steps {
-                timeout(time: 15, unit: "MINUTES") {
+                timeout(time: 25, unit: "MINUTES") {
                     dir("${SOURCE}") {
-                        sh "repo init -u git://github.com/couchbase/manifest -m branch-master.xml -g all"
+                        sh "repo init -u https://github.com/couchbase/manifest -m couchbase-server/neo.xml -g all"
                         sh "repo sync -j8"
                     }
                 }
@@ -146,17 +135,21 @@ pipeline {
         }
 
         stage("Test") {
+            environment {
+                GOROOT = "${WORKSPACE}/go"
+                GOBIN = "${GOROOT}/bin"
+                PATH="${PATH}:${GOBIN}"
+            }
+
             steps{
                 dir("${EXAMINADOR}") {
-                    // Run test suites
                     sh '''#!/bin/bash
                           source robot-env/bin/activate
-                          ulimit -n 9000
-                          robot-env/bin/robot --variable SOURCE:${SOURCE} --variable WORKSPACE:${WORKSPACE} --variable DELETE_LOGS:True --outputdir ${WORKSPACE}/reports --exclude in_progress --exclude wait_for_bug_fix --exclude UI --consolewidth 120 -L DEBUG *_tests rest_api_longer
+                          robot-env/bin/robot --variable SOURCE:${SOURCE} --variable WORKSPACE:${WORKSPACE} --variable DELETE_LOGS:True --outputdir ${WORKSPACE}/reports --exclude in_progress --exclude UI --exclude wait_for_bug_fix --consolewidth 120 -L DEBUG cbm_tests cbm_cloud_integration_tests rest_api_tests rest_api_longer
                     '''
                 }
             }
-      }
+        }
 
     }
 

@@ -1,3 +1,4 @@
+# pylint: disable=duplicate-code
 """This file contains functions that define keywords needed for the cbbackupmgr cloud backwards compatibility tests"""
 
 import json
@@ -238,7 +239,7 @@ def get_all_buckets_for_version(version: str):
     """Return a set of all bucket names used across all repos and backups for a version."""
     buckets = set()
     version_config = TEST_VERSIONS.get(version, {})
-    for repo_name, backups in version_config.items():
+    for _, backups in version_config.items():
         for backup in backups:
             buckets.update(backup.get("buckets", {}).keys())
     return list(buckets)
@@ -341,5 +342,3 @@ def get_examine_bucket_for_version(version: str, repo: str):
     if not backups or not backups[0].get("buckets"):
         return None
     return list(backups[0]["buckets"].keys())[0]
-
-
