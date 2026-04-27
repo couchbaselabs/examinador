@@ -44,7 +44,7 @@ def get_all_buckets_for_version(test_versions: dict, version: str):
     """Return a set of all bucket names used across all repos and backups for a version."""
     buckets = set()
     version_config = test_versions.get(version, {})
-    for repo_name, backups in version_config.items():
+    for _, backups in version_config.items():
         for backup in backups:
             buckets.update(backup.get("buckets", {}).keys())
     return list(buckets)
@@ -106,7 +106,7 @@ def get_prefix_counts_for_bucket(test_versions: dict, version: str, repo: str, b
     if up_to_backup_idx == -1:
         up_to_backup_idx = len(backups) - 1
 
-    prefix_counts = {}
+    prefix_counts: dict[str, int] = {}
     for backup_idx in range(up_to_backup_idx + 1):
         backup = backups[backup_idx]
         bucket_data = backup.get("buckets", {}).get(bucket, {})

@@ -1,3 +1,4 @@
+# pylint: disable=duplicate-code
 """This file contains functions that define keywords needed for the cbbackupmgr cloud backwards compatibility tests"""
 
 from robot.api.deco import keyword
@@ -244,5 +245,3 @@ def get_examine_key_for_version(version: str, repo: str):
 def get_examine_bucket_for_version(version: str, repo: str):
     """Return the bucket name to use for examine tests (first bucket in first backup)."""
     return bc.get_examine_bucket_for_version(TEST_VERSIONS, version, repo)
-
-

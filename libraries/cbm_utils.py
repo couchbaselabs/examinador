@@ -2,7 +2,9 @@
 
 import json
 import time
+import tempfile
 import os
+import secrets
 import subprocess
 from os.path import join
 from typing import Dict, List, Optional
@@ -650,7 +652,7 @@ class cbm_utils:
             objects_versions[key].append(version)
 
         # Sort versions by LastModified date to find the first (oldest) version
-        for key in objects_versions:
+        for key in objects_versions: # pylint: disable=consider-using-dict-items
             objects_versions[key].sort(key=lambda v: parse(v['LastModified']))
 
         # Verify object lock retention for the first version of each object
@@ -699,7 +701,8 @@ class cbm_utils:
             logger.debug(f"Verified object lock for '{key}': retention until {retain_until_date}")
             verified_count += 1
 
-        logger.info(f"Successfully verified object lock retention for {verified_count} objects in s3://{bucket}/{prefix}")
+        logger.info(f"Successfully verified object lock retention for {verified_count} objects "
+                        f"in s3://{bucket}/{prefix}")
 
     @keyword(types=[str, str, str, str, str, str, int])
     def delete_current_version_of_cloud_objects(self, prefix: str, bucket: str = "aws-buck",
@@ -806,8 +809,6 @@ class cbm_utils:
         Raises:
             AssertionError: If no objects are found or overwrite fails.
         """
-        import tempfile
-        import secrets
 
         obj_region = self.obj_region if obj_region is None else obj_region
         obj_access_key_id = self.obj_access_key_id if obj_access_key_id is None else obj_access_key_id
