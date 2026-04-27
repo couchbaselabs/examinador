@@ -207,8 +207,8 @@ class common_utils:
     @keyword(types=[str, str, str])
     def get_vbucket_uuids(self, bucket: str, username: str, password: str):
         """Uses cbstats to create a list of vBucket UUIDs."""
-        process_results = subprocess.run([join(self.BIN_PATH, 'cbstats'), '-u', username, '-p', password, '-b', bucket, '-j',
-            'localhost:11999', 'vbucket-details'], capture_output=True, shell=False)
+        process_results = subprocess.run([join(self.BIN_PATH, 'cbstats'), '-u', username, '-p', password,
+            '-b', bucket, '-j', 'localhost:11999', 'vbucket-details'], capture_output=True, shell=False)
         check_subprocess_status(process_results)
         vbstats = json.loads(process_results.stdout)
 
@@ -237,8 +237,8 @@ class common_utils:
         attributes_dict_2 = vars(doc)
         for attr in attrs_to_validate:
             assert_equal(attributes_dict_1[attr], attributes_dict_2[attr],
-                f"Validation document with the full id '{valid_doc.collection_id} @ {valid_doc.key}' and the " \
-                    f"corresponding document are not equal for the attribute '{attr}'")
+                f"Validation document with the full id '{valid_doc.collection_id} @ {valid_doc.key}'" \
+                    f"and the corresponding document are not equal for the attribute '{attr}'")
 
 
     @staticmethod
