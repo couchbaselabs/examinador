@@ -1,4 +1,4 @@
-"""This file contains usefull and complex setup functionality"""
+"""This file contains useful and complex setup functionality"""
 import shutil
 import subprocess
 import time
@@ -80,7 +80,7 @@ def connect_nodes(cwd: str, node_num: int, services: str, data_size: int = 512, 
     Args:
         cwd: These should be the ns_server directory.
         node_num: The number of nodes to connect.
-        services: The services that each node should have following the cluster connect sintax (e.g n0:kv,n1:kv+backup).
+        services: The services that each node should have following the cluster connect syntax (e.g n0:kv,n1:kv+backup).
         data_size: The size in MB for the data service.
 
     It will realise a CalledProcessError if cluster_connect fails.
@@ -93,7 +93,8 @@ def connect_nodes(cwd: str, node_num: int, services: str, data_size: int = 512, 
                                    str(data_size), '-I', str(index_size), '-r', '0', '-M', 'memory_optimized'],
                                    capture_output=True, timeout=120)
         if complete.returncode != 0:
-            logger.warn(f'Cluster connect failed, rc {complete.returncode}: {str(complete.stdout)}')
+            logger.warn(f'Cluster connect failed, rc {complete.returncode}: {str(complete.stdout)} '
+                        f'{str(complete.stderr)}')
             time.sleep(5 * (i + 1))
         else:
             connected = True
@@ -131,11 +132,11 @@ def confirm_backup_service_running(host: str, log_path: str, user: str = 'Admini
     off the backup_service log"""
     worked = False
     try:
-        logger.info(f'Confiming the backup service is running in host: {host}')
+        logger.info(f'Confirming the backup service is running in host: {host}')
         res = requests.get(f'{host}/api/v1/config', auth=(user, password), timeout=60)
         worked = res.status_code == 200
     except Exception as connection_error:
-        logger.warn(f'Connection error occured: {connection_error}')
+        logger.warn(f'Connection error occurred: {connection_error}')
 
     if not worked:
         log_end_of_backup_service_logs(log_path, context)
@@ -144,7 +145,7 @@ def confirm_backup_service_running(host: str, log_path: str, user: str = 'Admini
 
 @keyword(types=[str])
 def remove_directory_and_ignore_errors(path: str):
-    """Remove directory specifed by path and everything in it and log a warning for any errors"""
+    """Remove directory specified by path and everything in it and log a warning for any errors"""
     shutil.rmtree(path, onerror = log_error)
     logger.info(f'Directory {path} has been removed')
 
@@ -182,7 +183,7 @@ def get_last_lines_of_log(log_path: str, context: int):
 
 
 def log_end_of_backup_service_logs(log_path: str, context: int):
-    """Log the last lines of the abckup service log"""
+    """Log the last lines of the backup service log"""
     try:
         logger.info(get_last_lines_of_log(log_path, context))
     except FileNotFoundError as e:
