@@ -435,6 +435,31 @@ class cbm_utils:
         utils.check_subprocess_status(complete)
         return complete.returncode
 
+    @keyword
+    def scan_backup_files_for_plaintext_identifiers(self, backup_dir: str, identifiers: list):
+        """Scans all files in a backup directory for plaintext identifiers.
+
+        Used to verify encryption: if bucket, scope, or collection names appear as plaintext
+        in encrypted backup files, the encryption is not working correctly.
+
+        Args:
+            backup_dir: The path to the backup directory to scan.
+            identifiers: A list of strings to search for in the backup files.
+
+        Raises:
+            AssertionError: If any identifier is found as plaintext in a backup file.
+        """
+        for root, _, files in os.walk(backup_dir):
+            for file in files:
+                file_path = os.path.join(root, file)
+                with open(file_path, 'rb') as f:
+                    content = f.read()
+                    for identifier in identifiers:
+                        if identifier.encode('utf-8') in content:
+                            raise AssertionError(f"Plaintext identifier '{identifier}' found in encrypted "
+                                                 f"backup file: {file_path}")
+
+
     @keyword(types=[str, str, str, str, str, int])
     def check_flush_is_disabled(self, archive: Optional[str] = None, host: str = "http://localhost:9000",
             user: str = "Administrator", password: str = "asdasd", bucket: str = "default", timeout_value: int = 240,
