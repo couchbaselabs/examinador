@@ -38,7 +38,7 @@ class cbm_utils:
         self.obj_endpoint = obj_endpoint
 
 
-    @keyword(types=[str, str, str, str, str, int])
+    @keyword(types=[str, Optional[str], str, str, str, int])
     def restore_docs(self, repo: Optional[str] = None, archive: Optional[str] = None,
             host: str = "http://localhost:9000", user: str = "Administrator", password: str = "asdasd",
             timeout_value: int = 240, users: bool = False, **kwargs):
@@ -437,21 +437,32 @@ class cbm_utils:
 
     @keyword
     def scan_backup_files_for_plaintext_identifiers(self, backup_dir: str, identifiers: list):
-        """Scans all files in a backup directory for plaintext identifiers.
+        """Scans all files and directory names in a backup directory for plaintext identifiers.
 
         Used to verify encryption: if bucket, scope, or collection names appear as plaintext
-        in encrypted backup files, the encryption is not working correctly.
+        in encrypted backup file names, directory names, or file contents, the encryption is not
+        working correctly.
 
         Args:
             backup_dir: The path to the backup directory to scan.
             identifiers: A list of strings to search for in the backup files.
 
         Raises:
-            AssertionError: If any identifier is found as plaintext in a backup file.
+            AssertionError: If any identifier is found as plaintext in a file name, directory name,
+                            or file content.
         """
-        for root, _, files in os.walk(backup_dir):
+        for root, dirs, files in os.walk(backup_dir):
+            for directory in dirs:
+                for identifier in identifiers:
+                    if identifier in directory:
+                        raise AssertionError(f"Plaintext identifier '{identifier}' found in encrypted "
+                                             f"backup directory name: {os.path.join(root, directory)}")
             for file in files:
                 file_path = os.path.join(root, file)
+                for identifier in identifiers:
+                    if identifier in file:
+                        raise AssertionError(f"Plaintext identifier '{identifier}' found in encrypted "
+                                             f"backup file name: {file_path}")
                 with open(file_path, 'rb') as f:
                     content = f.read()
                     for identifier in identifiers:
